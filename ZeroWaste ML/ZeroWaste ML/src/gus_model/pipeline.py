@@ -62,6 +62,52 @@ class FitDiagnostics:
     signal_anchors: Dict = field(default_factory=dict)
 
 
+def estimate_coverage_drift(
+    cfg: ModelConfig,
+    train: pd.DataFrame,
+    train_pred_log: pd.DataFrame,
+    later: pd.DataFrame,
+    later_pred_log: pd.DataFrame,
+) -> float:
+    """Bir sonraki donemde kaybedilen kapsamayi tahmin eder.
+
+    Konformal garanti degisim-degismezlik (exchangeability) varsayar. Bizim
+    kullanimimizda bu varsayim YAPISAL OLARAK bozuktur: aralik W doneminde
+    kalibre edilir, W+1 doneminde kullanilir. Ne kadar kaybedildigini test
+    bolumune bakmadan olcmenin yolu, ayni deneyi egitim penceresi ICINDE
+    tekrarlamaktir:
+
+        kalibre et   egitim penceresinin ilk ceyrekleri
+        carpani ayarla  egitim penceresinin son iki ceyregi
+        olc          valid bolumu (bir sonraki pencere)
+
+    Aradaki fark, dagilim kaymasinin kapsamaya maliyetidir ve nihai carpan
+    ayarina ek pay olarak eklenir. Test bolumu bu hesaba GIRMEZ.
+    """
+    periods = sorted(train["period"].astype(str).unique())
+    if len(periods) < 4 or len(later) == 0:
+        return 0.0
+
+    tune_periods = set(periods[-2:])
+    is_tune = train["period"].astype(str).isin(tune_periods).to_numpy()
+    if is_tune.all() or not is_tune.any():
+        return 0.0
+
+    inner = build_calibrator(cfg).fit(
+        train.loc[~is_tune], train_pred_log.loc[~is_tune], fitted_on="train (ilk ceyrekler)"
+    )
+    inner.tune_scale(
+        train.loc[is_tune], train_pred_log.loc[is_tune], fitted_on="train (son ceyrekler)"
+    )
+
+    calibrated = inner.apply(later, later_pred_log)
+    y = later[TARGET_COLUMN].astype(float).to_numpy()
+    observed = float(
+        ((y >= calibrated["q05_cal"].to_numpy()) & (y <= calibrated["q95_cal"].to_numpy())).mean()
+    )
+    return max(0.0, inner.required_coverage - observed)
+
+
 @dataclass
 class GusModel:
     """Egitilmis GUS-DEDEKTIV modeli."""
@@ -76,6 +122,7 @@ class GusModel:
     probability: ProbabilityCalibrator = field(default_factory=ProbabilityCalibrator)
     score_map: ScoreMap = field(default_factory=ScoreMap)
     diagnostics: FitDiagnostics = field(default_factory=FitDiagnostics)
+    coverage_drift: float = 0.0
     data_version: str = "unknown"
 
     # ------------------------------------------------------------------ fit --
@@ -284,6 +331,10 @@ class GusModel:
                 "peer": self.peer.best_iteration if self.peer else {},
             },
             "target_coverage": self.cfg.target_coverage,
+            "coverage_drift_margin": round(self.coverage_drift, 4),
+            "conformal_delta_scale": (
+                round(self.conformal.delta_scale, 3) if self.conformal else None
+            ),
             "seed": self.cfg.seed,
         }
 
