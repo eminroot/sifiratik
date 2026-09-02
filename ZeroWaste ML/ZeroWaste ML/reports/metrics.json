@@ -1,0 +1,62 @@
+{
+  "model_version": "gus-ml-1.0.0",
+  "data_version": "1.0.0",
+  "test": {
+    "n": 1200,
+    "prevalans": 0.0808,
+    "PR_AUC": 0.2877,
+    "ROC_AUC": 0.6782,
+    "Precision@100": 0.32,
+    "Precision@100_CI": [
+      0.22,
+      0.42
+    ],
+    "Recall@100": 0.3299,
+    "Lift@100": 3.959,
+    "Precision@50": 0.44,
+    "Lift@50": 5.443
+  },
+  "valid": {
+    "PR_AUC": 0.2842,
+    "Precision@100": 0.31
+  },
+  "en_iyi_baseline": {
+    "ad": "bl_zscore_hist",
+    "PR_AUC": 0.1592,
+    "Precision@100": 0.19
+  },
+  "konformal": {
+    "hedef_kapsama": 0.9,
+    "gozlenen_valid": 0.91,
+    "gozlenen_test": 0.875,
+    "ortanca_bagil_genislik_test": 0.853
+  },
+  "olasilik_kalibrasyonu": {
+    "brier": 0.06696,
+    "ece": 0.0204,
+    "ortalama_tahmin": 0.06655,
+    "gozlenen_prevalans": 0.08083
+  },
+  "fayda_top100": {
+    "K": 100,
+    "dogrulanan_vaka": 32,
+    "vaka_100_denetim_basina": 32.0,
+    "duzeltilen_tonaj": 2304.97,
+    "toplam_tonajin_payi": 0.7851,
+    "denetim_maliyeti_try": 3890592.65,
+    "ton_basina_maliyet_try": 1687.92,
+    "toplam_inceleme_gunu": 1241
+  },
+  "kavramsal_kayma_A08": {
+    "mekanizma": "A08_dis_kanit_uyumsuz",
+    "n": 18,
+    "truth": 17,
+    "Top50_icinde": 4,
+    "Top50_orani": 0.2222,
+    "Top100_icinde": 10,
+    "Top100_orani": 0.5556,
+    "Top200_icinde": 13,
+    "Top200_orani": 0.7222
+  },
+  "harman_agirligi_hist": 0.95
+}

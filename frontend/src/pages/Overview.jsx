@@ -16,14 +16,17 @@ import {
 import { useApp } from '../App.jsx';
 import { post, query, useApi } from '../lib/api.js';
 import {
-  LEVEL_LABEL,
-  STATUS_LABEL,
+  fieldLabel,
+  levelLabel,
   lira,
   num,
   percent,
+  signalName,
   splitUnit,
+  statusLabel,
   tonnes,
 } from '../lib/format.js';
+import { useT } from '../lib/i18n.jsx';
 import { Figures, PageHead, Panel, Pill, Resource, Section, Stat } from '../components/ui.jsx';
 import QueueTable from '../components/QueueTable.jsx';
 
@@ -31,6 +34,7 @@ const MIX_TONE = { CRITICAL: 'stop', HIGH: 'warn', MEDIUM: 'mute', LOW: 'ok' };
 
 export default function Overview() {
   const { period, toast } = useApp();
+  const t = useT();
   const state = useApi(`/dashboard${query({ period })}`, [period]);
   const [running, setRunning] = useState(false);
 
@@ -38,7 +42,12 @@ export default function Overview() {
     setRunning(true);
     try {
       const result = await post('/scoring/run', { period });
-      toast(`${result.companies_scored} companies rescored in ${result.duration_ms} ms`);
+      toast(
+        t('overview.rescored', {
+          count: num(result.companies_scored),
+          ms: num(result.duration_ms),
+        }),
+      );
       state.reload();
     } catch (error) {
       toast(error.message, 'bad');
@@ -53,9 +62,9 @@ export default function Overview() {
         {(data) => (
           <>
             <PageHead
-              eyebrow={`Period ${data.period}`}
+              eyebrow={t('overview.eyebrow', { period: data.period })}
               icon={LayoutGrid}
-              title="Overview"
+              title={t('overview.title')}
             >
               <button
                 type="button"
@@ -64,7 +73,7 @@ export default function Overview() {
                 disabled={running}
               >
                 {running ? <span className="spin on-ink" /> : <RefreshCw size={15} strokeWidth={1.9} />}
-                {running ? 'Scoring' : 'Re-run scoring'}
+                {t(running ? 'overview.scoring' : 'overview.rescore')}
               </button>
             </PageHead>
 
@@ -75,10 +84,10 @@ export default function Overview() {
                     <span className="stat-chip">
                       <Boxes size={15} strokeWidth={1.9} />
                     </span>
-                    <span className="label">Priority spread</span>
+                    <span className="label">{t('overview.spread')}</span>
                     <span className="stat-head-action">
                       <Link className="btn btn-quiet btn-sm" to="/queue">
-                        Open queue
+                        {t('overview.openQueue')}
                         <ArrowUpRight size={13} strokeWidth={1.9} />
                       </Link>
                     </span>
@@ -86,8 +95,10 @@ export default function Overview() {
 
                   <div className="stat-value">{num(data.companies_analysed)}</div>
                   <div className="stat-note">
-                    companies scored across {data.regions_covered} provinces and{' '}
-                    {data.sectors_covered} sectors
+                    {t('overview.scoredAcross', {
+                      regions: data.regions_covered,
+                      sectors: data.sectors_covered,
+                    })}
                   </div>
 
                   <div className="mix">
@@ -96,7 +107,7 @@ export default function Overview() {
                         key={band.level}
                         className={`mix-part ${MIX_TONE[band.level]}`}
                         style={{ flex: Math.max(band.count, 0.4) }}
-                        title={`${LEVEL_LABEL[band.level]}: ${band.count}`}
+                        title={`${levelLabel(band.level)}: ${num(band.count)}`}
                       />
                     ))}
                   </div>
@@ -104,7 +115,7 @@ export default function Overview() {
                     {data.by_level.map((band) => (
                       <li key={band.level}>
                         <i className={MIX_TONE[band.level]} />
-                        {LEVEL_LABEL[band.level]} <b>{num(band.count)}</b>
+                        {levelLabel(band.level)} <b>{num(band.count)}</b>
                         <em>{percent(band.share)}</em>
                       </li>
                     ))}
@@ -115,49 +126,54 @@ export default function Overview() {
               <Figures rows>
                 <Stat
                   icon={ListChecks}
-                  label="Awaiting a decision"
+                  label={t('overview.awaiting')}
                   value={num(data.awaiting_review)}
-                  note={`${num(data.in_progress)} in progress, ${num(data.reviewed)} closed`}
+                  note={t('overview.awaitingNote', {
+                    progress: num(data.in_progress),
+                    closed: num(data.reviewed),
+                  })}
                 />
                 <Stat
                   icon={Database}
-                  label="No filing on record"
+                  label={t('overview.noFiling')}
                   value={num(data.companies_without_declaration)}
-                  note="Output is known, a declaration is not"
+                  note={t('overview.noFilingNote')}
                   tone={data.companies_without_declaration ? 'warn' : undefined}
                 />
               </Figures>
             </div>
 
-            <Section icon={Coins} title="Exposure">
+            <Section icon={Coins} title={t('overview.exposure')}>
               <Figures columns={3}>
                 <Stat
                   icon={Boxes}
-                  label="Tonnage identified"
+                  label={t('overview.tonnageIdentified')}
                   {...splitUnit(tonnes(data.additional_tonnage_identified))}
-                  note="Below the expected range, at high and critical priority"
+                  note={t('overview.tonnageIdentifiedNote')}
                 />
                 <Stat
                   icon={Coins}
-                  label="Contribution at stake"
+                  label={t('overview.atStake')}
                   {...splitUnit(lira(data.estimated_gekap_gap_try))}
-                  note="2026 tariff applied to the unexplained tonnage"
+                  note={t('overview.atStakeNote')}
                 />
                 <Stat
                   icon={Crosshair}
-                  label="Concentration"
+                  label={t('overview.concentration')}
                   {...splitUnit(percent(data.exposure_share_in_top_50))}
-                  note={`of that sits in the top 50 companies, worth ${lira(data.exposure_in_top_50_try)}`}
+                  note={t('overview.concentrationNote', {
+                    value: lira(data.exposure_in_top_50_try),
+                  })}
                 />
               </Figures>
             </Section>
 
             <Section
               icon={ListChecks}
-              title="Priority queue"
+              title={t('overview.queue')}
               actions={
                 <Link className="btn btn-ghost btn-sm" to="/queue">
-                  All {num(data.companies_analysed)} companies
+                  {t('overview.allCompanies', { count: num(data.companies_analysed) })}
                   <ArrowUpRight size={13} strokeWidth={1.9} />
                 </Link>
               }
@@ -165,17 +181,17 @@ export default function Overview() {
               <QueueTable items={data.priority_queue} compact />
             </Section>
 
-            <Section icon={Gauge} title="Coverage">
+            <Section icon={Gauge} title={t('overview.coverage')}>
               <div className="grid grid-side">
                 <Panel>
                   <div className="stat-head" style={{ marginBottom: 14 }}>
                     <span className="stat-chip">
                       <Database size={14} strokeWidth={1.9} />
                     </span>
-                    <span className="label">Field coverage</span>
+                    <span className="label">{t('overview.fieldCoverage')}</span>
                     <span className="stat-head-action">
                       <Link className="btn btn-quiet btn-sm" to="/data-quality">
-                        Detail
+                        {t('common.detail')}
                         <ArrowUpRight size={13} strokeWidth={1.9} />
                       </Link>
                     </span>
@@ -184,10 +200,13 @@ export default function Overview() {
                   {data.field_coverage.map((field) => (
                     <div className="coverage-row" key={field.key}>
                       <div className="coverage-name">
-                        {field.label}
+                        {fieldLabel(field.key)}
                         <span>
-                          {num(field.available)} complete, {num(field.partial)} partial,{' '}
-                          {num(field.missing)} missing
+                          {t('overview.coverageBreakdown', {
+                            available: num(field.available),
+                            partial: num(field.partial),
+                            missing: num(field.missing),
+                          })}
                         </span>
                       </div>
                       <div className="coverage-bar">
@@ -205,7 +224,7 @@ export default function Overview() {
                     <span className="stat-chip">
                       <SignalHigh size={14} strokeWidth={1.9} />
                     </span>
-                    <span className="label">Signals evaluated</span>
+                    <span className="label">{t('overview.signalsEvaluated')}</span>
                   </div>
 
                   <table className="table" style={{ marginTop: -4 }}>
@@ -216,27 +235,28 @@ export default function Overview() {
                             <span className="signal-code" style={{ marginRight: 8 }}>
                               {signal.code}
                             </span>
-                            {signal.name}
+                            {signalName(signal.code)}
                           </td>
                           <td className="num right" style={{ padding: '9px 0', width: 90 }}>
                             {percent(signal.availability_rate)}
                           </td>
                           <td className="right" style={{ padding: '9px 0', width: 74 }}>
-                            <Pill tone={signal.active ? 'warn' : 'mute'}>{signal.active} firing</Pill>
+                            <Pill tone={signal.active ? 'warn' : 'mute'}>
+                              {t('overview.firing', { count: num(signal.active) })}
+                            </Pill>
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                   <p className="figure-note" style={{ marginTop: 14, paddingTop: 0 }}>
-                    A check that cannot run is held out of the calculation, never counted as a
-                    check that passed.
+                    {t('overview.heldOut')}
                   </p>
                 </Panel>
               </div>
             </Section>
 
-            <Section icon={ListChecks} title="Workflow">
+            <Section icon={ListChecks} title={t('overview.workflow')}>
               <Panel>
                 <div className="grid grid-3" style={{ gap: 0 }}>
                   {data.by_status.map((status) => (
@@ -244,7 +264,7 @@ export default function Overview() {
                       key={status.status}
                       style={{ padding: '10px 0', display: 'flex', alignItems: 'center', gap: 12 }}
                     >
-                      <Pill tone={statusTone(status.status)}>{STATUS_LABEL[status.status]}</Pill>
+                      <Pill tone={statusTone(status.status)}>{statusLabel(status.status)}</Pill>
                       <b className="tnum" style={{ fontSize: 15, fontWeight: 600 }}>
                         {num(status.count)}
                       </b>

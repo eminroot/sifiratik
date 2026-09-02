@@ -4,31 +4,28 @@ import { useNavigate } from 'react-router-dom';
 import { useApp } from '../App.jsx';
 import { query, useApi } from '../lib/api.js';
 import {
-  FIELD_STATE_LABEL,
-  LEVEL_LABEL,
   LEVEL_TONE,
+  fieldLabel,
+  fieldShort,
+  fieldStateLabel,
+  levelLabel,
   num,
   percent,
   qualityTone,
+  sectorLabel,
+  signalName,
   splitUnit,
 } from '../lib/format.js';
+import { useT } from '../lib/i18n.jsx';
 import { Figures, Meter, PageHead, Panel, Pill, Resource, Section, Stat } from '../components/ui.jsx';
 
 const STATE_CLASS = { AVAILABLE: 'ok', PARTIAL: 'warn', MISSING: 'stop' };
-
-const SHORT_FIELD = {
-  production: 'Prod',
-  import: 'Imp',
-  history: 'Hist',
-  gtip: 'GTIP',
-  field: 'Site',
-  registry: 'Reg',
-};
 
 const MATRIX_ROWS = 60;
 
 export default function Quality() {
   const { period } = useApp();
+  const t = useT();
   const navigate = useNavigate();
   const state = useApi(`/data-quality${query({ period })}`, [period]);
 
@@ -40,47 +37,50 @@ export default function Quality() {
 
           return (
             <>
-              <PageHead eyebrow="Evidence" icon={Gauge} title="Data quality" />
+              <PageHead eyebrow={t('quality.eyebrow')} icon={Gauge} title={t('quality.title')} />
 
               <Figures columns={4}>
                 <Stat
                   icon={Gauge}
-                  label="Mean data quality"
+                  label={t('quality.mean')}
                   {...splitUnit(percent(data.average_data_quality))}
-                  note={`across ${num(data.companies_analysed)} scored companies`}
+                  note={t('quality.meanNote', { count: num(data.companies_analysed) })}
                 />
                 <Stat
                   icon={Database}
-                  label="Complete records"
+                  label={t('quality.complete')}
                   value={num(data.fully_evidenced)}
-                  note="every field present"
+                  note={t('quality.completeNote')}
                 />
                 <Stat
                   icon={ShieldQuestion}
-                  label="Thin evidence"
+                  label={t('quality.thin')}
                   value={num(data.thin_evidence)}
-                  note="below 50% completeness"
+                  note={t('quality.thinNote')}
                   tone={data.thin_evidence ? 'warn' : undefined}
                 />
                 <Stat
                   icon={CircleSlash}
-                  label="Checks not run"
+                  label={t('quality.notRun')}
                   value={num(
                     data.signal_availability.reduce((sum, signal) => sum + signal.unavailable, 0),
                   )}
-                  note="held out of the calculation"
+                  note={t('quality.notRunNote')}
                 />
               </Figures>
 
-              <Section icon={Database} title="Coverage by field">
+              <Section icon={Database} title={t('quality.byField')}>
                 <Panel>
                   {data.field_coverage.map((field) => (
                     <div className="coverage-row" key={field.key}>
                       <div className="coverage-name">
-                        {field.label}
+                        {fieldLabel(field.key)}
                         <span>
-                          {num(field.available)} available, {num(field.partial)} partial,{' '}
-                          {num(field.missing)} missing
+                          {t('quality.fieldBreakdown', {
+                            available: num(field.available),
+                            partial: num(field.partial),
+                            missing: num(field.missing),
+                          })}
                         </span>
                       </div>
                       <div className="coverage-bar">
@@ -103,16 +103,16 @@ export default function Quality() {
                 </Panel>
               </Section>
 
-              <Section icon={Layers} title="Checks that could not run">
+              <Section icon={Layers} title={t('quality.couldNotRun')}>
                 <div className="table-wrap">
                   <table className="table">
                     <thead>
                       <tr>
-                        <th>Check</th>
-                        <th>Evaluated</th>
-                        <th>Not run</th>
-                        <th>Firing</th>
-                        <th>Most common reason</th>
+                        <th>{t('common.check')}</th>
+                        <th>{t('quality.evaluated')}</th>
+                        <th>{t('quality.unavailable')}</th>
+                        <th>{t('quality.firing')}</th>
+                        <th>{t('quality.commonReason')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -122,7 +122,7 @@ export default function Quality() {
                             <span className="signal-code" style={{ marginRight: 8 }}>
                               {signal.code}
                             </span>
-                            {signal.name}
+                            {signalName(signal.code)}
                           </td>
                           <td className="num">
                             <span className="score-cell">
@@ -137,7 +137,7 @@ export default function Quality() {
                           <td className="num">{num(signal.active)}</td>
                           <td className="prose-cell" style={{ maxWidth: 400 }}>
                             {signal.top_reason ?? (
-                              <span className="faint">Ran for every company</span>
+                              <span className="faint">{t('quality.ranForEvery')}</span>
                             )}
                           </td>
                         </tr>
@@ -149,11 +149,13 @@ export default function Quality() {
 
               <Section
                 icon={ScanSearch}
-                title="Weakest records"
+                title={t('quality.weakest')}
                 actions={
                   <span className="stat-note" style={{ marginTop: 0 }}>
-                    {Math.min(MATRIX_ROWS, data.companies.length)} of {num(data.companies_analysed)}{' '}
-                    shown, weakest first
+                    {t('quality.shown', {
+                      shown: num(Math.min(MATRIX_ROWS, data.companies.length)),
+                      total: num(data.companies_analysed),
+                    })}
                   </span>
                 }
               >
@@ -161,15 +163,15 @@ export default function Quality() {
                   <table className="table">
                     <thead>
                       <tr>
-                        <th>Company</th>
-                        <th>Quality</th>
+                        <th>{t('common.company')}</th>
+                        <th>{t('quality.quality')}</th>
                         {data.field_coverage.map((field) => (
                           <th key={field.key} style={{ width: 40, textAlign: 'center' }}>
-                            {SHORT_FIELD[field.key]}
+                            {fieldShort(field.key)}
                           </th>
                         ))}
-                        <th>Checks not run</th>
-                        <th>Priority</th>
+                        <th>{t('quality.checksNotRun')}</th>
+                        <th>{t('common.priority')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -183,7 +185,7 @@ export default function Quality() {
                             <span className="cell-name">
                               {company.company_name}
                               <em>
-                                {company.sector_label} · {company.region}
+                                {sectorLabel(company.sector)} · {company.region}
                               </em>
                             </span>
                           </td>
@@ -200,14 +202,14 @@ export default function Quality() {
                             <td key={key} style={{ textAlign: 'center' }}>
                               <span
                                 className={`dot ${STATE_CLASS[company.fields[key]]}`}
-                                title={`${data.field_labels[key]}: ${FIELD_STATE_LABEL[company.fields[key]]}`}
+                                title={`${fieldLabel(key)}: ${fieldStateLabel(company.fields[key])}`}
                               />
                             </td>
                           ))}
                           <td className="num">{company.unavailable_signals}</td>
                           <td>
                             <Pill tone={LEVEL_TONE[company.priority_level]}>
-                              {LEVEL_LABEL[company.priority_level]}
+                              {levelLabel(company.priority_level)}
                             </Pill>
                           </td>
                         </tr>
@@ -218,11 +220,13 @@ export default function Quality() {
 
                 <div className="pager">
                   <span className="dot-row">
-                    <span className="dot ok" /> Available
-                    <span className="dot warn" style={{ marginLeft: 12 }} /> Partial
-                    <span className="dot stop" style={{ marginLeft: 12 }} /> Missing
+                    <span className="dot ok" /> {fieldStateLabel('AVAILABLE')}
+                    <span className="dot warn" style={{ marginLeft: 12 }} />{' '}
+                    {fieldStateLabel('PARTIAL')}
+                    <span className="dot stop" style={{ marginLeft: 12 }} />{' '}
+                    {fieldStateLabel('MISSING')}
                   </span>
-                  <span>Columns follow the order of the coverage list above.</span>
+                  <span>{t('quality.columnOrder')}</span>
                 </div>
               </Section>
             </>

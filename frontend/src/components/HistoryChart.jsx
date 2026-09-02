@@ -1,4 +1,5 @@
 import { num, tonnes } from '../lib/format.js';
+import { useT } from '../lib/i18n.jsx';
 
 const axisLabel = (value) => num(Math.round(value));
 
@@ -25,6 +26,8 @@ function niceCeiling(value) {
  * to compare things that are not comparable.
  */
 export default function HistoryChart({ rows }) {
+  const t = useT();
+
   const periods = rows.filter(Boolean);
   if (periods.length < 2) return null;
 
@@ -74,7 +77,7 @@ export default function HistoryChart({ rows }) {
         className="chart"
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         role="img"
-        aria-label="Declared packaging against the expected range, with output underneath"
+        aria-label={t('chart.alt')}
       >
         {ticks.map((tick) => (
           <g key={tick}>
@@ -104,7 +107,12 @@ export default function HistoryChart({ rows }) {
               cy={y(row.declared_tonnage)}
               r={3.4}
             >
-              <title>{`${row.period}: ${tonnes(row.declared_tonnage)} declared`}</title>
+              <title>
+                {t('chart.declaredAt', {
+                  period: row.period,
+                  amount: tonnes(row.declared_tonnage),
+                })}
+              </title>
             </circle>
           );
         })}
@@ -123,7 +131,9 @@ export default function HistoryChart({ rows }) {
               height={Math.max(1, height)}
               rx="2"
             >
-              <title>{`${row.period}: ${tonnes(basis[index])} of output`}</title>
+              <title>
+                {t('chart.outputAt', { period: row.period, amount: tonnes(basis[index]) })}
+              </title>
             </rect>
           );
         })}
@@ -133,10 +143,10 @@ export default function HistoryChart({ rows }) {
           {axisLabel(basisMax)}
         </text>
         <text className="tick-x" x={PAD_LEFT} y={TOP_H + GAP - 8} textAnchor="start">
-          Output, tonnes
+          {t('chart.outputTonnes')}
         </text>
         <text className="tick-x" x={PAD_LEFT} y={16} textAnchor="start">
-          Packaging, tonnes
+          {t('chart.packagingTonnes')}
         </text>
 
         {periods.map((row, index) => {
@@ -153,15 +163,15 @@ export default function HistoryChart({ rows }) {
       <div className="chart-legend">
         <span>
           <i />
-          Declared packaging
+          {t('chart.declared')}
         </span>
         <span>
           <i className="band" />
-          Expected range at the time
+          {t('chart.expectedBand')}
         </span>
         <span>
           <i className="col" />
-          Production and imports
+          {t('chart.output')}
         </span>
       </div>
     </div>

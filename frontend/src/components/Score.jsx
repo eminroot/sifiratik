@@ -1,4 +1,5 @@
-import { LEVEL_LABEL, LEVEL_TONE, POSITION_LABEL, lira, tonnes } from '../lib/format.js';
+import { LEVEL_TONE, levelLabel, lira, positionLabel, tonnes } from '../lib/format.js';
+import { useT } from '../lib/i18n.jsx';
 import { Pill } from './ui.jsx';
 
 /**
@@ -6,6 +7,8 @@ import { Pill } from './ui.jsx';
  * nothing; a number sitting inside the scale it was graded on does.
  */
 export function ScoreBlock({ score, level, bands, confidence, coverage, quality }) {
+  const t = useT();
+
   const segments = bands ?? [
     { level: 'LOW', lower: 0, upper: 24 },
     { level: 'MEDIUM', lower: 25, upper: 49 },
@@ -21,11 +24,9 @@ export function ScoreBlock({ score, level, bands, confidence, coverage, quality 
           <span>/ 100</span>
         </div>
         <div style={{ paddingTop: 6 }}>
-          <Pill tone={LEVEL_TONE[level]}>{LEVEL_LABEL[level]} priority</Pill>
+          <Pill tone={LEVEL_TONE[level]}>{t('score.priority', { level: levelLabel(level) })}</Pill>
           <div className="stat-note" style={{ marginTop: 9, maxWidth: '32ch' }}>
-            {confidence === 'LOW'
-              ? 'Ranked on a thin evidence base. Treat the position as provisional.'
-              : 'Ranked for human review, not judged.'}
+            {t(confidence === 'LOW' ? 'score.thinEvidence' : 'score.forReview')}
           </div>
         </div>
       </div>
@@ -52,11 +53,11 @@ export function ScoreBlock({ score, level, bands, confidence, coverage, quality 
 
       <div className="range-legend">
         <div>
-          <span className="label">Evidence coverage</span>
+          <span className="label">{t('score.evidenceCoverage')}</span>
           <b className="tnum">{Math.round(coverage * 100)}%</b>
         </div>
         <div>
-          <span className="label">Data quality</span>
+          <span className="label">{t('score.dataQuality')}</span>
           <b className="tnum">{Math.round(quality)}%</b>
         </div>
       </div>
@@ -69,6 +70,8 @@ export function ScoreBlock({ score, level, bands, confidence, coverage, quality 
  * band is hatched rather than filled: it is an interval, not a target figure.
  */
 export function RangeBar({ expected }) {
+  const t = useT();
+
   const { lower, median, upper, declared, position, shortfall_tonnage, estimated_gekap_gap_try } =
     expected;
 
@@ -87,7 +90,11 @@ export function RangeBar({ expected }) {
         <div
           className={`range-actual ${position === 'BELOW' ? 'below' : position === 'ABOVE' ? 'above' : ''}`}
           style={{ left: at(filed) }}
-          title={declared === null ? 'No filing' : `${filed} t declared`}
+          title={
+            declared === null
+              ? tonnes(null)
+              : t('range.declaredTitle', { amount: tonnes(filed) })
+          }
         />
       </div>
 
@@ -99,27 +106,27 @@ export function RangeBar({ expected }) {
 
       <div className="range-legend">
         <div>
-          <span className="label">Declared</span>
+          <span className="label">{t('range.declared')}</span>
           <b className={`tnum${position === 'BELOW' ? ' stop' : ''}`}>{tonnes(declared)}</b>
         </div>
         <div>
-          <span className="label">Expected range</span>
+          <span className="label">{t('range.expectedRange')}</span>
           <b className="tnum">
-            {tonnes(lower, { unit: false })} to {tonnes(upper)}
+            {t('common.range', { from: tonnes(lower, { unit: false }), to: tonnes(upper) })}
           </b>
         </div>
         <div>
-          <span className="label">Expected median</span>
+          <span className="label">{t('range.expectedMedian')}</span>
           <b className="tnum">{tonnes(median)}</b>
         </div>
         {shortfall_tonnage > 0 && (
           <>
             <div>
-              <span className="label">Unexplained</span>
+              <span className="label">{t('range.unexplained')}</span>
               <b className="tnum stop">{tonnes(shortfall_tonnage)}</b>
             </div>
             <div>
-              <span className="label">Contribution at stake</span>
+              <span className="label">{t('range.atStake')}</span>
               <b className="tnum">{lira(estimated_gekap_gap_try)}</b>
             </div>
           </>
@@ -127,10 +134,8 @@ export function RangeBar({ expected }) {
       </div>
 
       <p className="stat-note" style={{ marginTop: 14 }}>
-        {POSITION_LABEL[position]}
-        {shortfall_tonnage > 0
-          ? `. The shortfall is measured against the bottom of the range, not its middle.`
-          : '.'}
+        {positionLabel(position)}
+        {shortfall_tonnage > 0 ? t('range.shortfallNote') : '.'}
       </p>
     </div>
   );

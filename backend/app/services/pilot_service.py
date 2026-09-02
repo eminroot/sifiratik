@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app import i18n
 from app.models import (
     AuditReview,
     CollectorProgram,
@@ -39,7 +40,6 @@ from app.services.climate_service import material_rows
 from app.services.company_service import QueueFilters, latest_review_subquery, queue
 from app.scoring.registry import resolve_engine
 
-PILOT_NAME = "COP31 Antalya Packaging Transparency Pilot"
 DEFAULT_REGION = "Antalya"
 
 
@@ -69,7 +69,13 @@ def _confirmation_ratio(db: Session, period: str) -> float:
     return min(1.2, confirmed / identified)
 
 
-def run_pilot(db: Session, request: PilotRunRequest, period: str, persist: bool = True) -> PilotResult:
+def run_pilot(
+    db: Session,
+    request: PilotRunRequest,
+    period: str,
+    persist: bool = True,
+    lang: str = "en",
+) -> PilotResult:
     engine = resolve_engine()
     region = request.region or DEFAULT_REGION
     sector = request.sector
@@ -142,85 +148,107 @@ def run_pilot(db: Session, request: PilotRunRequest, period: str, persist: bool 
         average_data_quality=round(quality_total / len(shortlist), 1) if shortlist else 0.0,
     )
 
-    sector_label = SECTORS[sector]["name"] if sector else "All sectors"
+    def say(key: str, part: str, **params) -> str:
+        return i18n.phrase(i18n.PILOT_STEPS, key, part, lang, **params)
+
+    sector_label = (
+        SECTORS[sector]["name"] if sector else say("sector", "all")
+    )
     steps = [
         PilotStep(
             index=1,
             key="region",
-            label="Pilot region set",
-            detail=f"{region} province, {municipalities} participating municipalities.",
+            label=say("region", "label"),
+            detail=say("region", "detail", region=region, municipalities=municipalities),
             value=region,
         ),
         PilotStep(
             index=2,
             key="sector",
-            label="Sector scope set",
-            detail="Packaging intensive sectors carry the largest declaration gaps."
+            label=say("sector", "label"),
+            detail=say("sector", "detail")
             if not sector
-            else f"Scoped to {sector_label}.",
+            else say("sector", "scoped", sector=sector_label),
             value=sector_label,
         ),
         PilotStep(
             index=3,
             key="load",
-            label="Records loaded",
-            detail=f"{declarations:,} declaration periods and {gtip_lines:,} customs lines "
-            f"across {len(scope_ids)} companies.",
-            value=f"{len(scope_ids)} companies",
+            label=say("load", "label"),
+            detail=say(
+                "load",
+                "detail",
+                declarations=f"{declarations:,}",
+                lines=f"{gtip_lines:,}",
+                companies=len(scope_ids),
+            ),
+            value=say("load", "value", companies=len(scope_ids)),
         ),
         PilotStep(
             index=4,
             key="analyse",
-            label="Analysis run",
-            detail=f"Eight signals evaluated per company for {period}.",
+            label=say("analyse", "label"),
+            detail=say("analyse", "detail", period=period),
             value=engine.version,
         ),
         PilotStep(
             index=5,
             key="shortlist",
-            label="Shortlist produced",
-            detail=f"{findings.critical} critical and {findings.high} high priority in the "
-            f"top {len(shortlist)}.",
-            value=f"Top {len(shortlist)}",
+            label=say("shortlist", "label"),
+            detail=say(
+                "shortlist",
+                "detail",
+                critical=findings.critical,
+                high=findings.high,
+                size=len(shortlist),
+            ),
+            value=say("shortlist", "value", size=len(shortlist)),
         ),
         PilotStep(
             index=6,
             key="reasons",
-            label="Reasons attached",
-            detail=f"{unavailable} signal evaluations could not be run and are marked "
-            "unavailable rather than clear.",
-            value=f"{findings.average_data_quality:.0f}% mean data quality",
+            label=say("reasons", "label"),
+            detail=say("reasons", "detail", count=unavailable),
+            value=say("reasons", "value", quality=f"{findings.average_data_quality:.0f}"),
         ),
         PilotStep(
             index=7,
             key="outcomes",
-            label="Outcomes applied",
-            detail=f"Closed inspections in the system have confirmed {ratio * 100:.0f}% of the "
-            "tonnage they were sent to check."
+            label=say("outcomes", "label"),
+            detail=say("outcomes", "detail", ratio=f"{ratio * 100:.0f}")
             if ratio
-            else "Outcome projection switched off for this run.",
-            value=f"{ratio * 100:.0f}% confirmed" if ratio else "off",
+            else say("outcomes", "off"),
+            value=say("outcomes", "value", ratio=f"{ratio * 100:.0f}")
+            if ratio
+            else say("outcomes", "valueOff"),
         ),
         PilotStep(
             index=8,
             key="impact",
-            label="Impact calculated",
-            detail=f"{findings.recovery_potential_tonnes:,.0f} t into formal recovery, "
-            f"{findings.co2e_avoided_tonnes:,.0f} t CO2e avoided.",
-            value=f"{findings.estimated_gekap_try / 1_000_000:,.1f}M TL at stake",
+            label=say("impact", "label"),
+            detail=say(
+                "impact",
+                "detail",
+                tonnes=f"{findings.recovery_potential_tonnes:,.0f}",
+                co2e=f"{findings.co2e_avoided_tonnes:,.0f}",
+            ),
+            value=say(
+                "impact",
+                "value",
+                value=f"{findings.estimated_gekap_try / 1_000_000:,.1f}",
+            ),
         ),
         PilotStep(
             index=9,
             key="publish",
-            label="Published to impact dashboard",
-            detail=f"{SOCIAL_FUND_SHARE * 100:.0f}% of recovered contribution is earmarked for "
-            "collector formalisation.",
-            value="Live",
+            label=say("publish", "label"),
+            detail=say("publish", "detail", share=f"{SOCIAL_FUND_SHARE * 100:.0f}"),
+            value=say("publish", "value"),
         ),
     ]
 
     config = PilotConfig(
-        name=PILOT_NAME if region == DEFAULT_REGION else f"{region} packaging transparency pilot",
+        name=i18n.pilot_name(lang, region, DEFAULT_REGION),
         region=region,
         sector=sector,
         period=period,

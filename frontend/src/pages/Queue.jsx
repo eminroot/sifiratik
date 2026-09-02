@@ -3,28 +3,19 @@ import { ChevronLeft, ChevronRight, ClipboardList, Search, X } from 'lucide-reac
 
 import { useApp } from '../App.jsx';
 import { query, useApi } from '../lib/api.js';
-import { lira, num, tonnes } from '../lib/format.js';
+import { levelLabel, lira, num, sectorLabel, sizeLabel, statusLabel, tonnes } from '../lib/format.js';
+import { useT } from '../lib/i18n.jsx';
 import QueueTable from '../components/QueueTable.jsx';
 import { PageHead, Resource } from '../components/ui.jsx';
 
 const PAGE_SIZE = 50;
 
-const SORTS = [
-  { value: 'priority', label: 'Priority score' },
-  { value: 'gap', label: 'Contribution at stake' },
-  { value: 'shortfall', label: 'Unexplained tonnage' },
-  { value: 'quality', label: 'Data quality' },
-  { value: 'name', label: 'Company name' },
-];
-
-const QUALITY = [
-  { value: 'HIGH', label: 'Well evidenced' },
-  { value: 'MEDIUM', label: 'Partly evidenced' },
-  { value: 'LOW', label: 'Thin evidence' },
-];
+const SORTS = ['priority', 'gap', 'shortfall', 'quality', 'name'];
+const QUALITY = ['HIGH', 'MEDIUM', 'LOW'];
 
 export default function Queue() {
   const { period, reference } = useApp();
+  const t = useT();
 
   const [search, setSearch] = useState('');
   const [debounced, setDebounced] = useState('');
@@ -75,7 +66,7 @@ export default function Queue() {
 
   return (
     <div className="page wide">
-      <PageHead eyebrow="Operations" icon={ClipboardList} title="Inspection queue" />
+      <PageHead eyebrow={t('queue.eyebrow')} icon={ClipboardList} title={t('queue.title')} />
 
       <div className="filters">
         <div className="filter-search">
@@ -83,64 +74,70 @@ export default function Queue() {
           <input
             type="search"
             value={search}
-            placeholder="Company name or tax number"
+            placeholder={t('queue.search')}
             onChange={(event) => setSearch(event.target.value)}
-            aria-label="Search companies"
+            aria-label={t('queue.searchLabel')}
           />
         </div>
 
-        <Select value={filters.level} onChange={set('level')} label="All priorities">
+        <Select value={filters.level} onChange={set('level')} label={t('queue.allPriorities')}>
           {(reference?.priority_levels ?? []).map((option) => (
             <option key={option.value} value={option.value}>
-              {option.label} ({option.count})
+              {levelLabel(option.value)} ({num(option.count)})
             </option>
           ))}
         </Select>
 
-        <Select value={filters.sector} onChange={set('sector')} label="All sectors">
+        <Select value={filters.sector} onChange={set('sector')} label={t('queue.allSectors')}>
           {(reference?.sectors ?? []).map((option) => (
             <option key={option.value} value={option.value}>
-              {option.label}
+              {sectorLabel(option.value)}
             </option>
           ))}
         </Select>
 
-        <Select value={filters.region} onChange={set('region')} label="All provinces">
+        <Select value={filters.region} onChange={set('region')} label={t('queue.allProvinces')}>
           {(reference?.regions ?? []).map((option) => (
             <option key={option.value} value={option.value}>
-              {option.label} ({option.count})
+              {option.label} ({num(option.count)})
             </option>
           ))}
         </Select>
 
-        <Select value={filters.size} onChange={set('size')} label="Any size">
+        <Select value={filters.size} onChange={set('size')} label={t('queue.anySize')}>
           {(reference?.company_sizes ?? []).map((option) => (
             <option key={option.value} value={option.value}>
-              {option.label}
+              {sizeLabel(option.value)}
             </option>
           ))}
         </Select>
 
-        <Select value={filters.status} onChange={set('status')} label="Any status">
+        <Select value={filters.status} onChange={set('status')} label={t('queue.anyStatus')}>
           {(reference?.review_statuses ?? []).map((option) => (
             <option key={option.value} value={option.value}>
-              {option.label}
+              {statusLabel(option.value)}
             </option>
           ))}
         </Select>
 
-        <Select value={filters.quality} onChange={set('quality')} label="Any evidence level">
-          {QUALITY.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
+        <Select value={filters.quality} onChange={set('quality')} label={t('queue.anyEvidence')}>
+          {QUALITY.map((value) => (
+            <option key={value} value={value}>
+              {t(`queue.evidence.${value}`)}
             </option>
           ))}
         </Select>
 
-        <Select value={sort} onChange={(event) => setSort(event.target.value)} label={null} always>
-          {SORTS.map((option) => (
-            <option key={option.value} value={option.value}>
-              Sort by {option.label.toLowerCase()}
+        <Select
+          value={sort}
+          onChange={(event) => setSort(event.target.value)}
+          label={null}
+          fallbackLabel={t('queue.sortOrder')}
+          always
+        >
+          {SORTS.map((value) => (
+            <option key={value} value={value}>
+              {t('queue.sortBy', { what: t(`queue.sort.${value}`) })}
             </option>
           ))}
         </Select>
@@ -148,7 +145,7 @@ export default function Queue() {
         {active && (
           <button type="button" className="btn btn-quiet btn-sm" onClick={clear}>
             <X size={13} strokeWidth={1.9} />
-            Clear
+            {t('common.clear')}
           </button>
         )}
       </div>
@@ -161,16 +158,23 @@ export default function Queue() {
             <div className="pager">
               <span>
                 {data.total === 0
-                  ? 'No companies match'
-                  : `${num(data.offset + 1)} to ${num(Math.min(data.offset + data.limit, data.total))} of ${num(data.total)}`}
+                  ? t('queue.noMatch')
+                  : t('queue.pageRange', {
+                      from: num(data.offset + 1),
+                      to: num(Math.min(data.offset + data.limit, data.total)),
+                      total: num(data.total),
+                    })}
                 {data.items.length > 0 && (
                   <>
                     {' · '}
-                    {tonnes(data.items.reduce((sum, item) => sum + item.shortfall_tonnage, 0))} and{' '}
-                    {lira(
-                      data.items.reduce((sum, item) => sum + item.estimated_gekap_gap_try, 0),
-                    )}{' '}
-                    unexplained on this page
+                    {t('queue.pageTotals', {
+                      tonnes: tonnes(
+                        data.items.reduce((sum, item) => sum + item.shortfall_tonnage, 0),
+                      ),
+                      value: lira(
+                        data.items.reduce((sum, item) => sum + item.estimated_gekap_gap_try, 0),
+                      ),
+                    })}
                   </>
                 )}
               </span>
@@ -183,7 +187,7 @@ export default function Queue() {
                   onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))}
                 >
                   <ChevronLeft size={13} strokeWidth={1.9} />
-                  Previous
+                  {t('common.previous')}
                 </button>
                 <button
                   type="button"
@@ -191,7 +195,7 @@ export default function Queue() {
                   disabled={offset + PAGE_SIZE >= data.total}
                   onClick={() => setOffset(offset + PAGE_SIZE)}
                 >
-                  Next
+                  {t('common.next')}
                   <ChevronRight size={13} strokeWidth={1.9} />
                 </button>
               </span>
@@ -203,13 +207,13 @@ export default function Queue() {
   );
 }
 
-function Select({ value, onChange, label, children, always = false }) {
+function Select({ value, onChange, label, children, always = false, fallbackLabel }) {
   return (
     <select
       className={`filter-select${value || always ? ' on' : ''}`}
       value={value}
       onChange={onChange}
-      aria-label={label ?? 'Sort order'}
+      aria-label={label ?? fallbackLabel}
     >
       {label && <option value="">{label}</option>}
       {children}

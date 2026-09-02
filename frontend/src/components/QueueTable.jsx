@@ -4,15 +4,18 @@ import { CircleCheck, FileX2, Flag } from 'lucide-react';
 
 import { useApp } from '../App.jsx';
 import { post } from '../lib/api.js';
+import { useT } from '../lib/i18n.jsx';
 import {
-  LEVEL_LABEL,
   LEVEL_TONE,
-  SIZE_LABEL,
-  STATUS_LABEL,
   STATUS_TONE,
+  levelLabel,
   lira,
   num,
   qualityTone,
+  sectorLabel,
+  signalName,
+  sizeLabel,
+  statusLabel,
   tonnes,
 } from '../lib/format.js';
 import { Empty, Meter, Pill } from './ui.jsx';
@@ -28,25 +31,26 @@ const ACTIONS = [
     key: 'flag',
     status: 'MARKED_FOR_INSPECTION',
     icon: Flag,
-    label: 'Mark for inspection',
-    done: 'is on the field schedule',
-    title: 'Mark for inspection — adds the company to the field schedule',
-    titleOn: 'Already marked for inspection',
+    label: 'action.flag',
+    title: 'action.flagTitle',
+    titleOn: 'action.flagOn',
+    done: 'action.flagDone',
   },
   {
     key: 'clear',
     status: 'NO_ACTION_REQUIRED',
     icon: CircleCheck,
-    label: 'Clear',
-    done: 'is out of the queue',
-    title: 'Clear — accepts the declaration and takes the company out of the queue',
-    titleOn: 'Already cleared, no action required',
+    label: 'action.clear',
+    title: 'action.clearTitle',
+    titleOn: 'action.clearOn',
+    done: 'action.clearDone',
   },
 ];
 
 export default function QueueTable({ items, compact = false }) {
   const navigate = useNavigate();
   const { period, toast } = useApp();
+  const t = useT();
 
   // The list is owned by whichever page fetched it, so a decision taken here
   // is held locally rather than by refetching the whole page underneath the
@@ -55,13 +59,7 @@ export default function QueueTable({ items, compact = false }) {
   const [saving, setSaving] = useState(null);
 
   if (!items.length) {
-    return (
-      <Empty
-        icon={FileX2}
-        title="Nothing matches those filters"
-        note="Widen the selection, or clear it to see the whole period."
-      />
-    );
+    return <Empty icon={FileX2} title={t('table.emptyTitle')} note={t('table.emptyNote')} />;
   }
 
   const decide = async (item, action) => {
@@ -70,10 +68,10 @@ export default function QueueTable({ items, compact = false }) {
       await post(`/companies/${item.company_id}/review?period=${period}`, {
         status: action.status,
         auditor_id: 'aydin.m',
-        notes: `${action.label} from the inspection queue.`,
+        notes: t('action.note', { action: t(action.label) }),
       });
       setDecided((current) => ({ ...current, [item.company_id]: action.status }));
-      toast(`${item.company_name} ${action.done}`);
+      toast(t(action.done, { company: item.company_name }));
     } catch (error) {
       toast(error.message, 'bad');
     } finally {
@@ -87,15 +85,15 @@ export default function QueueTable({ items, compact = false }) {
         <thead>
           <tr>
             <th>#</th>
-            <th>Company</th>
-            <th>Sector</th>
-            {!compact && <th>Region</th>}
-            <th>Priority</th>
-            <th>Leading reason</th>
-            {!compact && <th>Declared</th>}
-            <th>Data</th>
-            <th>Status</th>
-            <th className="col-actions">Action</th>
+            <th>{t('common.company')}</th>
+            <th>{t('common.sector')}</th>
+            {!compact && <th>{t('common.region')}</th>}
+            <th>{t('common.priority')}</th>
+            <th>{t('table.leadingReason')}</th>
+            {!compact && <th>{t('common.declared')}</th>}
+            <th>{t('table.data')}</th>
+            <th>{t('common.status')}</th>
+            <th className="col-actions">{t('table.action')}</th>
           </tr>
         </thead>
         <tbody>
@@ -116,12 +114,12 @@ export default function QueueTable({ items, compact = false }) {
                     <em>
                       <span className="mono">{item.tax_identifier}</span>
                       {' · '}
-                      {SIZE_LABEL[item.company_size]}
+                      {sizeLabel(item.company_size)}
                     </em>
                   </span>
                 </td>
 
-                <td>{item.sector_label}</td>
+                <td>{sectorLabel(item.sector)}</td>
                 {!compact && <td>{item.region}</td>}
 
                 <td>
@@ -129,7 +127,7 @@ export default function QueueTable({ items, compact = false }) {
                     <b>{item.priority_score.toFixed(0)}</b>
                     <Meter value={item.priority_score} tone={LEVEL_TONE[item.priority_level]} />
                     <Pill tone={LEVEL_TONE[item.priority_level]}>
-                      {LEVEL_LABEL[item.priority_level]}
+                      {levelLabel(item.priority_level)}
                     </Pill>
                   </span>
                 </td>
@@ -139,25 +137,29 @@ export default function QueueTable({ items, compact = false }) {
                     <>
                       <span className="reason-inline">
                         <span className="signal-code">{item.main_reason.code}</span>
-                        {item.main_reason.name}
+                        {signalName(item.main_reason.code)}
                       </span>
-                      <span>{num(item.main_reason.contribution)}% of the score</span>
+                      <span>
+                        {t('table.contributionShare', {
+                          percent: num(item.main_reason.contribution),
+                        })}
+                      </span>
                     </>
                   ) : (
-                    <span>No check raised a concern</span>
+                    <span>{t('table.noConcern')}</span>
                   )}
                 </td>
 
                 {!compact && (
                   <td className="num">
                     {item.declared_tonnage === null ? (
-                      <Pill tone="stop">No filing</Pill>
+                      <Pill tone="stop">{tonnes(null)}</Pill>
                     ) : (
                       <>
                         {tonnes(item.declared_tonnage)}
                         {item.shortfall_tonnage > 0 && (
                           <span style={{ display: 'block', fontSize: 12, color: 'var(--ink-3)' }}>
-                            {lira(item.estimated_gekap_gap_try)} at stake
+                            {t('table.atStake', { value: lira(item.estimated_gekap_gap_try) })}
                           </span>
                         )}
                       </>
@@ -172,7 +174,7 @@ export default function QueueTable({ items, compact = false }) {
                 </td>
 
                 <td>
-                  <Pill tone={STATUS_TONE[status]}>{STATUS_LABEL[status]}</Pill>
+                  <Pill tone={STATUS_TONE[status]}>{statusLabel(status)}</Pill>
                 </td>
 
                 <td className="col-actions">
@@ -186,8 +188,11 @@ export default function QueueTable({ items, compact = false }) {
                           key={action.key}
                           type="button"
                           className={`row-action ${action.key}${on ? ' on' : ''}`}
-                          title={on ? action.titleOn : action.title}
-                          aria-label={`${action.label}: ${item.company_name}`}
+                          title={t(on ? action.titleOn : action.title)}
+                          aria-label={t('action.for', {
+                            action: t(action.label),
+                            company: item.company_name,
+                          })}
                           aria-pressed={on}
                           disabled={on || busy || saving !== null}
                           onClick={(event) => {

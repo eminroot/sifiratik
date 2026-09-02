@@ -1,0 +1,373 @@
+{
+  "schema_version": "1.0.0",
+  "version": "gus-ml-1.0.0",
+  "data_version": "1.0.0",
+  "trained_at": "2026-09-02T15:07:34+00:00",
+  "seed": 20260902,
+  "target_coverage": 0.9,
+  "environment": {
+    "python": "3.11.9",
+    "lightgbm": "4.7.0",
+    "numpy": "2.3.2",
+    "pandas": "2.3.1"
+  },
+  "risk_members": [
+    "risk_model.txt",
+    "risk_model_2.txt",
+    "risk_model_3.txt",
+    "risk_model_4.txt",
+    "risk_model_5.txt"
+  ],
+  "anchor_fallback_log": {
+    "hist": 4.051302745968119,
+    "peer": 4.051302745968119
+  },
+  "feature_order": {
+    "hist": [
+      "production_qty",
+      "f_s4_prod_lag1",
+      "f_s4_prod_lag4",
+      "f_s4_prod_qoq",
+      "f_s4_prod_yoy",
+      "f_s5_export_share",
+      "f_s5_import_share",
+      "f_s5_return_share",
+      "f_s5_domestic_derived",
+      "f_s5_export_share_lag1",
+      "f_s5_export_share_delta",
+      "f_s5_exemption_flag",
+      "f_s5_exempt_share",
+      "f_s5_correction_qty",
+      "f_s5_trade_data_missing",
+      "f_s6_quarter",
+      "f_s7_matrix_age_years",
+      "f_s7_matrix_stale_flag",
+      "f_firm_age_years",
+      "f_data_quality_score",
+      "f_missing_field_count",
+      "sector",
+      "size_band",
+      "f_s1_decl_lag1",
+      "f_s1_decl_lag2",
+      "f_s1_decl_lag3",
+      "f_s1_decl_lag4",
+      "f_s1_hist_median",
+      "f_s1_hist_std",
+      "f_s1_hist_p10",
+      "f_s1_history_len",
+      "f_s1_ratio_hist_median",
+      "f_s1_ratio_hist_std",
+      "f_s5_dpd_hist_median",
+      "f_s5_dpd_hist_std",
+      "f_s6_own_quarter_mean_prev"
+    ],
+    "peer": [
+      "production_qty",
+      "f_s4_prod_lag1",
+      "f_s4_prod_lag4",
+      "f_s4_prod_qoq",
+      "f_s4_prod_yoy",
+      "f_s5_export_share",
+      "f_s5_import_share",
+      "f_s5_return_share",
+      "f_s5_domestic_derived",
+      "f_s5_export_share_lag1",
+      "f_s5_export_share_delta",
+      "f_s5_exemption_flag",
+      "f_s5_exempt_share",
+      "f_s5_correction_qty",
+      "f_s5_trade_data_missing",
+      "f_s6_quarter",
+      "f_s7_matrix_age_years",
+      "f_s7_matrix_stale_flag",
+      "f_firm_age_years",
+      "f_data_quality_score",
+      "f_missing_field_count",
+      "sector",
+      "size_band",
+      "f_s2_peer_median_prev",
+      "f_s2_peer_p10_prev",
+      "f_s2_peer_iqr_prev",
+      "f_s2_peer_n_prev"
+    ],
+    "risk": [
+      "raw_s1",
+      "raw_s2",
+      "raw_s3",
+      "raw_s4",
+      "raw_s5",
+      "raw_s6",
+      "raw_s7",
+      "raw_s8",
+      "avail_s1",
+      "avail_s2",
+      "avail_s3",
+      "avail_s4",
+      "avail_s5",
+      "avail_s6",
+      "avail_s7",
+      "avail_s8",
+      "interval_position_z",
+      "interval_rel_gap",
+      "interval_width_rel",
+      "interval_below_lower",
+      "f_active_signal_count",
+      "f_data_quality_score",
+      "f_data_freshness_days",
+      "f_missing_field_count",
+      "f_data_confidence_level",
+      "f_firm_age_years",
+      "f_s6_quarter",
+      "f_s3_bom_coverage",
+      "f_s7_matrix_age_years",
+      "f_s2_peer_n_prev",
+      "sector",
+      "size_band",
+      "log_production"
+    ]
+  },
+  "categories": {
+    "hist": {
+      "sector": [
+        "elektronik",
+        "ev_temizlik",
+        "gida_icecek",
+        "ilac",
+        "kimya_boya",
+        "kozmetik",
+        "otomotiv_yan_sanayi",
+        "tekstil"
+      ],
+      "size_band": [
+        "buyuk",
+        "kucuk",
+        "mikro",
+        "orta"
+      ]
+    },
+    "peer": {
+      "sector": [
+        "elektronik",
+        "ev_temizlik",
+        "gida_icecek",
+        "ilac",
+        "kimya_boya",
+        "kozmetik",
+        "otomotiv_yan_sanayi",
+        "tekstil"
+      ],
+      "size_band": [
+        "buyuk",
+        "kucuk",
+        "mikro",
+        "orta"
+      ]
+    },
+    "risk": {
+      "f_data_confidence_level": [
+        "dusuk",
+        "orta",
+        "yuksek"
+      ],
+      "sector": [
+        "elektronik",
+        "ev_temizlik",
+        "gida_icecek",
+        "ilac",
+        "kimya_boya",
+        "kozmetik",
+        "otomotiv_yan_sanayi",
+        "tekstil"
+      ],
+      "size_band": [
+        "buyuk",
+        "kucuk",
+        "mikro",
+        "orta"
+      ]
+    }
+  },
+  "transforms": {
+    "target": "log1p(declared_packaging_tonnage)",
+    "log1p_columns": [
+      "production_qty",
+      "f_s1_decl_lag1",
+      "f_s1_decl_lag2",
+      "f_s1_decl_lag3",
+      "f_s1_decl_lag4",
+      "f_s1_hist_median",
+      "f_s1_hist_p10",
+      "f_s1_hist_std",
+      "f_s3_bom_expected",
+      "f_s4_prod_lag1",
+      "f_s4_prod_lag4",
+      "f_s5_domestic_derived",
+      "f_s5_correction_qty"
+    ],
+    "categorical_columns": [
+      "sector",
+      "size_band",
+      "f_data_confidence_level"
+    ],
+    "stale_matrix_multiplier": 0.35,
+    "signal_active_threshold": 22.0
+  },
+  "signals": [
+    {
+      "code": "S1",
+      "key": "HISTORICAL_SHORTFALL",
+      "name": "Tarihsel alt sinir ihlali",
+      "question": "Firma kendi gecmis beyan davranisindan ne kadar sapiyor?",
+      "availability_feature": "f_avail_s1",
+      "unavailable_reason": "Firmanin en az uc onceki donemde hem beyan hem uretim kaydi yok; kendi taban cizgisi kurulamiyor."
+    },
+    {
+      "code": "S2",
+      "key": "PEER_DEVIATION",
+      "name": "Emsal alt sinir ihlali",
+      "question": "Benzer firmalarin beklenen araliginin ne kadar altinda?",
+      "availability_feature": "f_avail_s2",
+      "unavailable_reason": "Ayni sektor ve olcek bandinda onceki donemde bes emsal firma bulunmuyor; emsal karsilastirmasi yapilamiyor."
+    },
+    {
+      "code": "S3",
+      "key": "BOM_EXPECTATION_GAP",
+      "name": "Beklenen-gerceklesen tonaj farki",
+      "question": "Urun agacindan beklenen ile beyan arasindaki fark?",
+      "availability_feature": "f_avail_s3",
+      "unavailable_reason": "Urun agaci / ambalaj agirlik matrisi bu kayit icin tanimli degil."
+    },
+    {
+      "code": "S4",
+      "key": "ACTIVITY_MISMATCH",
+      "name": "Faaliyet esnekligi uyumsuzlugu",
+      "question": "Uretim artarken beyan makul olcude degisiyor mu?",
+      "availability_feature": "f_avail_s4",
+      "unavailable_reason": "Onceki donem uretim miktari yok; hareket karsilastirilamiyor."
+    },
+    {
+      "code": "S5",
+      "key": "TRADE_BALANCE",
+      "name": "Dis ticaret ve duzeltme dengesi",
+      "question": "Ithalat/ihracat/iade/mahsup beyanla uyumlu mu?",
+      "availability_feature": "f_avail_s5",
+      "unavailable_reason": "Ithalat veya ihracat verisi eksik; ic piyasa arzi hesaplanamiyor."
+    },
+    {
+      "code": "S6",
+      "key": "SEASONAL_BREAK",
+      "name": "Donemsel davranis kirilmasi",
+      "question": "Ceyreklik kalipta aciklanamayan kirilma var mi?",
+      "availability_feature": "f_avail_s6",
+      "unavailable_reason": "Ayni ceyrek icin onceki yil kaydi yok; mevsimsel taban kurulamiyor."
+    },
+    {
+      "code": "S7",
+      "key": "PACKAGING_MATRIX",
+      "name": "Urun agaci / ambalaj matrisi uyumsuzlugu",
+      "question": "SKU ve agirlik matrisi beyani destekliyor mu?",
+      "availability_feature": "f_avail_s7",
+      "unavailable_reason": "Ambalaj agirlik matrisi kapsami %5'in altinda."
+    },
+    {
+      "code": "S8",
+      "key": "EXTERNAL_EVIDENCE",
+      "name": "Dis dogrulama kaniti",
+      "question": "ERP / onceki denetim kaydiyla uyumsuzluk var mi?",
+      "availability_feature": "f_avail_s8",
+      "unavailable_reason": "ERP veya onceki denetim kaydi bulunmuyor."
+    }
+  ],
+  "iterations": {
+    "model_version": "gus-ml-1.0.0",
+    "data_version": "1.0.0",
+    "blend_weight_hist": 0.95,
+    "blend_pinball": {
+      "q05": 0.02855,
+      "q50": 0.0949,
+      "q95": 0.02753
+    },
+    "risk_iterations": 123,
+    "quantile_iterations": {
+      "hist": {
+        "q05": 104,
+        "q50": 897,
+        "q95": 88
+      },
+      "peer": {
+        "q05": 87,
+        "q50": 900,
+        "q95": 110
+      }
+    },
+    "target_coverage": 0.9,
+    "seed": 20260902
+  },
+  "metrics": {
+    "model_version": "gus-ml-1.0.0",
+    "data_version": "1.0.0",
+    "test": {
+      "n": 1200,
+      "prevalans": 0.0808,
+      "PR_AUC": 0.2877,
+      "ROC_AUC": 0.6782,
+      "Precision@100": 0.32,
+      "Precision@100_CI": [
+        0.22,
+        0.42
+      ],
+      "Recall@100": 0.3299,
+      "Lift@100": 3.959,
+      "Precision@50": 0.44,
+      "Lift@50": 5.443
+    },
+    "valid": {
+      "PR_AUC": 0.2842,
+      "Precision@100": 0.31
+    },
+    "en_iyi_baseline": {
+      "ad": "bl_zscore_hist",
+      "PR_AUC": 0.1592,
+      "Precision@100": 0.19
+    },
+    "konformal": {
+      "hedef_kapsama": 0.9,
+      "gozlenen_valid": 0.91,
+      "gozlenen_test": 0.875,
+      "ortanca_bagil_genislik_test": 0.853
+    },
+    "olasilik_kalibrasyonu": {
+      "brier": 0.06696,
+      "ece": 0.0204,
+      "ortalama_tahmin": 0.06655,
+      "gozlenen_prevalans": 0.08083
+    },
+    "fayda_top100": {
+      "K": 100,
+      "dogrulanan_vaka": 32,
+      "vaka_100_denetim_basina": 32.0,
+      "duzeltilen_tonaj": 2304.97,
+      "toplam_tonajin_payi": 0.7851,
+      "denetim_maliyeti_try": 3890592.65,
+      "ton_basina_maliyet_try": 1687.92,
+      "toplam_inceleme_gunu": 1241
+    },
+    "kavramsal_kayma_A08": {
+      "mekanizma": "A08_dis_kanit_uyumsuz",
+      "n": 18,
+      "truth": 17,
+      "Top50_icinde": 4,
+      "Top50_orani": 0.2222,
+      "Top100_icinde": 10,
+      "Top100_orani": 0.5556,
+      "Top200_icinde": 13,
+      "Top200_orani": 0.7222
+    },
+    "harman_agirligi_hist": 0.95
+  },
+  "notes": [
+    "Sentetik veri uzerinde egitilmistir; gercek kamu performansi degildir.",
+    "Zamansal holdout: train=2024Q1, 2024Q2, 2024Q3, 2024Q4, 2025Q1, 2025Q2 valid=2025Q3, 2025Q4 test=2026Q1, 2026Q2"
+  ],
+  "disclaimer": "Oncelik puani operasyonel inceleme onceligidir. Suc veya usulsuzluk olasiligi DEGILDIR. Model tek basina ceza veya olumsuz idari karar uretemez. Bu surum SENTETIK veri uzerinde egitilmistir."
+}

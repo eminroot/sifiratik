@@ -2,12 +2,14 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Gavel, History, LineChart, MapPin, Table2 } from 'lucide-react';
 
 import { useApi } from '../lib/api.js';
-import { LEVEL_LABEL, LEVEL_TONE, STATUS_LABEL, date, tonnes } from '../lib/format.js';
+import { LEVEL_TONE, date, levelLabel, positionShort, statusLabel, tonnes } from '../lib/format.js';
+import { useT } from '../lib/i18n.jsx';
 import HistoryChart from '../components/HistoryChart.jsx';
 import { Empty, PageHead, Panel, Pill, Resource, Section } from '../components/ui.jsx';
 
 export default function CompanyHistory() {
   const { companyId } = useParams();
+  const t = useT();
   const state = useApi(`/companies/${companyId}/history`);
 
   return (
@@ -25,42 +27,42 @@ export default function CompanyHistory() {
               </Link>
 
               <PageHead
-                eyebrow="History"
+                eyebrow={t('history.eyebrow')}
                 icon={History}
-                title="History"
+                title={t('history.title')}
               >
                 <div className="page-head-figures">
                   <div className="head-figure">
-                    <span className="label">Periods filed</span>
+                    <span className="label">{t('history.periodsFiled')}</span>
                     <b className="tnum">
                       {filed.length}/{data.periods.length}
                     </b>
                   </div>
                   <div className="head-figure">
-                    <span className="label">Below range</span>
+                    <span className="label">{t('history.belowRange')}</span>
                     <b className="tnum">{below}</b>
                   </div>
                 </div>
               </PageHead>
 
-              <Section icon={LineChart} title="Declared against expected" first>
+              <Section icon={LineChart} title={t('history.declaredAgainst')} first>
                 <Panel>
                   <HistoryChart rows={data.periods} />
                 </Panel>
               </Section>
 
-              <Section icon={Table2} title="Period by period">
+              <Section icon={Table2} title={t('history.periodByPeriod')}>
                 <div className="table-wrap">
                   <table className="table">
                     <thead>
                       <tr>
-                        <th>Period</th>
-                        <th>Production</th>
-                        <th>Imports</th>
-                        <th>Declared</th>
-                        <th>Expected range</th>
-                        <th>Position</th>
-                        <th>Priority</th>
+                        <th>{t('common.period')}</th>
+                        <th>{t('common.production')}</th>
+                        <th>{t('common.imports')}</th>
+                        <th>{t('common.declared')}</th>
+                        <th>{t('history.expectedRange')}</th>
+                        <th>{t('history.position')}</th>
+                        <th>{t('common.priority')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -77,7 +79,7 @@ export default function CompanyHistory() {
                           </td>
                           <td className="num">
                             {row.declared_tonnage === null ? (
-                              <Pill tone="stop">No filing</Pill>
+                              <Pill tone="stop">{tonnes(null)}</Pill>
                             ) : (
                               tonnes(row.declared_tonnage)
                             )}
@@ -85,16 +87,23 @@ export default function CompanyHistory() {
                           <td className="num">
                             {row.expected_lower === null
                               ? '--'
-                              : `${tonnes(row.expected_lower, { unit: false })} to ${tonnes(row.expected_upper)}`}
+                              : t('common.range', {
+                                  from: tonnes(row.expected_lower, { unit: false }),
+                                  to: tonnes(row.expected_upper),
+                                })}
                           </td>
                           <td>
-                            {row.position === 'BELOW' ? (
-                              <Pill tone="stop">Below</Pill>
-                            ) : row.position === 'ABOVE' ? (
-                              <Pill tone="warn">Above</Pill>
-                            ) : (
-                              <Pill tone="ok">Within</Pill>
-                            )}
+                            <Pill
+                              tone={
+                                row.position === 'BELOW'
+                                  ? 'stop'
+                                  : row.position === 'ABOVE'
+                                    ? 'warn'
+                                    : 'ok'
+                              }
+                            >
+                              {positionShort(row.position)}
+                            </Pill>
                           </td>
                           <td>
                             {row.priority_score === null ? (
@@ -103,7 +112,7 @@ export default function CompanyHistory() {
                               <span className="score-cell">
                                 <b>{row.priority_score.toFixed(0)}</b>
                                 <Pill tone={LEVEL_TONE[row.priority_level]}>
-                                  {LEVEL_LABEL[row.priority_level]}
+                                  {levelLabel(row.priority_level)}
                                 </Pill>
                               </span>
                             )}
@@ -120,14 +129,14 @@ export default function CompanyHistory() {
                   <div className="section-head">
                     <h2 className="section-title">
                       <Gavel size={15} strokeWidth={1.9} />
-                      Decisions taken
+                      {t('history.decisions')}
                     </h2>
                   </div>
                   {data.decisions.length === 0 ? (
                     <Empty
                       icon={Gavel}
-                      title="No decision recorded yet"
-                      note="Nothing has been decided on this company since it entered the queue."
+                      title={t('history.noDecisionTitle')}
+                      note={t('history.noDecisionNote')}
                     />
                   ) : (
                     <Panel>
@@ -139,12 +148,17 @@ export default function CompanyHistory() {
                             </span>
                             <div className="step-body">
                               <div className="step-name">
-                                {STATUS_LABEL[decision.new_status] ?? decision.action}
+                                {decision.new_status
+                                  ? statusLabel(decision.new_status)
+                                  : decision.action}
                               </div>
                               <div className="step-detail">
-                                {decision.previous_status && (
-                                  <>from {STATUS_LABEL[decision.previous_status].toLowerCase()}, </>
-                                )}
+                                {decision.previous_status &&
+                                  t('history.from', {
+                                    status: statusLabel(
+                                      decision.previous_status,
+                                    ).toLocaleLowerCase(),
+                                  })}
                                 {decision.user_id} · {date(decision.created_at, { time: true })}
                               </div>
                               {decision.notes && <p className="event-note">{decision.notes}</p>}
@@ -160,14 +174,14 @@ export default function CompanyHistory() {
                   <div className="section-head">
                     <h2 className="section-title">
                       <MapPin size={15} strokeWidth={1.9} />
-                      Site visits
+                      {t('company.siteVisits')}
                     </h2>
                   </div>
                   {data.observations.length === 0 ? (
                     <Empty
                       icon={MapPin}
-                      title="No site visit on record"
-                      note="Field evidence is the one input the platform cannot collect on its own."
+                      title={t('history.noVisitTitle')}
+                      note={t('history.noVisitNote')}
                     />
                   ) : (
                     <Panel>
@@ -177,7 +191,9 @@ export default function CompanyHistory() {
                             <span className="step-index mono">{observation.period.slice(-2)}</span>
                             <div className="step-body">
                               <div className="step-name">
-                                {tonnes(observation.observed_packaging_tonnage)} measured
+                                {t('company.measured', {
+                                  amount: tonnes(observation.observed_packaging_tonnage),
+                                })}
                               </div>
                               <div className="step-detail">
                                 {observation.observation} {observation.inspector},{' '}

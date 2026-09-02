@@ -4,6 +4,7 @@ import { AlertTriangle, ArrowUp, MessageSquare, RotateCcw, X } from 'lucide-reac
 
 import { useApp } from '../App.jsx';
 import { post, query, useApi } from '../lib/api.js';
+import { useI18n } from '../lib/i18n.jsx';
 
 /** Turns worth sending back as context. Older ones fall off the front. */
 const HISTORY_DEPTH = 10;
@@ -15,10 +16,13 @@ const HISTORY_DEPTH = 10;
  */
 export default function Assistant() {
   const { period } = useApp();
+  const { lang, t } = useI18n();
   const location = useLocation();
 
   const status = useApi(`/assistant/status${query({ period })}`, [period]);
-  const suggestions = useApi(`/assistant/suggestions${query({ period })}`, [period]);
+  // Suggestions are written by the API, so the language belongs in the request
+  // rather than in a lookup here.
+  const suggestions = useApi(`/assistant/suggestions${query({ period, lang })}`, [period, lang]);
 
   const [open, setOpen] = useState(false);
   const [turns, setTurns] = useState([]);
@@ -63,7 +67,7 @@ export default function Assistant() {
     setThinking(true);
 
     try {
-      const result = await post(`/assistant/chat${query({ period })}`, {
+      const result = await post(`/assistant/chat${query({ period, lang })}`, {
         message,
         history,
         company_id: companyId,
@@ -96,18 +100,20 @@ export default function Assistant() {
         className={`assistant-launcher${open ? ' open' : ''}`}
         onClick={() => setOpen(!open)}
         aria-expanded={open}
-        aria-label={open ? 'Close the assistant' : 'Ask the assistant'}
+        aria-label={t(open ? 'assistant.close' : 'assistant.open')}
       >
         {open ? <X size={18} strokeWidth={2} /> : <MessageSquare size={18} strokeWidth={1.9} />}
       </button>
 
       {open && (
-        <aside className="assistant" role="dialog" aria-label="Assistant">
+        <aside className="assistant" role="dialog" aria-label={t('assistant.title')}>
           <header className="assistant-head">
             <div className="grow">
-              <div className="assistant-title">Assistant</div>
+              <div className="assistant-title">{t('assistant.title')}</div>
               <div className="assistant-sub">
-                {ready ? `Reading ${period ?? 'the current period'}` : 'Not configured'}
+                {ready
+                  ? t('assistant.reading', { period: period ?? '' })
+                  : t('assistant.notConfigured')}
               </div>
             </div>
             {turns.length > 0 && (
@@ -115,7 +121,7 @@ export default function Assistant() {
                 type="button"
                 className="btn btn-quiet btn-sm"
                 onClick={() => setTurns([])}
-                title="Start again"
+                title={t('assistant.restart')}
               >
                 <RotateCcw size={13} strokeWidth={1.9} />
               </button>
@@ -127,7 +133,7 @@ export default function Assistant() {
               <div className="notice warn" style={{ margin: 0 }}>
                 <AlertTriangle size={15} strokeWidth={1.9} />
                 <div>
-                  <div className="notice-title">No API key</div>
+                  <div className="notice-title">{t('assistant.noKeyTitle')}</div>
                   {status.data?.detail}
                 </div>
               </div>
@@ -135,10 +141,7 @@ export default function Assistant() {
 
             {ready && turns.length === 0 && (
               <div className="assistant-intro">
-                <p>
-                  Ask about the queue, a score, or what a check is measuring. Answers come from
-                  this period&apos;s figures, not from memory.
-                </p>
+                <p>{t('assistant.intro')}</p>
                 <div className="assistant-openers">
                   {openers.map((question) => (
                     <button
@@ -178,25 +181,23 @@ export default function Assistant() {
               rows={1}
               value={draft}
               disabled={!ready}
-              placeholder={ready ? 'Ask about this period' : 'Add a Gemini key to enable this'}
+              placeholder={t(ready ? 'assistant.placeholder' : 'assistant.disabledPlaceholder')}
               onChange={(event) => setDraft(event.target.value)}
               onKeyDown={onKeyDown}
-              aria-label="Message"
+              aria-label={t('assistant.message')}
             />
             <button
               type="button"
               className="assistant-send"
               onClick={() => send(draft)}
               disabled={!ready || thinking || !draft.trim()}
-              aria-label="Send"
+              aria-label={t('assistant.send')}
             >
               <ArrowUp size={15} strokeWidth={2.2} />
             </button>
           </div>
 
-          <footer className="assistant-foot">
-            Answers are guidance for triage. The decision stays with the auditor.
-          </footer>
+          <footer className="assistant-foot">{t('assistant.foot')}</footer>
         </aside>
       )}
     </>

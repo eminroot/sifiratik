@@ -1,0 +1,258 @@
+{
+  "method": "mondrian_cqr",
+  "target_coverage": 0.9,
+  "min_group": 60,
+  "thin_widen": 1.15,
+  "delta_scale": 0.5,
+  "fitted_on": "train(OOF) + valid_b",
+  "scale_fitted_on": "valid_a",
+  "space": "log1p",
+  "levels": [
+    [
+      "sector",
+      "size_band"
+    ],
+    [
+      "sector"
+    ],
+    [
+      "size_band"
+    ],
+    []
+  ],
+  "tables": [
+    {
+      "elektronik|buyuk": {
+        "delta": 0.1918607944068853,
+        "n": 36,
+        "thin": true
+      },
+      "elektronik|kucuk": {
+        "delta": 0.13568232477016373,
+        "n": 172,
+        "thin": false
+      },
+      "elektronik|mikro": {
+        "delta": 0.15177227356794143,
+        "n": 96,
+        "thin": false
+      },
+      "elektronik|orta": {
+        "delta": 0.10445932755716791,
+        "n": 88,
+        "thin": false
+      },
+      "ev_temizlik|buyuk": {
+        "delta": 0.08251728482158249,
+        "n": 36,
+        "thin": true
+      },
+      "ev_temizlik|kucuk": {
+        "delta": 0.11354639907743636,
+        "n": 124,
+        "thin": false
+      },
+      "ev_temizlik|mikro": {
+        "delta": 0.25139456286637296,
+        "n": 96,
+        "thin": false
+      },
+      "ev_temizlik|orta": {
+        "delta": -0.009184568342130106,
+        "n": 48,
+        "thin": true
+      },
+      "gida_icecek|buyuk": {
+        "delta": 0.08687584031072326,
+        "n": 62,
+        "thin": false
+      },
+      "gida_icecek|kucuk": {
+        "delta": 0.07507127893812604,
+        "n": 432,
+        "thin": false
+      },
+      "gida_icecek|mikro": {
+        "delta": 0.07473001372018828,
+        "n": 356,
+        "thin": false
+      },
+      "gida_icecek|orta": {
+        "delta": 0.042608050211826676,
+        "n": 264,
+        "thin": false
+      },
+      "ilac|buyuk": {
+        "delta": 0.27012413844156224,
+        "n": 16,
+        "thin": true
+      },
+      "ilac|kucuk": {
+        "delta": 0.08440135976740937,
+        "n": 150,
+        "thin": false
+      },
+      "ilac|mikro": {
+        "delta": 0.11687212874905306,
+        "n": 162,
+        "thin": false
+      },
+      "ilac|orta": {
+        "delta": 0.17756595032467537,
+        "n": 50,
+        "thin": true
+      },
+      "kimya_boya|buyuk": {
+        "delta": 0.07304562569191653,
+        "n": 44,
+        "thin": true
+      },
+      "kimya_boya|kucuk": {
+        "delta": 0.17806368205537204,
+        "n": 164,
+        "thin": false
+      },
+      "kimya_boya|mikro": {
+        "delta": 0.1006942838872642,
+        "n": 150,
+        "thin": false
+      },
+      "kimya_boya|orta": {
+        "delta": 0.03057098273404879,
+        "n": 50,
+        "thin": true
+      },
+      "kozmetik|buyuk": {
+        "delta": 0.06796870879759975,
+        "n": 60,
+        "thin": false
+      },
+      "kozmetik|kucuk": {
+        "delta": 0.15028008283721128,
+        "n": 148,
+        "thin": false
+      },
+      "kozmetik|mikro": {
+        "delta": 0.10400193849932649,
+        "n": 138,
+        "thin": false
+      },
+      "kozmetik|orta": {
+        "delta": 0.20460078969831308,
+        "n": 82,
+        "thin": false
+      },
+      "otomotiv_yan_sanayi|buyuk": {
+        "delta": 0.13741069367782366,
+        "n": 14,
+        "thin": true
+      },
+      "otomotiv_yan_sanayi|kucuk": {
+        "delta": 0.15459288211455013,
+        "n": 226,
+        "thin": false
+      },
+      "otomotiv_yan_sanayi|mikro": {
+        "delta": 0.13135900769005193,
+        "n": 144,
+        "thin": false
+      },
+      "otomotiv_yan_sanayi|orta": {
+        "delta": 0.2374438968810999,
+        "n": 94,
+        "thin": false
+      },
+      "tekstil|buyuk": {
+        "delta": 0.06530106626362642,
+        "n": 70,
+        "thin": false
+      },
+      "tekstil|kucuk": {
+        "delta": 0.18726224636594946,
+        "n": 252,
+        "thin": false
+      },
+      "tekstil|mikro": {
+        "delta": 0.17919085790493938,
+        "n": 206,
+        "thin": false
+      },
+      "tekstil|orta": {
+        "delta": 0.13478809299422423,
+        "n": 118,
+        "thin": false
+      }
+    },
+    {
+      "elektronik": {
+        "delta": 0.12452788266252401,
+        "n": 392,
+        "thin": false
+      },
+      "ev_temizlik": {
+        "delta": 0.09703074259166877,
+        "n": 304,
+        "thin": false
+      },
+      "gida_icecek": {
+        "delta": 0.07134953645071529,
+        "n": 1114,
+        "thin": false
+      },
+      "ilac": {
+        "delta": 0.11196261528655072,
+        "n": 378,
+        "thin": false
+      },
+      "kimya_boya": {
+        "delta": 0.09348464874908569,
+        "n": 408,
+        "thin": false
+      },
+      "kozmetik": {
+        "delta": 0.1138827097440025,
+        "n": 428,
+        "thin": false
+      },
+      "otomotiv_yan_sanayi": {
+        "delta": 0.15127499348891815,
+        "n": 478,
+        "thin": false
+      },
+      "tekstil": {
+        "delta": 0.1377855270628996,
+        "n": 646,
+        "thin": false
+      }
+    },
+    {
+      "buyuk": {
+        "delta": 0.08251728482158249,
+        "n": 338,
+        "thin": false
+      },
+      "kucuk": {
+        "delta": 0.1138827097440025,
+        "n": 1668,
+        "thin": false
+      },
+      "mikro": {
+        "delta": 0.10400193849932649,
+        "n": 1348,
+        "thin": false
+      },
+      "orta": {
+        "delta": 0.10109864590201045,
+        "n": 794,
+        "thin": false
+      }
+    },
+    {
+      "*": {
+        "delta": 0.10286142524510522,
+        "n": 4148,
+        "thin": false
+      }
+    }
+  ]
+}

@@ -14,12 +14,16 @@ import {
 
 import { useApp } from '../App.jsx';
 import { query, useApi } from '../lib/api.js';
-import { lira, num, splitUnit, tonnes } from '../lib/format.js';
+import { lira, materialLabel, num, splitUnit, tonnes } from '../lib/format.js';
+import { useI18n } from '../lib/i18n.jsx';
 import { Figures, PageHead, Panel, Resource, Section, Stat } from '../components/ui.jsx';
 
 export default function Impact() {
   const { period } = useApp();
-  const state = useApi(`/climate-impact${query({ period })}`, [period]);
+  const { lang, t } = useI18n();
+  // Step labels and notes are prose the API writes, so the language goes with
+  // the request rather than into a lookup here.
+  const state = useApi(`/climate-impact${query({ period, lang })}`, [period, lang]);
 
   return (
     <div className="page">
@@ -30,42 +34,44 @@ export default function Impact() {
 
           return (
             <>
-              <PageHead eyebrow="COP31" icon={Leaf} title="Climate impact">
+              <PageHead eyebrow={t('impact.eyebrow')} icon={Leaf} title={t('impact.title')}>
                 <Link className="btn btn-ghost" to="/pilot">
                   <Target size={15} strokeWidth={1.9} />
-                  Antalya pilot
+                  {t('impact.pilotLink')}
                 </Link>
               </PageHead>
 
               <Figures columns={4}>
                 <Stat
                   icon={Boxes}
-                  label="Identified"
+                  label={t('impact.identified')}
                   {...splitUnit(tonnes(data.additional_tonnage_identified))}
-                  note={`across ${num(data.companies_flagged)} flagged companies`}
+                  note={t('impact.identifiedNote', { count: num(data.companies_flagged) })}
                 />
                 <Stat
                   icon={Recycle}
-                  label="Confirmed by inspection"
+                  label={t('impact.confirmed')}
                   {...splitUnit(tonnes(data.additional_tonnage_confirmed))}
-                  note={`${num(data.companies_inspected)} inspections closed`}
+                  note={t('impact.confirmedNote', { count: num(data.companies_inspected) })}
                 />
                 <Stat
                   icon={CircleDollarSign}
-                  label="Contribution recovered"
+                  label={t('impact.recovered')}
                   {...splitUnit(lira(data.confirmed_gekap_revenue_try))}
-                  note={`${lira(data.estimated_gekap_revenue_try)} identified but not yet confirmed`}
+                  note={t('impact.recoveredNote', {
+                    value: lira(data.estimated_gekap_revenue_try),
+                  })}
                 />
                 <Stat
                   icon={Cloud}
-                  label="Emissions avoided"
+                  label={t('impact.emissions')}
                   value={num(data.co2e_avoided_tonnes)}
                   unit="t CO2e"
-                  note="against disposal of the same material"
+                  note={t('impact.emissionsNote')}
                 />
               </Figures>
 
-              <Section icon={Recycle} title="Impact chain">
+              <Section icon={Recycle} title={t('impact.chain')}>
                 <div className="grid grid-side">
                   <Panel>
                     <div className="chain">
@@ -96,7 +102,7 @@ export default function Impact() {
                         <span className="stat-chip">
                           <Map size={14} strokeWidth={1.9} />
                         </span>
-                        <span className="label">Identified tonnage by province</span>
+                        <span className="label">{t('impact.byProvince')}</span>
                       </div>
                       {data.by_region.map((row) => (
                         <div className="coverage-row" key={row.key}>
@@ -114,15 +120,15 @@ export default function Impact() {
                     <Panel>
                       <dl className="facts">
                         <div>
-                          <dt>Provinces covered</dt>
+                          <dt>{t('impact.provincesCovered')}</dt>
                           <dd>{data.cities_covered}</dd>
                         </div>
                         <div>
-                          <dt>Sectors covered</dt>
+                          <dt>{t('impact.sectorsCovered')}</dt>
                           <dd>{data.sectors_covered}</dd>
                         </div>
                         <div>
-                          <dt>Records corrected after inspection</dt>
+                          <dt>{t('impact.recordsCorrected')}</dt>
                           <dd>{num(data.records_updated)}</dd>
                         </div>
                       </dl>
@@ -131,22 +137,22 @@ export default function Impact() {
                 </div>
               </Section>
 
-              <Section icon={Boxes} title="By material">
+              <Section icon={Boxes} title={t('impact.byMaterial')}>
                 <div className="table-wrap">
                   <table className="table">
                     <thead>
                       <tr>
-                        <th>Material</th>
-                        <th>Share</th>
-                        <th>Tonnage</th>
-                        <th>Contribution at the 2026 tariff</th>
-                        <th>CO2e avoided</th>
+                        <th>{t('common.material')}</th>
+                        <th>{t('impact.share')}</th>
+                        <th>{t('common.tonnage')}</th>
+                        <th>{t('impact.contributionAtTariff')}</th>
+                        <th>{t('impact.co2eAvoided')}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {data.by_material.map((row) => (
                         <tr key={row.key}>
-                          <td className="lead">{row.name}</td>
+                          <td className="lead">{materialLabel(row.key)}</td>
                           <td style={{ width: 200 }}>
                             <div className="coverage-bar">
                               <i
@@ -165,32 +171,30 @@ export default function Impact() {
                 </div>
               </Section>
 
-              <Section icon={Users} title="Collector formalisation">
+              <Section icon={Users} title={t('impact.collectors')}>
                 <div className="grid grid-side">
                   <Panel>
                     <p className="page-lede" style={{ marginTop: 0, maxWidth: '58ch' }}>
-                      A share of the contribution recovered through inspection funds the move of
-                      informal collectors into insured work. Better field coverage then feeds the
-                      next round of inspections.
+                      {t('impact.collectorsNote')}
                     </p>
 
                     <div className="divider" />
 
                     <div className="grid grid-3" style={{ gap: 20 }}>
                       <div>
-                        <span className="label">Collectors supported</span>
+                        <span className="label">{t('impact.collectorsSupported')}</span>
                         <div className="stat-value sm" style={{ marginTop: 10 }}>
                           {num(data.social.collectors_supported)}
                         </div>
                       </div>
                       <div>
-                        <span className="label">Moved to formal work</span>
+                        <span className="label">{t('impact.movedToFormal')}</span>
                         <div className="stat-value sm" style={{ marginTop: 10 }}>
                           {num(data.social.formal_transitions)}
                         </div>
                       </div>
                       <div>
-                        <span className="label">Insured working days</span>
+                        <span className="label">{t('impact.insuredDays')}</span>
                         <div className="stat-value sm" style={{ marginTop: 10 }}>
                           {num(data.social.insured_days)}
                         </div>
@@ -201,21 +205,26 @@ export default function Impact() {
                   <div className="stack">
                     <Stat
                       icon={HandCoins}
-                      label="Programme funding"
+                      label={t('impact.funding')}
                       value={lira(data.social.funding_allocated_try)}
-                      note={`allocated across ${num(data.social.municipalities)} districts`}
+                      note={t('impact.fundingNote', { count: num(data.social.municipalities) })}
                     />
                     <Stat
                       icon={Building}
-                      label="From closed inspections"
+                      label={t('impact.fromClosed')}
                       value={lira(data.social.funding_available_try)}
-                      note={`${num(data.social.worker_years_funded, 1)} insured worker years at ${lira(data.social.cost_per_transition_try)} each`}
+                      note={t('impact.fromClosedNote', {
+                        years: num(data.social.worker_years_funded, 1),
+                        cost: lira(data.social.cost_per_transition_try),
+                      })}
                     />
                     <Stat
                       icon={Recycle}
-                      label="If the open cases close"
+                      label={t('impact.ifClosed')}
                       value={lira(data.social.funding_potential_try)}
-                      note={`a further ${num(data.social.worker_years_potential, 1)} worker years, not yet recovered`}
+                      note={t('impact.ifClosedNote', {
+                        years: num(data.social.worker_years_potential, 1),
+                      })}
                       tone="warn"
                     />
                   </div>

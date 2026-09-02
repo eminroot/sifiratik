@@ -12,6 +12,7 @@ from __future__ import annotations
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app import i18n
 from app.models import AuditReview, CollectorProgram, Company, ScoreResult
 from app.reference import (
     COLLECTOR_ANNUAL_COST_TRY,
@@ -88,7 +89,7 @@ def social_impact(db: Session, funding_available: float, funding_potential: floa
     )
 
 
-def climate_impact(db: Session, period: str) -> ClimateImpact:
+def climate_impact(db: Session, period: str, lang: str = "en") -> ClimateImpact:
     rows = db.execute(
         select(
             Company.sector,
@@ -154,48 +155,51 @@ def climate_impact(db: Session, period: str) -> ClimateImpact:
 
     region_rows = sorted(identified_by_region.items(), key=lambda item: item[1], reverse=True)[:8]
 
+    def step(key: str, part: str, **params) -> str:
+        return i18n.phrase(i18n.CHAIN_STEPS, key, part, lang, **params)
+
     impact_chain = [
         ChainStep(
             key="analysed",
-            label="Companies analysed",
+            label=step("analysed", "label"),
             value=float(analysed),
             unit="companies",
-            note=f"Period {period}",
+            note=step("analysed", "note", period=period),
         ),
         ChainStep(
             key="flagged",
-            label="Raised for inspection",
+            label=step("flagged", "label"),
             value=float(flagged),
             unit="companies",
-            note="High and critical priority with an unexplained amount",
+            note=step("flagged", "note"),
         ),
         ChainStep(
             key="identified",
-            label="Tonnage identified",
+            label=step("identified", "label"),
             value=round(identified, 1),
             unit="tonnes",
-            note="Below the expected range, before inspection",
+            note=step("identified", "note"),
         ),
         ChainStep(
             key="confirmed",
-            label="Tonnage confirmed",
+            label=step("confirmed", "label"),
             value=round(confirmed, 1),
             unit="tonnes",
-            note=f"Established by {inspected} completed inspections",
+            note=step("confirmed", "note", count=inspected),
         ),
         ChainStep(
             key="recovery",
-            label="Entering formal recovery",
+            label=step("recovery", "label"),
             value=round(to_recovery, 1),
             unit="tonnes",
-            note=f"{int(RECOVERY_CAPTURE_RATE * 100)}% of confirmed tonnage",
+            note=step("recovery", "note", share=int(RECOVERY_CAPTURE_RATE * 100)),
         ),
         ChainStep(
             key="co2e",
-            label="Emissions avoided",
+            label=step("co2e", "label"),
             value=round(co2e, 1),
             unit="t CO2e",
-            note="Against disposal of the same material",
+            note=step("co2e", "note"),
         ),
     ]
 

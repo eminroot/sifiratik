@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from app import i18n
 from app.database.database import get_db
 from app.routers.deps import resolve_period
 from app.schemas.assistant import AssistantStatus, ChatReply, ChatRequest
@@ -22,15 +23,18 @@ def assistant_status(
 
 @router.get("/suggestions", response_model=list[str])
 def assistant_suggestions(
-    period: str = Depends(resolve_period), db: Session = Depends(get_db)
+    period: str = Depends(resolve_period),
+    lang: str = Depends(i18n.resolve_lang),
+    db: Session = Depends(get_db),
 ) -> list[str]:
-    return assistant_service.suggested_questions(db, period)
+    return assistant_service.suggested_questions(db, period, lang)
 
 
 @router.post("/chat", response_model=ChatReply)
 async def assistant_chat(
     payload: ChatRequest,
     period: str = Depends(resolve_period),
+    lang: str = Depends(i18n.resolve_lang),
     db: Session = Depends(get_db),
 ) -> ChatReply:
     """One turn against Gemini, grounded in the current period's figures."""
@@ -40,6 +44,7 @@ async def assistant_chat(
         history=payload.history,
         period=period,
         company_id=payload.company_id,
+        lang=lang,
     )
     _enabled, model, _detail = assistant_service.status()
     return ChatReply(reply=reply, model=model, period=period)

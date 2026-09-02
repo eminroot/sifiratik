@@ -70,6 +70,7 @@ class Dashboard(PlainModel):
 class CompanyQualityRow(BaseModel):
     company_id: int
     company_name: str
+    sector: str
     sector_label: str
     region: str
     quality_score: float

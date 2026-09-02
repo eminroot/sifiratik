@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect } from 'react';
 import { AlertTriangle, Check, Inbox, X } from 'lucide-react';
 
+import { useT } from '../lib/i18n.jsx';
+
 export function PageHead({ eyebrow, icon: Icon, title, lede, note, children }) {
   return (
     <header className="page-head">
@@ -111,8 +113,9 @@ export function Empty({ icon: Icon = Inbox, title, note, action }) {
 }
 
 export function Loading({ rows = 3 }) {
+  const t = useT();
   return (
-    <div className="loading-page" aria-busy="true" aria-label="Loading">
+    <div className="loading-page" aria-busy="true" aria-label={t('state.loading')}>
       <div className="skeleton" style={{ height: 84 }} />
       {Array.from({ length: rows }).map((_, index) => (
         <div key={index} className="skeleton" style={{ height: index === 0 ? 168 : 116 }} />
@@ -122,15 +125,16 @@ export function Loading({ rows = 3 }) {
 }
 
 export function ErrorState({ error, onRetry }) {
+  const t = useT();
   return (
     <Empty
       icon={AlertTriangle}
-      title="The service did not answer"
-      note={error?.message ?? 'Check that the API is running, then try again.'}
+      title={t('state.errorTitle')}
+      note={error?.message ?? t('state.errorNote')}
       action={
         onRetry && (
           <button type="button" className="btn btn-ghost" onClick={onRetry}>
-            Try again
+            {t('state.retry')}
           </button>
         )
       }
@@ -161,7 +165,7 @@ export function Toasts({ items }) {
   );
 }
 
-export function Sheet({ open, title, lede, onClose, children, footer }) {
+export function Sheet({ open, title, lede, onClose, children, footer, closeLabel = 'Close' }) {
   useEffect(() => {
     if (!open) return undefined;
     const close = (event) => event.key === 'Escape' && onClose();
@@ -183,7 +187,7 @@ export function Sheet({ open, title, lede, onClose, children, footer }) {
             <h2 className="sheet-title">{title}</h2>
             {lede && <p className="sheet-lede">{lede}</p>}
           </div>
-          <button type="button" className="btn btn-quiet" onClick={onClose} aria-label="Close">
+          <button type="button" className="btn btn-quiet" onClick={onClose} aria-label={closeLabel}>
             <X size={16} strokeWidth={1.9} />
           </button>
         </div>

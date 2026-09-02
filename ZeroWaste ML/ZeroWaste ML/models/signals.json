@@ -1,0 +1,106 @@
+{
+  "method": "train_window_percentile_ramp",
+  "low_percentile": 70.0,
+  "high_percentile": 99.0,
+  "active_threshold": 22.0,
+  "fitted_on": "train (out-of-fold expectation)",
+  "stale_matrix_multiplier": 0.35,
+  "signals": {
+    "S1": {
+      "key": "HISTORICAL_SHORTFALL",
+      "name": "Tarihsel alt sinir ihlali",
+      "question": "Firma kendi gecmis beyan davranisindan ne kadar sapiyor?",
+      "source": "quantile_hist",
+      "availability_feature": "f_avail_s1",
+      "unavailable_reason": "Firmanin en az uc onceki donemde hem beyan hem uretim kaydi yok; kendi taban cizgisi kurulamiyor.",
+      "low": 0.110778,
+      "high": 0.577186,
+      "n": 3474,
+      "availability_rate": 0.9791
+    },
+    "S2": {
+      "key": "PEER_DEVIATION",
+      "name": "Emsal alt sinir ihlali",
+      "question": "Benzer firmalarin beklenen araliginin ne kadar altinda?",
+      "source": "quantile_peer",
+      "availability_feature": "f_avail_s2",
+      "unavailable_reason": "Ayni sektor ve olcek bandinda onceki donemde bes emsal firma bulunmuyor; emsal karsilastirmasi yapilamiyor.",
+      "low": 0.534778,
+      "high": 0.986723,
+      "n": 3516,
+      "availability_rate": 0.991
+    },
+    "S3": {
+      "key": "BOM_EXPECTATION_GAP",
+      "name": "Beklenen-gerceklesen tonaj farki",
+      "question": "Urun agacindan beklenen ile beyan arasindaki fark?",
+      "source": "feature",
+      "availability_feature": "f_avail_s3",
+      "unavailable_reason": "Urun agaci / ambalaj agirlik matrisi bu kayit icin tanimli degil.",
+      "low": 0.0,
+      "high": 0.138993,
+      "n": 3523,
+      "availability_rate": 0.993
+    },
+    "S4": {
+      "key": "ACTIVITY_MISMATCH",
+      "name": "Faaliyet esnekligi uyumsuzlugu",
+      "question": "Uretim artarken beyan makul olcude degisiyor mu?",
+      "source": "feature",
+      "availability_feature": "f_avail_s4",
+      "unavailable_reason": "Onceki donem uretim miktari yok; hareket karsilastirilamiyor.",
+      "low": 0.145868,
+      "high": 0.804389,
+      "n": 3145,
+      "availability_rate": 0.8864
+    },
+    "S5": {
+      "key": "TRADE_BALANCE",
+      "name": "Dis ticaret ve duzeltme dengesi",
+      "question": "Ithalat/ihracat/iade/mahsup beyanla uyumlu mu?",
+      "source": "feature",
+      "availability_feature": "f_avail_s5",
+      "unavailable_reason": "Ithalat veya ihracat verisi eksik; ic piyasa arzi hesaplanamiyor.",
+      "low": 0.082755,
+      "high": 0.467707,
+      "n": 2852,
+      "availability_rate": 0.8038
+    },
+    "S6": {
+      "key": "SEASONAL_BREAK",
+      "name": "Donemsel davranis kirilmasi",
+      "question": "Ceyreklik kalipta aciklanamayan kirilma var mi?",
+      "source": "feature",
+      "availability_feature": "f_avail_s6",
+      "unavailable_reason": "Ayni ceyrek icin onceki yil kaydi yok; mevsimsel taban kurulamiyor.",
+      "low": 0.128447,
+      "high": 0.69746,
+      "n": 3291,
+      "availability_rate": 0.9276
+    },
+    "S7": {
+      "key": "PACKAGING_MATRIX",
+      "name": "Urun agaci / ambalaj matrisi uyumsuzlugu",
+      "question": "SKU ve agirlik matrisi beyani destekliyor mu?",
+      "source": "feature",
+      "availability_feature": "f_avail_s7",
+      "unavailable_reason": "Ambalaj agirlik matrisi kapsami %5'in altinda.",
+      "low": 0.077501,
+      "high": 0.159182,
+      "n": 3495,
+      "availability_rate": 0.9851
+    },
+    "S8": {
+      "key": "EXTERNAL_EVIDENCE",
+      "name": "Dis dogrulama kaniti",
+      "question": "ERP / onceki denetim kaydiyla uyumsuzluk var mi?",
+      "source": "feature",
+      "availability_feature": "f_avail_s8",
+      "unavailable_reason": "ERP veya onceki denetim kaydi bulunmuyor.",
+      "low": 0.095822,
+      "high": 0.373881,
+      "n": 669,
+      "availability_rate": 0.1886
+    }
+  }
+}

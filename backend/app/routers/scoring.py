@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from app import i18n
 from app.config import ScoringPolicy, get_policy, set_policy
 from app.database.database import get_db
 from app.routers.deps import resolve_period
@@ -52,8 +53,8 @@ def scoring_run(
 
 
 @router.get("/scoring/engines", response_model=list[EngineOut])
-def engines() -> list[EngineOut]:
-    return engines_out()
+def engines(lang: str = Depends(i18n.resolve_lang)) -> list[EngineOut]:
+    return engines_out(lang)
 
 
 @router.get("/scoring/policy", response_model=PolicyOut)

@@ -1,0 +1,31 @@
+anchor_id;gosterge;kapsam;donem;deger;birim;veri_sinifi;source_id;kullanim_amaci;notlar
+MA-001;Beyan edilen ambalaj atigi - Kagit Karton (150101);Turkiye;2021;452160;ton;official_open;SRC-005;Malzeme payi kalibrasyonu (referans);Atik beyan sistemi verisi - piyasaya surulen ambalaj DEGILDIR
+MA-002;Beyan edilen ambalaj atigi - Plastik (150102);Turkiye;2021;187479;ton;official_open;SRC-005;Malzeme payi kalibrasyonu (referans);Atik beyan sistemi verisi
+MA-003;Beyan edilen ambalaj atigi - Ahsap (150103);Turkiye;2021;251658;ton;official_open;SRC-005;Malzeme payi kalibrasyonu (referans);Atik beyan sistemi verisi
+MA-004;Beyan edilen ambalaj atigi - Metal (150104);Turkiye;2021;16250;ton;official_open;SRC-005;Malzeme payi kalibrasyonu (referans);Atik beyan sistemi verisi
+MA-005;Beyan edilen ambalaj atigi - Kompozit (150105);Turkiye;2021;8643;ton;official_open;SRC-005;Malzeme payi kalibrasyonu (referans);Atik beyan sistemi verisi
+MA-006;Beyan edilen ambalaj atigi - Cam (150107);Turkiye;2021;30967;ton;official_open;SRC-005;Malzeme payi kalibrasyonu (referans);Atik beyan sistemi verisi
+MA-007;Beyan edilen ambalaj atigi - TOPLAM;Turkiye;2021;947157;ton;official_open;SRC-005;Malzeme payi kalibrasyonu (referans);Atik beyan sistemi verisi
+MA-008;Beyan edilen ambalaj atigi - Kagit Karton (150101);Turkiye;2022;514270;ton;official_open;SRC-005;Malzeme payi kalibrasyonu (referans);Atik beyan sistemi verisi
+MA-009;Beyan edilen ambalaj atigi - Plastik (150102);Turkiye;2022;191417;ton;official_open;SRC-005;Malzeme payi kalibrasyonu (referans);Atik beyan sistemi verisi
+MA-010;Beyan edilen ambalaj atigi - Ahsap (150103);Turkiye;2022;265450;ton;official_open;SRC-005;Malzeme payi kalibrasyonu (referans);Atik beyan sistemi verisi
+MA-011;Beyan edilen ambalaj atigi - Metal (150104);Turkiye;2022;18635;ton;official_open;SRC-005;Malzeme payi kalibrasyonu (referans);Atik beyan sistemi verisi
+MA-012;Beyan edilen ambalaj atigi - Kompozit (150105);Turkiye;2022;11664;ton;official_open;SRC-005;Malzeme payi kalibrasyonu (referans);Atik beyan sistemi verisi
+MA-013;Beyan edilen ambalaj atigi - Cam (150107);Turkiye;2022;29887;ton;official_open;SRC-005;Malzeme payi kalibrasyonu (referans);Atik beyan sistemi verisi
+MA-014;Beyan edilen ambalaj atigi - TOPLAM;Turkiye;2022;1031326;ton;official_open;SRC-005;Malzeme payi kalibrasyonu (referans);Atik beyan sistemi verisi
+MA-015;Beyan edilen ambalaj atigi - Kagit Karton (150101);Turkiye;2023;561181;ton;official_open;SRC-005;Malzeme payi kalibrasyonu (referans);Atik beyan sistemi verisi
+MA-016;Beyan edilen ambalaj atigi - Plastik (150102);Turkiye;2023;202008;ton;official_open;SRC-005;Malzeme payi kalibrasyonu (referans);Atik beyan sistemi verisi
+MA-017;Beyan edilen ambalaj atigi - Ahsap (150103);Turkiye;2023;285349;ton;official_open;SRC-005;Malzeme payi kalibrasyonu (referans);Atik beyan sistemi verisi
+MA-018;Beyan edilen ambalaj atigi - Metal (150104);Turkiye;2023;19544;ton;official_open;SRC-005;Malzeme payi kalibrasyonu (referans);Atik beyan sistemi verisi
+MA-019;Beyan edilen ambalaj atigi - Kompozit (150105);Turkiye;2023;10174;ton;official_open;SRC-005;Malzeme payi kalibrasyonu (referans);Atik beyan sistemi verisi
+MA-020;Beyan edilen ambalaj atigi - Cam (150107);Turkiye;2023;28685;ton;official_open;SRC-005;Malzeme payi kalibrasyonu (referans);Atik beyan sistemi verisi
+MA-021;Beyan edilen ambalaj atigi - TOPLAM;Turkiye;2023;1106941;ton;official_open;SRC-005;Malzeme payi kalibrasyonu (referans);Atik beyan sistemi verisi
+MA-022;Uretilen ambalaj miktari;Turkiye;2021;9729057;ton;official_open;SRC-006;Olcek buyuklugu referansi;Cevresel Gostergeler
+MA-023;Piyasaya surulen ambalaj miktari (Ambalaj Bilgi Sistemi B-1);Turkiye;2021;4046930;ton;official_open;SRC-006;Sentetik evrenin toplam olcek referansi;Bu deger dataset toplam beklenen ambalaj tonajinin buyuklugunu kalibre etmek icin kullanilmistir
+MA-024;Genel geri kazanim orani (tum atiklar);Turkiye;2023;34,92;yuzde;official_open;SRC-007;Iklim senaryosu geri kazanim varsayimi alt referansi;AMBALAJ ozelinde oran DEGILDIR
+MA-025;Genel geri kazanim orani (tum atiklar);Turkiye;2024;36,08;yuzde;official_open;SRC-007;Iklim senaryosu geri kazanim varsayimi ust referansi;AMBALAJ ozelinde oran DEGILDIR
+MA-026;Yeniden degerleme orani;Turkiye;2023;58,46;yuzde;official_open_secondary;SRC-003;2024 GEKAP tarifelerinin capraz dogrulanmasi;2024 tarifeleri = 2023 tarifeleri x 1,5846 (yuzde 5 kesir kurali ile)
+MA-027;Yeniden degerleme orani;Turkiye;2024;43,93;yuzde;official_open;SRC-002;2025 GEKAP tarifelerinin capraz dogrulanmasi;2025 tarifeleri = 2024 tarifeleri x 1,4393 (yuzde 5 kesir kurali ile)
+MA-028;Yeniden degerleme orani;Turkiye;2025;25,49;yuzde;official_open;SRC-004;2026 GEKAP tarifelerinin capraz dogrulanmasi;2026 tarifeleri = 2025 tarifeleri x 1,2549 (yuzde 5 kesir kurali ile)
+MA-029;Sanayi Uretim Endeksi - imalat sanayi ceyreklik seri;Turkiye;2023Q1-2026Q2;TO_BE_FILLED;endeks (2021=100);official_open_pending;SRC-016;Sektorel uretim dalgalanmasinin gercek makro seriyle degistirilmesi;DOLDURULMADI. TUIK Veri Portali uzerinden cekilmelidir - https://data.tuik.gov.tr/Kategori/GetKategori?p=sanayi-114 . Dataset bu seri yerine dokumante edilmis sentetik mevsimsellik ve trend kullanmaktadir.
+MA-030;Dis ticaret - sektorel ihracat ve ithalat ceyreklik seri;Turkiye;2023Q1-2026Q2;TO_BE_FILLED;bin USD;official_open_pending;SRC-017;Firma dis ticaret oranlarinin gercek makro seriyle degistirilmesi;DOLDURULMADI. TUIK Dis Ticaret Istatistikleri ve UN Comtrade uzerinden cekilmelidir. Dataset sentetik ihracat/ithalat oranlari kullanmaktadir.

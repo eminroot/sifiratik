@@ -18,19 +18,23 @@ import {
 import { useApp } from '../App.jsx';
 import { query, useApi } from '../lib/api.js';
 import {
-  CONFIDENCE_LABEL,
-  FIELD_STATE_LABEL,
   FIELD_STATE_TONE,
-  REGISTRY_LABEL,
-  SIZE_LABEL,
-  STATUS_LABEL,
+  materialLabel,
   STATUS_TONE,
+  confidenceLabel,
   date,
+  fieldLabel,
+  fieldStateLabel,
   num,
   percent,
+  registryLabel,
   relativeDays,
+  sectorLabel,
+  sizeLabel,
+  statusLabel,
   tonnes,
 } from '../lib/format.js';
+import { useT } from '../lib/i18n.jsx';
 import { RangeBar, ScoreBlock } from '../components/Score.jsx';
 import { ReasonList, SignalGrid } from '../components/Signals.jsx';
 import ReviewSheet from '../components/ReviewSheet.jsx';
@@ -39,6 +43,7 @@ import { Empty, PageHead, Panel, Pill, Resource, Section } from '../components/u
 export default function Company() {
   const { companyId } = useParams();
   const { period, toast } = useApp();
+  const t = useT();
   const state = useApi(`/companies/${companyId}${query({ period })}`, [period]);
   const policy = useApi('/scoring/policy');
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -52,28 +57,31 @@ export default function Company() {
             <>
               <Link className="back-link" to="/queue">
                 <ArrowLeft size={13} strokeWidth={1.9} />
-                Inspection queue
+                {t('company.backToQueue')}
               </Link>
 
               <PageHead
-                eyebrow={`Rank ${data.rank} of ${num(data.total_ranked)}`}
+                eyebrow={t('company.rank', {
+                  rank: num(data.rank),
+                  total: num(data.total_ranked),
+                })}
                 icon={Building2}
                 title={company.company_name}
-                lede={`${company.sector_label} · ${company.region} · ${SIZE_LABEL[company.company_size]} · ${company.tax_identifier}`}
+                lede={`${sectorLabel(company.sector)} · ${company.region} · ${sizeLabel(company.company_size)} · ${company.tax_identifier}`}
                 note={
                   <>
                     <Pill tone={STATUS_TONE[data.review_status]}>
-                      {STATUS_LABEL[data.review_status]}
+                      {statusLabel(data.review_status)}
                     </Pill>
                     {company.registry_status !== 'MATCHED' && (
-                      <Pill tone="stop">{REGISTRY_LABEL[company.registry_status]}</Pill>
+                      <Pill tone="stop">{registryLabel(company.registry_status)}</Pill>
                     )}
                   </>
                 }
               >
                 <Link className="btn btn-ghost" to={`/companies/${companyId}/history`}>
                   <History size={15} strokeWidth={1.9} />
-                  History
+                  {t('company.history')}
                 </Link>
                 <button
                   type="button"
@@ -81,15 +89,15 @@ export default function Company() {
                   onClick={() => setSheetOpen(true)}
                 >
                   <Gavel size={15} strokeWidth={1.9} />
-                  Record decision
+                  {t('company.record')}
                 </button>
               </PageHead>
 
               {!score ? (
                 <Empty
                   icon={FileSearch}
-                  title={`No result for ${period}`}
-                  note="The company has no scored record in this period. Pick another period from the header."
+                  title={t('company.noResultTitle', { period })}
+                  note={t('company.noResultNote')}
                 />
               ) : (
                 <>
@@ -99,7 +107,7 @@ export default function Company() {
                         <span className="stat-chip">
                           <Scale size={14} strokeWidth={1.9} />
                         </span>
-                        <span className="label">Inspection priority</span>
+                        <span className="label">{t('company.priority')}</span>
                       </div>
                       <ScoreBlock
                         score={score.priority_score}
@@ -116,68 +124,68 @@ export default function Company() {
                         <span className="stat-chip">
                           <Layers size={14} strokeWidth={1.9} />
                         </span>
-                        <span className="label">Result</span>
+                        <span className="label">{t('company.result')}</span>
                       </div>
                       <dl className="facts">
                         <div>
-                          <dt>Evidence base</dt>
-                          <dd>{CONFIDENCE_LABEL[score.confidence]}</dd>
+                          <dt>{t('company.evidenceBase')}</dt>
+                          <dd>{confidenceLabel(score.confidence)}</dd>
                         </div>
                         <div>
-                          <dt>Checks that ran</dt>
+                          <dt>{t('company.checksRan')}</dt>
                           <dd>
-                            {score.signals.length - score.unavailable_signals} of{' '}
+                            {score.signals.length - score.unavailable_signals} {t('common.of')}{' '}
                             {score.signals.length}
                           </dd>
                         </div>
                         <div>
-                          <dt>Checks firing</dt>
+                          <dt>{t('company.checksFiring')}</dt>
                           <dd>{score.active_signals}</dd>
                         </div>
                         <div>
-                          <dt>Scored</dt>
+                          <dt>{t('company.scoredAt')}</dt>
                           <dd>{date(score.created_at, { time: true })}</dd>
                         </div>
                         <div>
-                          <dt>Engine</dt>
+                          <dt>{t('company.engine')}</dt>
                           <dd className="mono">{score.model_version}</dd>
                         </div>
                         <div>
-                          <dt>Policy</dt>
+                          <dt>{t('company.policy')}</dt>
                           <dd className="mono">{score.policy_version}</dd>
                         </div>
                       </dl>
                     </Panel>
                   </div>
 
-                  <Section icon={Factory} title={`Declaration for ${score.period}`}>
+                  <Section icon={Factory} title={t('company.declarationFor', { period: score.period })}>
                     <div className="grid grid-wide">
                       <Panel>
                         <dl className="facts">
                           <div>
-                            <dt>Production</dt>
+                            <dt>{t('common.production')}</dt>
                             <dd>{tonnes(data.current_period?.production_volume)}</dd>
                           </div>
                           <div>
-                            <dt>Imports</dt>
+                            <dt>{t('common.imports')}</dt>
                             <dd>
                               {data.current_period?.import_volume === null ||
                               data.current_period?.import_volume === undefined ? (
-                                <span className="faint">Not reported</span>
+                                <span className="faint">{t('common.notReported')}</span>
                               ) : (
                                 tonnes(data.current_period.import_volume)
                               )}
                             </dd>
                           </div>
                           <div>
-                            <dt>Exports</dt>
+                            <dt>{t('company.exports')}</dt>
                             <dd>{tonnes(data.current_period?.export_volume)}</dd>
                           </div>
                           <div>
-                            <dt>Packaging declared</dt>
+                            <dt>{t('company.packagingDeclared')}</dt>
                             <dd>
                               {data.current_period?.declared_tonnage === null ? (
-                                <Pill tone="stop">No filing</Pill>
+                                <Pill tone="stop">{tonnes(null)}</Pill>
                               ) : (
                                 tonnes(data.current_period?.declared_tonnage)
                               )}
@@ -188,11 +196,11 @@ export default function Company() {
                         {data.material_breakdown && (
                           <>
                             <div className="divider" />
-                            <span className="label">Material split as declared</span>
+                            <span className="label">{t('company.materialSplit')}</span>
                             <dl className="facts" style={{ marginTop: 10 }}>
                               {Object.entries(data.material_breakdown).map(([key, value]) => (
                                 <div key={key}>
-                                  <dt style={{ textTransform: 'capitalize' }}>{key}</dt>
+                                  <dt>{materialLabel(key)}</dt>
                                   <dd>{tonnes(value)}</dd>
                                 </div>
                               ))}
@@ -206,44 +214,50 @@ export default function Company() {
                           <span className="stat-chip">
                             <ListTree size={14} strokeWidth={1.9} />
                           </span>
-                          <span className="label">Declared against expected</span>
+                          <span className="label">{t('company.declaredAgainst')}</span>
                         </div>
                         <RangeBar expected={score.expected} />
                       </Panel>
                     </div>
                   </Section>
 
-                  <Section icon={FileSearch} title="Why this company is prioritised">
+                  <Section icon={FileSearch} title={t('company.whyPrioritised')}>
                     <ReasonList signals={score.signals} />
                   </Section>
 
-                  <Section icon={Layers} title="All eight checks">
+                  <Section icon={Layers} title={t('company.allChecks')}>
                     <SignalGrid signals={score.signals} />
                   </Section>
                 </>
               )}
 
-              <Section icon={Database} title="Evidence held on this company">
+              <Section icon={Database} title={t('company.evidenceHeld')}>
                 <div className="grid grid-side">
                   <Panel>
-                    <span className="label">Data quality {percent(quality.score)}</span>
+                    <span className="label">
+                      {t('company.dataQuality', { percent: percent(quality.score) })}
+                    </span>
                     <div className="bar" style={{ margin: '12px 0 18px' }}>
                       <i style={{ width: `${quality.score}%` }} />
                     </div>
                     <dl className="facts">
                       {Object.entries(quality.fields).map(([key, value]) => (
                         <div key={key}>
-                          <dt>{quality.field_labels[key]}</dt>
+                          <dt>{fieldLabel(key)}</dt>
                           <dd>
-                            <Pill tone={FIELD_STATE_TONE[value]}>{FIELD_STATE_LABEL[value]}</Pill>
+                            <Pill tone={FIELD_STATE_TONE[value]}>{fieldStateLabel(value)}</Pill>
                           </dd>
                         </div>
                       ))}
                     </dl>
                     <p className="stat-note" style={{ marginTop: 14 }}>
-                      Last updated {relativeDays(quality.freshness_days)}.
+                      {t('company.lastUpdated', { when: relativeDays(quality.freshness_days) })}
                       {quality.missing_fields.length > 0 &&
-                        ` Missing: ${quality.missing_fields.join(', ').toLowerCase()}.`}
+                        t('company.missingFields', {
+                          fields: quality.missing_fields
+                            .map((key) => fieldLabel(key).toLocaleLowerCase())
+                            .join(', '),
+                        })}
                     </p>
                   </Panel>
 
@@ -253,21 +267,22 @@ export default function Company() {
                         <span className="stat-chip">
                           <Users size={14} strokeWidth={1.9} />
                         </span>
-                        <span className="label">Peer group</span>
+                        <span className="label">{t('company.peerGroup')}</span>
                       </div>
                       <dl className="facts">
                         <div>
-                          <dt>Cohort</dt>
+                          <dt>{t('company.cohort')}</dt>
                           <dd>
-                            {peers.sector}, {SIZE_LABEL[peers.company_size].toLowerCase()}
+                            {sectorLabel(peers.sector)},{' '}
+                            {sizeLabel(peers.company_size).toLocaleLowerCase()}
                           </dd>
                         </div>
                         <div>
-                          <dt>Companies that filed</dt>
+                          <dt>{t('company.companiesFiled')}</dt>
                           <dd>{peers.member_count}</dd>
                         </div>
                         <div>
-                          <dt>This company</dt>
+                          <dt>{t('company.thisCompany')}</dt>
                           <dd>
                             {peers.company_intensity_kg_per_tonne === null
                               ? '--'
@@ -275,7 +290,7 @@ export default function Company() {
                           </dd>
                         </div>
                         <div>
-                          <dt>Cohort median</dt>
+                          <dt>{t('company.cohortMedian')}</dt>
                           <dd>
                             {peers.median_intensity_kg_per_tonne === null
                               ? '--'
@@ -290,11 +305,11 @@ export default function Company() {
                         <span className="stat-chip">
                           <MapPin size={14} strokeWidth={1.9} />
                         </span>
-                        <span className="label">Site visits</span>
+                        <span className="label">{t('company.siteVisits')}</span>
                       </div>
                       {data.observations.length === 0 ? (
                         <p className="stat-note" style={{ marginTop: 0 }}>
-                          No visit has been recorded, so the field check could not be evaluated.
+                          {t('company.noVisit')}
                         </p>
                       ) : (
                         <div className="steps">
@@ -303,7 +318,9 @@ export default function Company() {
                               <span className="step-index">{observation.period.slice(-2)}</span>
                               <div className="step-body">
                                 <div className="step-name">
-                                  {tonnes(observation.observed_packaging_tonnage)} measured on site
+                                  {t('company.measuredOnSite', {
+                                    amount: tonnes(observation.observed_packaging_tonnage),
+                                  })}
                                 </div>
                                 <div className="step-detail">
                                   {observation.observation} {observation.inspector},{' '}
@@ -320,16 +337,16 @@ export default function Company() {
               </Section>
 
               {data.gtip_lines.length > 0 && (
-                <Section icon={ListTree} title="Customs lines matched to this period">
+                <Section icon={ListTree} title={t('company.customsLines')}>
                   <div className="table-wrap">
                     <table className="table">
                       <thead>
                         <tr>
-                          <th>GTIP</th>
-                          <th>Description</th>
-                          <th>Quantity</th>
-                          <th>Packaging per tonne</th>
-                          <th>Implied packaging</th>
+                          <th>{t('company.gtip')}</th>
+                          <th>{t('company.description')}</th>
+                          <th>{t('company.quantity')}</th>
+                          <th>{t('company.packagingPerTonne')}</th>
+                          <th>{t('company.impliedPackaging')}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -360,7 +377,11 @@ export default function Company() {
                 onClose={() => setSheetOpen(false)}
                 onSaved={(review) => {
                   setSheetOpen(false);
-                  toast(`Recorded as ${STATUS_LABEL[review.status].toLowerCase()}`);
+                  toast(
+                    t('company.recordedAs', {
+                      status: statusLabel(review.status).toLocaleLowerCase(),
+                    }),
+                  );
                   state.reload();
                 }}
               />

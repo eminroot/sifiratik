@@ -52,6 +52,7 @@ def data_quality(
         CompanyQualityRow(
             company_id=row["company"].id,
             company_name=row["company"].company_name,
+            sector=row["company"].sector,
             sector_label=SECTORS[row["company"].sector]["name"],
             region=row["company"].region,
             quality_score=row["quality"],

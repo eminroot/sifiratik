@@ -344,7 +344,7 @@ def detail(db: Session, company: Company, period: str) -> CompanyDetail:
             last_update=quality.last_update,
         ),
         peers=PeerContext(
-            sector=SECTORS[company.sector]["name"],
+            sector=company.sector,
             company_size=company.company_size,
             member_count=cohort.member_count if cohort else 0,
             company_intensity_kg_per_tonne=round(own_intensity * 1000, 2) if own_intensity else None,

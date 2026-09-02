@@ -11,7 +11,8 @@ import {
 
 import { useApp } from '../App.jsx';
 import { post, query, useApi } from '../lib/api.js';
-import { lira, num, percent, splitUnit, tonnes } from '../lib/format.js';
+import { lira, materialLabel, num, percent, sectorLabel, splitUnit, tonnes } from '../lib/format.js';
+import { useI18n } from '../lib/i18n.jsx';
 import QueueTable from '../components/QueueTable.jsx';
 import { Figures, PageHead, Panel, Resource, Section, Stat } from '../components/ui.jsx';
 
@@ -19,14 +20,17 @@ const SHORTLIST_SIZES = [25, 50, 100, 200];
 
 export default function Pilot() {
   const { period, reference, toast } = useApp();
+  const { lang, t } = useI18n();
 
   const [region, setRegion] = useState('Antalya');
   const [sector, setSector] = useState('');
   const [size, setSize] = useState(100);
 
+  // The run sequence is prose the API writes, so it is fetched in the active
+  // language rather than translated after the fact.
   const state = useApi(
-    `/cop31/pilot${query({ period, region, sector, shortlist_size: size })}`,
-    [period],
+    `/cop31/pilot${query({ period, region, sector, shortlist_size: size, lang })}`,
+    [period, lang],
   );
 
   const [result, setResult] = useState(null);
@@ -42,7 +46,7 @@ export default function Pilot() {
     setRunning(true);
     setRevealed(0);
     try {
-      const payload = await post('/cop31/pilot/run', {
+      const payload = await post(`/cop31/pilot/run${query({ lang })}`, {
         region,
         sector: sector || null,
         shortlist_size: size,
@@ -56,7 +60,12 @@ export default function Pilot() {
         setTimeout(() => setRevealed(index + 1), 130 * (index + 1)),
       );
       setTimeout(() => setRunning(false), 130 * payload.steps.length);
-      toast(`${payload.findings.companies_shortlisted} companies shortlisted in ${region}`);
+      toast(
+        t('pilot.ranMessage', {
+          count: num(payload.findings.companies_shortlisted),
+          region,
+        }),
+      );
     } catch (error) {
       toast(error.message, 'bad');
       setRunning(false);
@@ -74,13 +83,13 @@ export default function Pilot() {
           return (
             <>
               <PageHead
-                eyebrow="Pilot"
+                eyebrow={t('pilot.eyebrow')}
                 icon={Target}
                 title={config.name}
               >
                 <button type="button" className="btn btn-primary" onClick={run} disabled={running}>
                   {running ? <span className="spin on-ink" /> : <Play size={15} strokeWidth={1.9} />}
-                  {running ? 'Running' : 'Run pilot'}
+                  {t(running ? 'pilot.running' : 'pilot.run')}
                 </button>
               </PageHead>
 
@@ -89,11 +98,14 @@ export default function Pilot() {
                   className="filter-select on"
                   value={region}
                   onChange={(event) => setRegion(event.target.value)}
-                  aria-label="Pilot province"
+                  aria-label={t('pilot.province')}
                 >
                   {(reference?.regions ?? []).map((option) => (
                     <option key={option.value} value={option.value}>
-                      {option.label} ({option.count} companies)
+                      {t('pilot.regionOption', {
+                        region: option.label,
+                        count: num(option.count),
+                      })}
                     </option>
                   ))}
                 </select>
@@ -102,12 +114,12 @@ export default function Pilot() {
                   className={`filter-select${sector ? ' on' : ''}`}
                   value={sector}
                   onChange={(event) => setSector(event.target.value)}
-                  aria-label="Pilot sector"
+                  aria-label={t('pilot.sector')}
                 >
-                  <option value="">All sectors</option>
+                  <option value="">{t('pilot.allSectors')}</option>
                   {(reference?.sectors ?? []).map((option) => (
                     <option key={option.value} value={option.value}>
-                      {option.label}
+                      {sectorLabel(option.value)}
                     </option>
                   ))}
                 </select>
@@ -116,17 +128,17 @@ export default function Pilot() {
                   className="filter-select on"
                   value={size}
                   onChange={(event) => setSize(Number(event.target.value))}
-                  aria-label="Shortlist size"
+                  aria-label={t('pilot.shortlistSize')}
                 >
                   {SHORTLIST_SIZES.map((value) => (
                     <option key={value} value={value}>
-                      Top {value}
+                      {t('pilot.top', { count: value })}
                     </option>
                   ))}
                 </select>
 
                 <span className="stat-note" style={{ marginTop: 0, marginLeft: 'auto' }}>
-                  {result ? 'Run recorded' : 'Showing the configuration as it stands'}
+                  {t(result ? 'pilot.runRecorded' : 'pilot.asConfigured')}
                 </span>
               </div>
 
@@ -136,7 +148,7 @@ export default function Pilot() {
                     <span className="stat-chip">
                       <ListChecks size={14} strokeWidth={1.9} />
                     </span>
-                    <span className="label">Run sequence</span>
+                    <span className="label">{t('pilot.sequence')}</span>
                   </div>
 
                   <div className="runbook">
@@ -159,48 +171,59 @@ export default function Pilot() {
                 <Figures rows>
                   <Stat
                     icon={Boxes}
-                    label="Shortlisted"
-                    value={`${num(findings.companies_shortlisted)} of ${num(findings.companies_analysed)}`}
-                    note={`${findings.critical} critical, ${findings.high} high, ${findings.medium} medium`}
+                    label={t('pilot.shortlisted')}
+                    value={t('pilot.shortlistedValue', {
+                      shortlisted: num(findings.companies_shortlisted),
+                      analysed: num(findings.companies_analysed),
+                    })}
+                    note={t('pilot.shortlistedNote', {
+                      critical: findings.critical,
+                      high: findings.high,
+                      medium: findings.medium,
+                    })}
                   />
                   <Stat
                     icon={CircleDollarSign}
-                    label="Contribution at stake"
+                    label={t('pilot.atStake')}
                     {...splitUnit(lira(findings.estimated_gekap_try))}
-                    note={`${tonnes(findings.additional_tonnage)} below the expected range`}
+                    note={t('pilot.atStakeNote', {
+                      tonnes: tonnes(findings.additional_tonnage),
+                    })}
                   />
                   <Stat
                     icon={Recycle}
-                    label="Recovery potential"
+                    label={t('pilot.recovery')}
                     {...splitUnit(tonnes(findings.recovery_potential_tonnes))}
-                    note="projected from the confirmation rate of closed inspections"
+                    note={t('pilot.recoveryNote')}
                   />
                   <Stat
                     icon={Cloud}
-                    label="Emissions avoided"
+                    label={t('pilot.emissions')}
                     value={num(findings.co2e_avoided_tonnes)}
                     unit="t CO2e"
-                    note={`at ${percent(findings.average_data_quality)} mean data quality`}
+                    note={t('pilot.emissionsNote', {
+                      percent: percent(findings.average_data_quality),
+                    })}
                   />
                 </Figures>
               </div>
 
               {findings.by_material.length > 0 && (
-                <Section icon={Boxes} title="Material in the shortlist">
+                <Section icon={Boxes} title={t('pilot.material')}>
                   <div className="table-wrap">
                     <table className="table">
                       <thead>
                         <tr>
-                          <th>Material</th>
-                          <th>Tonnage</th>
-                          <th>Contribution</th>
-                          <th>CO2e if recovered</th>
+                          <th>{t('common.material')}</th>
+                          <th>{t('common.tonnage')}</th>
+                          <th>{t('pilot.contribution')}</th>
+                          <th>{t('pilot.co2eIfRecovered')}</th>
                         </tr>
                       </thead>
                       <tbody>
                         {findings.by_material.map((row) => (
                           <tr key={row.key}>
-                            <td className="lead">{row.name}</td>
+                            <td className="lead">{materialLabel(row.key)}</td>
                             <td className="num">{tonnes(row.tonnes)}</td>
                             <td className="num">{lira(row.gekap_value_try)}</td>
                             <td className="num">{num(row.co2e_avoided_tonnes)} t</td>
@@ -214,20 +237,17 @@ export default function Pilot() {
 
               <Section
                 icon={ListChecks}
-                title="Shortlist"
+                title={t('pilot.shortlist')}
                 actions={
                   <span className="stat-note" style={{ marginTop: 0 }}>
-                    {findings.signals_unavailable} checks across the shortlist could not run
+                    {t('pilot.unavailableNote', { count: num(findings.signals_unavailable) })}
                   </span>
                 }
               >
                 <QueueTable items={shortlist.slice(0, 25)} />
                 {shortlist.length > 25 && (
                   <div className="pager">
-                    <span>
-                      Showing the top 25 of {shortlist.length}. The rest carry the same reasons and
-                      are in the queue.
-                    </span>
+                    <span>{t('pilot.showingTop', { total: num(shortlist.length) })}</span>
                   </div>
                 )}
               </Section>

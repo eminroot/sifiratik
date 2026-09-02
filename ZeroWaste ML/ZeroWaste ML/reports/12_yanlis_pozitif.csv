@@ -1,0 +1,14 @@
+﻿kategori;sayi;pay;aciklama
+Top-100 toplam;100;1.0;
+dogrulanan eksik beyan;32;0.32;gercek pozitif
+A08_dis_kanit_uyumsuz;1;0.01;yanlis pozitif
+N00_normal;24;0.24;yanlis pozitif
+N09_veri_eksikligi;1;0.01;veri incelemesi kuyrugu
+N10_mesru_gorunum;42;0.42;yanlis pozitif
+  mesru neden: eskimis_ambalaj_agirlik_matrisi;1;0.01;denetci gerekce panelinde gorunur
+  mesru neden: gec_duzeltme_beyannamesi;8;0.08;denetci gerekce panelinde gorunur
+  mesru neden: ihracat_agirlikli_donem;16;0.16;denetci gerekce panelinde gorunur
+  mesru neden: mevsimsel_uretim_duraklamasi;11;0.11;denetci gerekce panelinde gorunur
+  mesru neden: urun_gami_degisikligi;1;0.01;denetci gerekce panelinde gorunur
+  mesru neden: yasal_muafiyet_istisna;4;0.04;denetci gerekce panelinde gorunur
+  mesru neden: yeni_firma_kisa_tarihce;1;0.01;denetci gerekce panelinde gorunur

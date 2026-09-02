@@ -10,12 +10,14 @@ import {
 } from 'lucide-react';
 
 import { get, query, useApi } from '../lib/api.js';
-import { STATUS_LABEL, STATUS_TONE, date, num, shortHash } from '../lib/format.js';
+import { STATUS_TONE, date, num, shortHash, statusLabel } from '../lib/format.js';
+import { useT } from '../lib/i18n.jsx';
 import { PageHead, Panel, Pill, Resource, Section, Stat } from '../components/ui.jsx';
 
 const PAGE_SIZE = 40;
 
 export default function Trail() {
+  const t = useT();
   const [offset, setOffset] = useState(0);
   const events = useApi(`/audit/events${query({ limit: PAGE_SIZE, offset })}`, [offset]);
   const chain = useApi('/audit/verify');
@@ -36,13 +38,13 @@ export default function Trail() {
   return (
     <div className="page">
       <PageHead
-        eyebrow="Traceability"
+        eyebrow={t('trail.eyebrow')}
         icon={ScrollText}
-        title="Decision log"
+        title={t('trail.title')}
       >
         <button type="button" className="btn btn-ghost" onClick={reverify} disabled={verifying}>
           {verifying ? <span className="spin" /> : <ShieldCheck size={15} strokeWidth={1.9} />}
-          Verify chain
+          {t('trail.verify')}
         </button>
       </PageHead>
 
@@ -56,33 +58,33 @@ export default function Trail() {
                 <ShieldCheck size={14} strokeWidth={1.9} />
               )}
             </span>
-            <span className="label">Verification</span>
+            <span className="label">{t('trail.verification')}</span>
             <span className="stat-head-action">
               <Pill tone={intact === false ? 'stop' : 'ok'}>
-                {intact === false ? 'Broken' : 'Intact'}
+                {t(intact === false ? 'trail.broken' : 'trail.intact')}
               </Pill>
             </span>
           </div>
 
           <dl className="facts">
             <div>
-              <dt>Decisions checked</dt>
+              <dt>{t('trail.checked')}</dt>
               <dd>{num(chain.data?.events_checked ?? 0)}</dd>
             </div>
             <div>
-              <dt>Last verified</dt>
+              <dt>{t('trail.lastVerified')}</dt>
               <dd>{date(chain.data?.verified_at, { time: true })}</dd>
             </div>
             {chain.data?.broken_at && (
               <div>
-                <dt>First break</dt>
-                <dd>Sequence {chain.data.broken_at}</dd>
+                <dt>{t('trail.firstBreak')}</dt>
+                <dd>{t('trail.sequence', { n: chain.data.broken_at })}</dd>
               </div>
             )}
           </dl>
 
           <div className="divider" />
-          <span className="label">Head digest</span>
+          <span className="label">{t('trail.headDigest')}</span>
           <p className="hex" style={{ marginTop: 8 }}>
             {chain.data?.head_hash ?? '--'}
           </p>
@@ -92,21 +94,20 @@ export default function Trail() {
         <div className="stack">
           <Stat
             icon={ScrollText}
-            label="Decisions on record"
+            label={t('trail.onRecord')}
             value={num(chain.data?.total_events ?? 0)}
-            note="appended, never edited in place"
+            note={t('trail.onRecordNote')}
           />
           <Panel warm>
-            <span className="label">How the link is formed</span>
+            <span className="label">{t('trail.howLinked')}</span>
             <p className="stat-note" style={{ marginTop: 10 }}>
-              The digest covers the company, the auditor, the action, the statuses either side of
-              it, the note and the timestamp, together with the digest of the previous decision.
+              {t('trail.howLinkedNote')}
             </p>
           </Panel>
         </div>
       </div>
 
-      <Section icon={Link2} title="Recent decisions">
+      <Section icon={Link2} title={t('trail.recent')}>
         <Resource state={events} rows={2}>
           {(data) => (
             <>
@@ -115,11 +116,11 @@ export default function Trail() {
                   <thead>
                     <tr>
                       <th>#</th>
-                      <th>Company</th>
-                      <th>Auditor</th>
-                      <th>Change</th>
-                      <th>Recorded</th>
-                      <th>Digest</th>
+                      <th>{t('common.company')}</th>
+                      <th>{t('trail.auditor')}</th>
+                      <th>{t('trail.change')}</th>
+                      <th>{t('trail.recorded')}</th>
+                      <th>{t('trail.digest')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -135,7 +136,7 @@ export default function Trail() {
                               {event.company_name}
                             </Link>
                           ) : (
-                            <span className="faint">System</span>
+                            <span className="faint">{t('common.system')}</span>
                           )}
                           {event.notes && <p className="event-note">{event.notes}</p>}
                         </td>
@@ -144,12 +145,12 @@ export default function Trail() {
                           <span className="row gap-sm">
                             {event.previous_status && (
                               <span className="faint" style={{ fontSize: 12.5 }}>
-                                {STATUS_LABEL[event.previous_status]}
+                                {statusLabel(event.previous_status)}
                               </span>
                             )}
                             <ChevronRight size={12} strokeWidth={1.9} className="faint" />
                             <Pill tone={STATUS_TONE[event.new_status]}>
-                              {STATUS_LABEL[event.new_status] ?? event.new_status}
+                              {statusLabel(event.new_status)}
                             </Pill>
                           </span>
                         </td>
@@ -168,8 +169,11 @@ export default function Trail() {
 
               <div className="pager">
                 <span>
-                  {num(data.offset + 1)} to {num(Math.min(data.offset + data.limit, data.total))} of{' '}
-                  {num(data.total)}
+                  {t('queue.pageRange', {
+                    from: num(data.offset + 1),
+                    to: num(Math.min(data.offset + data.limit, data.total)),
+                    total: num(data.total),
+                  })}
                 </span>
                 <span className="row">
                   <button
@@ -179,7 +183,7 @@ export default function Trail() {
                     onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))}
                   >
                     <ChevronLeft size={13} strokeWidth={1.9} />
-                    Newer
+                    {t('common.newer')}
                   </button>
                   <button
                     type="button"
@@ -187,7 +191,7 @@ export default function Trail() {
                     disabled={offset + PAGE_SIZE >= data.total}
                     onClick={() => setOffset(offset + PAGE_SIZE)}
                   >
-                    Older
+                    {t('common.older')}
                     <ChevronRight size={13} strokeWidth={1.9} />
                   </button>
                 </span>

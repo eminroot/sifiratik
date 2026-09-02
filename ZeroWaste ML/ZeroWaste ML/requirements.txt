@@ -1,0 +1,16 @@
+# GUS-DEDEKTIV - dataset ureteci ve dogrulama bagimliliklari
+# Python >= 3.11 (gelistirme ortami: 3.13.12)
+
+pandas>=2.2,<4
+numpy>=1.26,<3
+scipy>=1.11
+openpyxl>=3.1
+XlsxWriter>=3.2
+pyarrow>=15.0
+
+# Zorluk/sizinti probu icin (opsiyonel - yoksa prob atlanir)
+scikit-learn>=1.4
+
+# PDF kaynak dogrulamasi icin (opsiyonel)
+pypdf>=4.0
+pillow>=10.0

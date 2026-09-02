@@ -17,6 +17,7 @@ import { Dock, DockIcon, DockItem, DockLabel } from './components/Dock.jsx';
 import Topbar from './components/Topbar.jsx';
 import { Toasts } from './components/ui.jsx';
 import { useApi } from './lib/api.js';
+import { useT } from './lib/i18n.jsx';
 
 import Overview from './pages/Overview.jsx';
 import Queue from './pages/Queue.jsx';
@@ -29,13 +30,13 @@ import Trail from './pages/Trail.jsx';
 import Transparency from './pages/Transparency.jsx';
 
 const DESTINATIONS = [
-  { to: '/', label: 'Overview', icon: LayoutGrid },
-  { to: '/queue', label: 'Inspection queue', icon: ClipboardList },
-  { to: '/data-quality', label: 'Data quality', icon: Gauge },
-  { to: '/impact', label: 'Climate impact', icon: Leaf },
-  { to: '/pilot', label: 'Antalya pilot', icon: Target },
-  { to: '/audit-trail', label: 'Audit trail', icon: ScrollText },
-  { to: '/transparency', label: 'How this works', icon: Scale },
+  { to: '/', key: 'nav.overview', icon: LayoutGrid },
+  { to: '/queue', key: 'nav.queue', icon: ClipboardList },
+  { to: '/data-quality', key: 'nav.quality', icon: Gauge },
+  { to: '/impact', key: 'nav.impact', icon: Leaf },
+  { to: '/pilot', key: 'nav.pilot', icon: Target },
+  { to: '/audit-trail', key: 'nav.trail', icon: ScrollText },
+  { to: '/transparency', key: 'nav.transparency', icon: Scale },
 ];
 
 const AppContext = createContext(null);
@@ -52,6 +53,7 @@ function readTheme() {
 export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
+  const t = useT();
 
   const [theme, setTheme] = useState(readTheme);
   const [period, setPeriod] = useState(null);
@@ -119,9 +121,9 @@ export default function App() {
         </main>
 
         <Dock>
-          {DESTINATIONS.map(({ to, label, icon: Icon }) => (
+          {DESTINATIONS.map(({ to, key, icon: Icon }) => (
             <DockItem key={to} href={to} onClick={follow(to)} active={isLive(to)}>
-              <DockLabel>{label}</DockLabel>
+              <DockLabel>{t(key)}</DockLabel>
               <DockIcon>
                 <Icon strokeWidth={1.75} />
               </DockIcon>
@@ -132,9 +134,9 @@ export default function App() {
 
           <DockItem
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            aria-label="Switch theme"
+            aria-label={t('nav.switchTheme')}
           >
-            <DockLabel>{theme === 'dark' ? 'Light mode' : 'Dark mode'}</DockLabel>
+            <DockLabel>{t(theme === 'dark' ? 'nav.lightMode' : 'nav.darkMode')}</DockLabel>
             <DockIcon>
               {theme === 'dark' ? <Sun strokeWidth={1.75} /> : <Moon strokeWidth={1.75} />}
             </DockIcon>
@@ -149,17 +151,18 @@ export default function App() {
 }
 
 function NotFound() {
+  const t = useT();
   return (
     <div className="page">
       <div className="empty" style={{ marginTop: 60 }}>
         <div className="empty-glyph">
           <Scale size={19} strokeWidth={1.6} />
         </div>
-        <div className="empty-title">No such page</div>
-        <p className="empty-note">The address does not match anything in the platform.</p>
+        <div className="empty-title">{t('notFound.title')}</div>
+        <p className="empty-note">{t('notFound.note')}</p>
         <div style={{ marginTop: 18 }}>
           <Link className="btn btn-ghost" to="/">
-            Back to overview
+            {t('notFound.back')}
           </Link>
         </div>
       </div>

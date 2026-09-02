@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from app import i18n
 from app.config import get_policy
 from app.database.database import get_db
 from app.reference import DATA_FIELDS, MATERIALS, MATERIAL_ORDER, SIGNAL_CATALOG
@@ -23,30 +24,6 @@ from app.scoring.registry import list_engines, resolve_engine
 from app.services.audit_chain import verify_chain
 
 router = APIRouter(tags=["transparency"])
-
-DISCLAIMER = (
-    "The priority score is an inspection prioritisation indicator. It is not a probability "
-    "of violation and not a legal conclusion. Final decisions remain with authorised human "
-    "auditors."
-)
-
-DOES = [
-    "Ranks companies for inspection using the data already held about them.",
-    "Compares a declaration with the same company's earlier filings.",
-    "Compares a declaration with companies of similar sector, size and output.",
-    "States which evidence produced each result and how much it contributed.",
-    "Reports when a check could not be run, and why.",
-    "Keeps every auditor decision in a log that cannot be quietly edited.",
-]
-
-DOES_NOT = [
-    "Decide whether a company has broken the law.",
-    "Issue penalties or start proceedings.",
-    "Treat a low score as a finding of compliance.",
-    "Treat missing data as evidence of good standing.",
-    "Replace the judgement of the inspector who visits the site.",
-]
-
 
 def policy_out() -> PolicyOut:
     policy = get_policy()
@@ -65,7 +42,7 @@ def policy_out() -> PolicyOut:
     )
 
 
-def engines_out() -> list[EngineOut]:
+def engines_out(lang: str) -> list[EngineOut]:
     # The configured engine and the serving engine differ whenever the
     # configured one is not ready, so the flag reports the one actually in use.
     serving = resolve_engine().name
@@ -76,54 +53,36 @@ def engines_out() -> list[EngineOut]:
             kind=info.kind,
             ready=info.ready,
             active=info.name == serving,
-            description=info.description,
-            produces_interval=info.produces_interval,
-            notes=info.notes,
+            description=i18n.engine_string(info.description, lang),
+            produces_interval=i18n.engine_string(info.produces_interval, lang),
+            notes=i18n.engine_notes(info.notes, lang),
         )
         for info in list_engines()
     ]
 
 
 @router.get("/transparency", response_model=TransparencyReport)
-def transparency(db: Session = Depends(get_db)) -> TransparencyReport:
+def transparency(
+    lang: str = Depends(i18n.resolve_lang), db: Session = Depends(get_db)
+) -> TransparencyReport:
     policy = get_policy()
     return TransparencyReport(
-        disclaimer=DISCLAIMER,
-        does=DOES,
-        does_not=DOES_NOT,
+        disclaimer=i18n.text("disclaimer", lang),
+        does=i18n.string_list("does", lang),
+        does_not=i18n.string_list("does_not", lang),
         principles=[
-            Principle(
-                title="Absent evidence is not clean evidence",
-                body="A check that cannot run is reported as unavailable and its weight is "
-                "removed from the calculation. It is never recorded as a check that passed.",
-            ),
-            Principle(
-                title="The interval widens when the inputs are thin",
-                body="An expected range is only as tight as the data behind it. Where records "
-                "are incomplete the range opens up, so a company is not flagged on the strength "
-                "of a figure the platform never had.",
-            ),
-            Principle(
-                title="Every score is reproducible",
-                body="Each result carries the engine, the model version and the policy version "
-                "that produced it, and the comparisons behind each signal are stated in full.",
-            ),
-            Principle(
-                title="Decisions are appended, not overwritten",
-                body="Changing a company's standing writes a new record linked to the one before "
-                "it. Altering the history breaks the chain and the check reports where.",
-            ),
+            Principle(title=title, body=body) for title, body in i18n.principles(lang)
         ],
         active_engine=resolve_engine().name,
-        engines=engines_out(),
+        engines=engines_out(lang),
         policy=policy_out(),
         signals=[
             SignalCatalogItem(
                 code=item["code"],
                 key=item["key"],
                 name=item["name"],
-                summary=item["summary"],
-                inputs=item["inputs"],
+                summary=i18n.signal_summary(item["code"], item["summary"], lang),
+                inputs=i18n.signal_inputs(item["inputs"], lang),
                 weight=policy.weight_for(item["code"]),
                 enabled=item["code"] in policy.enabled_codes(),
             )
