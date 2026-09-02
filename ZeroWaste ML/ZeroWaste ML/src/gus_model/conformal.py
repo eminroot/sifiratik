@@ -93,6 +93,7 @@ class ConformalCalibrator:
     # kapsamayi hedefe oturtur. Grup yapisini bozmaz, yalnizca olcekler.
     delta_scale: float = 1.0
     scale_fitted_on: str = ""
+    required_coverage: float = 0.0
     # level_index -> {group_key: {"delta": float, "n": int, "thin": bool}}
     tables: List[Dict[str, Dict[str, float]]] = field(default_factory=list)
     fitted_on: str = ""
@@ -257,7 +258,7 @@ class ConformalCalibrator:
         n = max(len(frame), 1)
         target = self.target_coverage
         margin = float(np.sqrt(target * (1.0 - target) / n))
-        required = min(target + margin, 0.999)
+        required = min(target + margin + max(0.0, float(extra_margin)), 0.999)
 
         chosen: Optional[float] = None
         best_scale, best_coverage = float(candidates[-1]), -1.0
@@ -270,8 +271,10 @@ class ConformalCalibrator:
                 chosen = float(scale)
         # Hicbir carpan esigi tutmuyorsa en yuksek kapsamayi veren secilir.
         self.delta_scale = chosen if chosen is not None else best_scale
+        self.required_coverage = required
         self.scale_fitted_on = (
-            f"{fitted_on} (hedef {target} + 1 standart hata = {required:.4f})"
+            f"{fitted_on} (hedef {target} + 1 standart hata {margin:.4f}"
+            f" + kayma payi {max(0.0, float(extra_margin)):.4f} = {required:.4f})"
         )
         return self
 
@@ -324,6 +327,7 @@ class ConformalCalibrator:
             "min_group": self.min_group,
             "thin_widen": self.thin_widen,
             "delta_scale": self.delta_scale,
+            "required_coverage": self.required_coverage,
             "fitted_on": self.fitted_on,
             "scale_fitted_on": self.scale_fitted_on,
             "space": "log1p",
@@ -345,6 +349,7 @@ class ConformalCalibrator:
             fitted_on=str(payload.get("fitted_on", "")),
         )
         calibrator.delta_scale = float(payload.get("delta_scale", 1.0))
+        calibrator.required_coverage = float(payload.get("required_coverage", 0.0))
         calibrator.scale_fitted_on = str(payload.get("scale_fitted_on", ""))
         calibrator.tables = payload.get("tables", [])
         return calibrator

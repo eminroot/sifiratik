@@ -121,9 +121,15 @@ class GusModel:
         )
         # Duzeltme carpani, kalibrasyon havuzuna GIRMEYEN valid_a uzerinde
         # ayarlanir; boylece hedef kapsama ile gozlenen kapsama arasindaki
-        # sistematik fark kapanir ve grup yapisi korunur.
+        # sistematik fark kapanir ve grup yapisi korunur. Ayrica aralik bir
+        # SONRAKI donemde kullanilacagi icin kayma payi eklenir.
+        blend_va = self.blend.blend_log(hist_va, peer_va)
+        self.coverage_drift = estimate_coverage_drift(
+            cfg, train, blend_oof, pd.concat([valid_a, valid_b]),
+            pd.concat([blend_va, blend_vb]),
+        )
         self.conformal.tune_scale(
-            valid_a, self.blend.blend_log(hist_va, peer_va), fitted_on="valid_a"
+            valid_a, blend_va, fitted_on="valid_a", extra_margin=self.coverage_drift
         )
 
         # --- Katman 4.1: sinyal olcegi (egitim penceresinden) -------------
