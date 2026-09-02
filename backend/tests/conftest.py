@@ -1,8 +1,8 @@
-"""A throwaway database per test session, seeded the same way production is.
+"""A throwaway database per test session, built the way production is.
 
-The tests run against the real seed rather than fixtures written by hand,
-because the behaviour worth checking is what the engine does with a realistic
-mix of complete and incomplete records.
+The tests run against the imported GÜS panel rather than fixtures written by
+hand, because the behaviour worth checking is what the engine does with a
+realistic mix of complete and incomplete records.
 """
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ def database():
     if TEMP_DB.exists():
         TEMP_DB.unlink()
 
-    from app.database.seed import bootstrap
+    from app.database.gus_import import bootstrap
 
     bootstrap(reset=True, verbose=False)
     yield

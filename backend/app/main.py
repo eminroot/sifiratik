@@ -32,7 +32,7 @@ settings = get_settings()
 async def lifespan(app: FastAPI):
     create_all()
     if settings.auto_seed:
-        from app.database.seed import bootstrap
+        from app.database.gus_import import bootstrap
 
         bootstrap(verbose=False)
     yield

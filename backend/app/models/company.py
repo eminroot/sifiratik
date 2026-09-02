@@ -13,14 +13,34 @@ def _now() -> datetime:
 
 
 class Company(Base):
+    """One registered obligor.
+
+    Identity is tokenised: `tax_identifier` carries the panel's firm token, not
+    a real VKN. The architecture requires the real identifier to stay inside
+    the authority's own boundary, and nothing in this platform needs it — every
+    comparison the engine makes is against the company's own history and its
+    cohort, both of which the token addresses perfectly well.
+    """
+
     __tablename__ = "companies"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     company_name: Mapped[str] = mapped_column(String(180), index=True)
-    tax_identifier: Mapped[str] = mapped_column(String(16), unique=True, index=True)
+    tax_identifier: Mapped[str] = mapped_column(String(32), unique=True, index=True)
     sector: Mapped[str] = mapped_column(String(40), index=True)
     region: Mapped[str] = mapped_column(String(40), index=True)
     company_size: Mapped[str] = mapped_column(String(12), index=True)
+
+    # Registry attributes carried on the declaration file itself.
+    nace_code: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    main_product_group: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    primary_packaging_material: Mapped[str | None] = mapped_column(String(24), nullable=True)
+    operating_since: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Year the packaging weight matrix was last revised. A matrix left to age
+    # is why a product tree can imply the wrong tonnage in good faith, so the
+    # engine reads it rather than assuming the matrix is current.
+    weight_matrix_vintage_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    data_maturity_score: Mapped[float | None] = mapped_column(Float, nullable=True)
 
     # Where the record came from and how complete the upstream picture is.
     registry_status: Mapped[str] = mapped_column(String(20), default="MATCHED")

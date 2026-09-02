@@ -44,6 +44,12 @@ class CompanyFacts:
     company_size: str
     registry_status: str
     gtip_coverage: float
+    # Registry attributes the model reads. A company that has only traded for
+    # a year has a short history for a reason, and a packaging weight matrix
+    # left to age explains a product tree that implies the wrong tonnage in
+    # good faith. Both change how a shortfall should be read.
+    operating_since: int | None = None
+    weight_matrix_vintage_year: int | None = None
 
 
 @dataclass(frozen=True)
@@ -57,6 +63,23 @@ class PeriodFacts:
     # The rule engine has no use for it; the model reads the composition to
     # see whether the reported mix moved without an explanation.
     material_breakdown: dict[str, float] | None = None
+    # Returns, corrections and exemptions all legitimately lower a
+    # declaration. A check that ignored them would raise findings against
+    # companies that did nothing wrong.
+    return_volume: float | None = None
+    correction_volume: float | None = None
+    exemption_flag: bool = False
+    exempt_share: float | None = None
+    # What the registered product tree implies for this period, and how much
+    # of the range it covers. The expectation is only as complete as the
+    # coverage, so the two always travel together.
+    bom_expected_tonnage: float | None = None
+    bom_coverage_ratio: float | None = None
+    # Completeness as recorded on the filing itself, where the source system
+    # states it rather than leaving the platform to infer it.
+    data_quality_score: float | None = None
+    data_freshness_days: int | None = None
+    missing_fields: tuple[str, ...] = ()
 
     @property
     def basis(self) -> float | None:

@@ -1,0 +1,17 @@
+{
+  "generated_at": "2026-09-02T15:58:32+00:00",
+  "dataset_version": "1.0.0",
+  "seed": 20260902,
+  "layer_a_files": [
+    "gekap_rates.csv",
+    "climate_factors.csv",
+    "source_registry.csv",
+    "packaging_weight_ranges.csv",
+    "macro_anchors.csv"
+  ],
+  "derived_files": [
+    "sector_profile.csv"
+  ],
+  "labels_file": "labels.json",
+  "note": "Katman A dosyalari GUS-DEDEKTIV veri deposundan oldugu gibi kopyalanmistir; elle duzenlenmez. Yeniden uretmek icin: python src/export_reference.py --out <backend>/app/reference_data"
+}

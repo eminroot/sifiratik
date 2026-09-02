@@ -1,0 +1,31 @@
+pack_spec_id;sektor;urun_grubu;ambalaj_rolu;gekap_malzeme;pack_format;gtip6_baglam;gtip6_aciklama;birim_agirlik_p10_g;birim_agirlik_p50_g;birim_agirlik_p90_g;dagilim;veri_sinifi;source_id;not
+PS-001;gida_icecek;Ambalajli su;birincil;plastik;PET sise 0,5 L;220110;Mineral sular ve gazli sular;12;16;22;lognormal;synthetic;SYN-BOM-01;Hafifletilmis PET sise araligi - sentetik uzman tahmini
+PS-002;gida_icecek;Ambalajli su;birincil;plastik;PET sise 1,5 L;220110;Mineral sular ve gazli sular;28;34;42;lognormal;synthetic;SYN-BOM-01;Sentetik uzman tahmini
+PS-003;gida_icecek;Gazli icecek;birincil;cam;Cam sise 0,33 L;220210;Ilave sekerli sular;180;215;260;lognormal;synthetic;SYN-BOM-01;Tek kullanimlik cam sise - depozitolu sise daha agirdir
+PS-004;gida_icecek;Gazli icecek;birincil;metal;Aluminyum kutu 0,33 L;220210;Ilave sekerli sular;12;13,5;16;lognormal;synthetic;SYN-BOM-01;Sentetik uzman tahmini
+PS-005;gida_icecek;Meyve suyu;birincil;kompozit;Karton kutu 1 L;200980;Diger meyve ve sebze sulari;26;30;36;lognormal;synthetic;SYN-BOM-01;Kagit-karton agirlikli kompozit icecek ambalaji
+PS-006;gida_icecek;Salca ve konserve;birincil;metal;Teneke kutu 400 g;200290;Domates - sirke disi hazirlanmis;45;56;70;lognormal;synthetic;SYN-BOM-01;Sentetik uzman tahmini
+PS-007;gida_icecek;Recel ve turşu;birincil;cam;Cam kavanoz 500 ml;200799;Recel jel ve marmelat;240;295;360;lognormal;synthetic;SYN-BOM-01;Sentetik uzman tahmini
+PS-008;gida_icecek;Kuru gida ve biskuvi;birincil;kagit_karton;Karton kutu;190531;Tatli biskuviler;30;52;90;lognormal;synthetic;SYN-BOM-01;Sentetik uzman tahmini
+PS-009;kozmetik;Sampuan ve dus jeli;birincil;plastik;HDPE sise 400 ml;330510;Sampuanlar;30;40;55;lognormal;synthetic;SYN-BOM-01;Sentetik uzman tahmini
+PS-010;kozmetik;Cilt bakim;birincil;plastik;Kavanoz veya tup 50 ml;330499;Guzellik ve cilt bakim musttahzarlari;18;26;40;lognormal;synthetic;SYN-BOM-01;Sentetik uzman tahmini
+PS-011;kozmetik;Parfum;birincil;cam;Cam sise 50 ml;330300;Parfumler ve tuvalet sulari;80;120;180;lognormal;synthetic;SYN-BOM-01;Pompa ve kapak agirligi dahil degildir
+PS-012;kozmetik;Kozmetik dis kutu;ikincil;kagit_karton;Karton kutu;330499;Guzellik ve cilt bakim musttahzarlari;8;14;25;lognormal;synthetic;SYN-BOM-01;Sentetik uzman tahmini
+PS-013;ev_temizlik;Sivi deterjan;birincil;plastik;HDPE sise 1 L;340220;Yuzey aktif musttahzarlar - perakende;50;64;85;lognormal;synthetic;SYN-BOM-01;Sentetik uzman tahmini
+PS-014;ev_temizlik;Camasir suyu;birincil;plastik;HDPE sise 2 L;340290;Yuzey aktif musttahzarlar - diger;70;90;120;lognormal;synthetic;SYN-BOM-01;Sentetik uzman tahmini
+PS-015;ev_temizlik;Toz deterjan;birincil;kagit_karton;Karton kutu 3 kg;340220;Yuzey aktif musttahzarlar - perakende;150;205;280;lognormal;synthetic;SYN-BOM-01;Sentetik uzman tahmini
+PS-016;elektronik;Kucuk ev aleti;birincil;kagit_karton;Karton kutu;850811;Elektrikli suepuergeler;200;450;900;lognormal;synthetic;SYN-BOM-01;Sentetik uzman tahmini
+PS-017;elektronik;Elektronik koruma;birincil;kompozit;Kopuk ve karton kompozit ic dolgu;851712;Telefon cihazlari;60;110;200;lognormal;synthetic;SYN-BOM-01;Sentetik uzman tahmini
+PS-018;tekstil;Hazir giyim;birincil;plastik;LDPE poset;610910;Pamuklu tisort;8;14;25;lognormal;synthetic;SYN-BOM-01;Ucretlendirmeye tabi olmayan urun poseti - ambalaj sayilir
+PS-019;tekstil;Hazir giyim kutu;ikincil;kagit_karton;Karton kutu;620342;Pamuklu pantolon;40;80;150;lognormal;synthetic;SYN-BOM-01;Sentetik uzman tahmini
+PS-020;otomotiv_yan_sanayi;Yedek parca;ikincil;kagit_karton;Oluklu mukavva koli;870870;Jantlar ve aksamlari;300;480;800;lognormal;synthetic;SYN-BOM-01;Sentetik uzman tahmini
+PS-021;otomotiv_yan_sanayi;Agir parca tasima;ucuncul;ahsap;Ahsap kasa;870830;Frenler ve aksamlari;4000;8000;15000;lognormal;synthetic;SYN-BOM-01;DIKKAT: Ahsap ambalaj GEKAP tarifesi ADET bazlidir - tonaj yalnizca malzeme akisi icin kullanilir
+PS-022;otomotiv_yan_sanayi;Sivi urun;birincil;metal;Metal bidon 20 L;271019;Petrol yaglari;400;700;1200;lognormal;synthetic;SYN-BOM-01;Sentetik uzman tahmini
+PS-023;ilac;Ilac dis kutu;birincil;kagit_karton;Karton kutu;300490;Dozlandirilmis ilaclar;4;7;12;lognormal;synthetic;SYN-BOM-01;Sentetik uzman tahmini
+PS-024;ilac;Serum ve surup;birincil;cam;Cam sise;300490;Dozlandirilmis ilaclar;25;42;70;lognormal;synthetic;SYN-BOM-01;Sentetik uzman tahmini
+PS-025;ilac;Blister;birincil;kompozit;Aluminyum-PVC blister;300490;Dozlandirilmis ilaclar;3;5,5;10;lognormal;synthetic;SYN-BOM-01;Elle ayrilamayan kompozit ambalaj
+PS-026;kimya_boya;Boya;birincil;metal;Metal kova 2,5 L;320810;Boyalar - susuz ortam;250;380;600;lognormal;synthetic;SYN-BOM-01;Sentetik uzman tahmini
+PS-027;kimya_boya;Endustriyel kimyasal;birincil;plastik;HDPE bidon 5 L;382499;Kimyasal musttahzarlar;250;380;600;lognormal;synthetic;SYN-BOM-01;Sentetik uzman tahmini
+PS-028;ORTAK;Tasima kolisi;ikincil;kagit_karton;Oluklu mukavva koli standart;481910;Oluklu kagit veya kartondan kutular;250;350;500;lognormal;synthetic;SYN-BOM-01;Tum sektorlerde kullanilabilir ikincil ambalaj
+PS-029;ORTAK;Palet;ucuncul;ahsap;EUR tipi ahsap palet;441510;Ahsaptan sandik kutu kafes ve palet;20000;23000;27000;lognormal;synthetic;SYN-BOM-01;DIKKAT: GEKAP tarifesi ADET bazlidir. Cok kullanimlik palet ise piyasaya surme sayimi farklidir.
+PS-030;ORTAK;Streç ve bant;ucuncul;plastik;Strec film ve bantlama;392010;Etilen polimerlerinden plakalar ve filmler;40;90;180;lognormal;synthetic;SYN-BOM-01;Palet basina strec film tuketimi

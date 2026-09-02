@@ -1,0 +1,108 @@
+{
+  "sector": {
+    "gida_icecek": {
+      "tr": "Gıda ve içecek",
+      "en": "Food and beverage"
+    },
+    "kozmetik": {
+      "tr": "Kozmetik ve kişisel bakım",
+      "en": "Cosmetics and personal care"
+    },
+    "ev_temizlik": {
+      "tr": "Ev ve temizlik ürünleri",
+      "en": "Household and cleaning"
+    },
+    "elektronik": {
+      "tr": "Elektronik",
+      "en": "Electronics"
+    },
+    "tekstil": {
+      "tr": "Tekstil ve hazır giyim",
+      "en": "Textile and apparel"
+    },
+    "otomotiv_yan_sanayi": {
+      "tr": "Otomotiv yan sanayi",
+      "en": "Automotive supply"
+    },
+    "ilac": {
+      "tr": "İlaç",
+      "en": "Pharmaceutical"
+    },
+    "kimya_boya": {
+      "tr": "Kimya ve boya",
+      "en": "Chemicals and coatings"
+    }
+  },
+  "size_band": {
+    "mikro": {
+      "tr": "Mikro",
+      "en": "Micro"
+    },
+    "kucuk": {
+      "tr": "Küçük",
+      "en": "Small"
+    },
+    "orta": {
+      "tr": "Orta",
+      "en": "Medium"
+    },
+    "buyuk": {
+      "tr": "Büyük",
+      "en": "Large"
+    }
+  },
+  "material": {
+    "plastik": {
+      "tr": "Plastik",
+      "en": "Plastic"
+    },
+    "kagit_karton": {
+      "tr": "Kâğıt ve karton",
+      "en": "Paper and cardboard"
+    },
+    "cam": {
+      "tr": "Cam",
+      "en": "Glass"
+    },
+    "metal": {
+      "tr": "Metal",
+      "en": "Metal"
+    },
+    "kompozit": {
+      "tr": "Kompozit",
+      "en": "Composite"
+    },
+    "ahsap": {
+      "tr": "Ahşap",
+      "en": "Wood"
+    }
+  },
+  "province": {
+    "Istanbul": "İstanbul",
+    "Izmir": "İzmir",
+    "Tekirdag": "Tekirdağ",
+    "Balikesir": "Balıkesir",
+    "Corum": "Çorum",
+    "Canakkale": "Çanakkale",
+    "Kutahya": "Kütahya",
+    "Sanliurfa": "Şanlıurfa",
+    "Diyarbakir": "Diyarbakır",
+    "Aydin": "Aydın",
+    "Mugla": "Muğla",
+    "Usak": "Uşak"
+  },
+  "size_order": [
+    "mikro",
+    "kucuk",
+    "orta",
+    "buyuk"
+  ],
+  "material_order": [
+    "plastik",
+    "kagit_karton",
+    "cam",
+    "metal",
+    "kompozit",
+    "ahsap"
+  ]
+}
