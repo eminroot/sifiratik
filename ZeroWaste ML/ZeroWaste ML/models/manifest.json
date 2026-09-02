@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "version": "gus-ml-1.0.0",
   "data_version": "1.0.0",
-  "trained_at": "2026-09-02T15:09:01+00:00",
+  "trained_at": "2026-09-02T15:11:01+00:00",
   "seed": 20260902,
   "target_coverage": 0.9,
   "environment": {
@@ -301,6 +301,8 @@
       }
     },
     "target_coverage": 0.9,
+    "coverage_drift_margin": 0.0,
+    "conformal_delta_scale": 0.55,
     "seed": 20260902
   },
   "metrics": {
