@@ -43,7 +43,10 @@ SIGNAL_CODES = ("S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8")
 # Group levels the conformal tables are keyed by, most specific first. Must
 # match `gus_model.conformal.GROUP_LEVELS`.
 GROUP_LEVELS: tuple[tuple[str, ...], ...] = (
+    ("sector", "size_band", "f_data_confidence_level"),
+    ("size_band", "f_data_confidence_level"),
     ("sector", "size_band"),
+    ("f_data_confidence_level",),
     ("sector",),
     ("size_band",),
     (),

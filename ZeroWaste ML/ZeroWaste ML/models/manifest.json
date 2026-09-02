@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "version": "gus-ml-1.0.0",
   "data_version": "1.0.0",
-  "trained_at": "2026-09-02T15:26:31+00:00",
+  "trained_at": "2026-09-02T15:34:43+00:00",
   "seed": 20260902,
   "target_coverage": 0.9,
   "environment": {
@@ -287,7 +287,7 @@
       "q50": 0.0949,
       "q95": 0.02753
     },
-    "risk_iterations": 169,
+    "risk_iterations": 121,
     "quantile_iterations": {
       "hist": {
         "q05": 104,
@@ -302,7 +302,7 @@
     },
     "target_coverage": 0.9,
     "coverage_drift_margin": 0.0,
-    "conformal_delta_scale": 0.55,
+    "conformal_delta_scale": 0.61,
     "seed": 20260902
   },
   "metrics": {
@@ -311,21 +311,21 @@
     "test": {
       "n": 1200,
       "prevalans": 0.0808,
-      "PR_AUC": 0.3251,
-      "ROC_AUC": 0.6661,
-      "Precision@100": 0.35,
+      "PR_AUC": 0.3339,
+      "ROC_AUC": 0.6633,
+      "Precision@100": 0.36,
       "Precision@100_CI": [
         0.26,
         0.46
       ],
-      "Recall@100": 0.3608,
-      "Lift@100": 4.33,
-      "Precision@50": 0.54,
-      "Lift@50": 6.68
+      "Recall@100": 0.3711,
+      "Lift@100": 4.454,
+      "Precision@50": 0.5,
+      "Lift@50": 6.186
     },
     "valid": {
-      "PR_AUC": 0.3037,
-      "Precision@100": 0.36
+      "PR_AUC": 0.3052,
+      "Precision@100": 0.37
     },
     "en_iyi_baseline": {
       "ad": "bl_zscore_hist",
@@ -334,25 +334,25 @@
     },
     "konformal": {
       "hedef_kapsama": 0.9,
-      "gozlenen_valid": 0.9142,
-      "gozlenen_test": 0.8792,
-      "ortanca_bagil_genislik_test": 0.867
+      "gozlenen_valid": 0.9167,
+      "gozlenen_test": 0.8825,
+      "ortanca_bagil_genislik_test": 0.873
     },
     "olasilik_kalibrasyonu": {
-      "brier": 0.06512,
-      "ece": 0.02273,
-      "ortalama_tahmin": 0.06503,
+      "brier": 0.06563,
+      "ece": 0.02357,
+      "ortalama_tahmin": 0.06384,
       "gozlenen_prevalans": 0.08083
     },
     "fayda_top100": {
       "K": 100,
-      "dogrulanan_vaka": 35,
-      "vaka_100_denetim_basina": 35.0,
-      "duzeltilen_tonaj": 2607.44,
-      "toplam_tonajin_payi": 0.8881,
-      "denetim_maliyeti_try": 3602824.05,
-      "ton_basina_maliyet_try": 1381.75,
-      "toplam_inceleme_gunu": 1101
+      "dogrulanan_vaka": 36,
+      "vaka_100_denetim_basina": 36.0,
+      "duzeltilen_tonaj": 2611.19,
+      "toplam_tonajin_payi": 0.8894,
+      "denetim_maliyeti_try": 3615590.89,
+      "ton_basina_maliyet_try": 1384.65,
+      "toplam_inceleme_gunu": 1112
     },
     "kavramsal_kayma_A08": {
       "mekanizma": "A08_dis_kanit_uyumsuz",
@@ -360,8 +360,8 @@
       "truth": 17,
       "Top50_icinde": 11,
       "Top50_orani": 0.6111,
-      "Top100_icinde": 11,
-      "Top100_orani": 0.6111,
+      "Top100_icinde": 12,
+      "Top100_orani": 0.6667,
       "Top200_icinde": 13,
       "Top200_orani": 0.7222
     },

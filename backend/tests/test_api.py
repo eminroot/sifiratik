@@ -120,8 +120,26 @@ def test_unknown_review_status_is_rejected(client):
     assert response.status_code == 422
 
 
-def test_scoring_run_falls_back_and_reports_the_engine_used(client):
+def test_scoring_run_reports_the_engine_that_produced_the_result(client):
+    """A caller is never left guessing what the scores came from."""
+    for requested in ("ml", "mock"):
+        response = client.post("/api/scoring/run", json={"engine": requested})
+        assert response.status_code == 200
+        body = response.json()
+        assert body["companies_scored"] > 0
+        assert body["engine"] in {"ml", "mock"}
+        assert body["model_version"]
+
+
+def test_an_engine_that_cannot_serve_falls_back_to_the_rules(client, monkeypatch):
+    """A model with no artefacts must not take the service down with it."""
+    from app.scoring import ml_scorer
+
+    monkeypatch.setattr(
+        ml_scorer.MLScoringEngine, "missing_artifacts", lambda self: ["manifest.json"]
+    )
     response = client.post("/api/scoring/run", json={"engine": "ml"})
+
     assert response.status_code == 200
     body = response.json()
     assert body["engine"] == "mock"

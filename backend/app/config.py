@@ -25,7 +25,10 @@ class Settings(BaseSettings):
     app_name: str = "GUS-DEDEKTIV"
     api_prefix: str = "/api"
     database_url: str = f"sqlite:///{(BASE_DIR / 'gus_dedektiv.db').as_posix()}"
-    scoring_engine: str = "mock"
+    # The model engine when its artefacts are present; `resolve_engine`
+    # falls back to the rule engine when they are not, so a checkout
+    # without `backend/models/` still runs.
+    scoring_engine: str = "ml"
     auto_seed: bool = True
     seed_random_state: int = 20260101
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173"

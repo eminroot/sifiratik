@@ -1,11 +1,11 @@
 ﻿cikarilan;ad;PR_AUC;Precision@100;delta_PR_AUC;delta_Precision@100
--;-;0.3038;0.35;0.0;0.0
-S1;Tarihsel alt sinir ihlali;0.3008;0.33;-0.003;-0.02
-S2;Emsal alt sinir ihlali;0.2962;0.35;-0.0076;0.0
-S3;Beklenen-gerceklesen tonaj farki;0.2162;0.26;-0.0876;-0.09
-S4;Faaliyet esnekligi uyumsuzlugu;0.2956;0.34;-0.0082;-0.01
-S5;Dis ticaret ve duzeltme dengesi;0.3026;0.33;-0.0012;-0.02
-S6;Donemsel davranis kirilmasi;0.3023;0.34;-0.0015;-0.01
-S7;Urun agaci / ambalaj matrisi uyumsuzlugu;0.3008;0.36;-0.003;0.01
-S8;Dis dogrulama kaniti;0.2969;0.33;-0.0069;-0.02
-konformal aralik;konformal aralik;0.2826;0.34;-0.0212;-0.01
+-;-;0.3006;0.35;0.0;0.0
+S1;Tarihsel alt sinir ihlali;0.298;0.35;-0.0026;0.0
+S2;Emsal alt sinir ihlali;0.2971;0.35;-0.0034;0.0
+S3;Beklenen-gerceklesen tonaj farki;0.2209;0.27;-0.0797;-0.08
+S4;Faaliyet esnekligi uyumsuzlugu;0.29;0.35;-0.0106;0.0
+S5;Dis ticaret ve duzeltme dengesi;0.2961;0.33;-0.0045;-0.02
+S6;Donemsel davranis kirilmasi;0.2991;0.34;-0.0015;-0.01
+S7;Urun agaci / ambalaj matrisi uyumsuzlugu;0.3058;0.36;0.0052;0.01
+S8;Dis dogrulama kaniti;0.3012;0.34;0.0006;-0.01
+konformal aralik;konformal aralik;0.2826;0.34;-0.018;-0.01

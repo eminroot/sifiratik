@@ -348,12 +348,21 @@ def run_scoring(
         query = query.where(Company.id.in_(company_ids))
     companies = db.execute(query).scalars().all()
 
+    # Assemble every context first, then hand the engine the whole batch. The
+    # rule engine is indifferent, but a model engine loads its boosters once
+    # and predicts over a matrix instead of a row at a time.
+    contexts = [
+        context
+        for context in (
+            build_context(db, company, period, peer_index, prior_peer_index)
+            for company in companies
+        )
+        if context is not None
+    ]
+
     counts: dict[str, int] = {}
     scored = 0
-    for company in companies:
-        outcome = score_company(db, company, period, engine, peer_index, prior_peer_index)
-        if outcome is None:
-            continue
+    for outcome in engine.score_many(contexts):
         persist_outcome(db, outcome)
         counts[outcome.priority_level] = counts.get(outcome.priority_level, 0) + 1
         scored += 1

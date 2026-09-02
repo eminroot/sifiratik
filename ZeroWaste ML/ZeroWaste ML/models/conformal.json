@@ -3,7 +3,7 @@
   "target_coverage": 0.9,
   "min_group": 60,
   "thin_widen": 1.15,
-  "delta_scale": 0.55,
+  "delta_scale": 0.6100000000000001,
   "required_coverage": 0.9122474487139159,
   "fitted_on": "train(OOF) + valid_b",
   "scale_fitted_on": "valid_a (hedef 0.9 + 1 standart hata 0.0122 + kayma payi 0.0000 = 0.9122)",
@@ -11,7 +11,19 @@
   "levels": [
     [
       "sector",
+      "size_band",
+      "f_data_confidence_level"
+    ],
+    [
+      "size_band",
+      "f_data_confidence_level"
+    ],
+    [
+      "sector",
       "size_band"
+    ],
+    [
+      "f_data_confidence_level"
     ],
     [
       "sector"
@@ -22,6 +34,535 @@
     []
   ],
   "tables": [
+    {
+      "elektronik|buyuk|orta": {
+        "delta": 0.1918607944068853,
+        "n": 16,
+        "thin": true
+      },
+      "elektronik|buyuk|yuksek": {
+        "delta": 0.20779406460247074,
+        "n": 20,
+        "thin": true
+      },
+      "elektronik|kucuk|dusuk": {
+        "delta": 0.4113859379916338,
+        "n": 9,
+        "thin": true
+      },
+      "elektronik|kucuk|orta": {
+        "delta": 0.1473111833195695,
+        "n": 89,
+        "thin": false
+      },
+      "elektronik|kucuk|yuksek": {
+        "delta": 0.10468479115519536,
+        "n": 74,
+        "thin": false
+      },
+      "elektronik|mikro|dusuk": {
+        "delta": 0.059121441559205845,
+        "n": 3,
+        "thin": true
+      },
+      "elektronik|mikro|orta": {
+        "delta": 0.12852541711801768,
+        "n": 53,
+        "thin": true
+      },
+      "elektronik|mikro|yuksek": {
+        "delta": 0.24268427645340207,
+        "n": 40,
+        "thin": true
+      },
+      "elektronik|orta|dusuk": {
+        "delta": 0.0758103035357145,
+        "n": 4,
+        "thin": true
+      },
+      "elektronik|orta|orta": {
+        "delta": 0.03951473071177514,
+        "n": 39,
+        "thin": true
+      },
+      "elektronik|orta|yuksek": {
+        "delta": 0.14845202804282476,
+        "n": 45,
+        "thin": true
+      },
+      "ev_temizlik|buyuk|dusuk": {
+        "delta": -0.23461932625435544,
+        "n": 1,
+        "thin": true
+      },
+      "ev_temizlik|buyuk|orta": {
+        "delta": 0.017662450638348925,
+        "n": 20,
+        "thin": true
+      },
+      "ev_temizlik|buyuk|yuksek": {
+        "delta": 1.6354810977907084,
+        "n": 15,
+        "thin": true
+      },
+      "ev_temizlik|kucuk|dusuk": {
+        "delta": 0.42949819984583204,
+        "n": 7,
+        "thin": true
+      },
+      "ev_temizlik|kucuk|orta": {
+        "delta": 0.11956504950328828,
+        "n": 52,
+        "thin": true
+      },
+      "ev_temizlik|kucuk|yuksek": {
+        "delta": 0.11354639907743636,
+        "n": 65,
+        "thin": false
+      },
+      "ev_temizlik|mikro|dusuk": {
+        "delta": 0.38936514195342564,
+        "n": 7,
+        "thin": true
+      },
+      "ev_temizlik|mikro|orta": {
+        "delta": 0.21569894732049288,
+        "n": 59,
+        "thin": true
+      },
+      "ev_temizlik|mikro|yuksek": {
+        "delta": 0.25139456286637296,
+        "n": 30,
+        "thin": true
+      },
+      "ev_temizlik|orta|dusuk": {
+        "delta": -0.26474415118650585,
+        "n": 1,
+        "thin": true
+      },
+      "ev_temizlik|orta|orta": {
+        "delta": 0.12212740516250165,
+        "n": 27,
+        "thin": true
+      },
+      "ev_temizlik|orta|yuksek": {
+        "delta": -0.020179645751948527,
+        "n": 20,
+        "thin": true
+      },
+      "gida_icecek|buyuk|dusuk": {
+        "delta": -0.18679250685695514,
+        "n": 1,
+        "thin": true
+      },
+      "gida_icecek|buyuk|orta": {
+        "delta": 0.23323258270860414,
+        "n": 28,
+        "thin": true
+      },
+      "gida_icecek|buyuk|yuksek": {
+        "delta": 0.08687584031072326,
+        "n": 33,
+        "thin": true
+      },
+      "gida_icecek|kucuk|dusuk": {
+        "delta": 0.11617655745206457,
+        "n": 37,
+        "thin": true
+      },
+      "gida_icecek|kucuk|orta": {
+        "delta": 0.07966551873143857,
+        "n": 210,
+        "thin": false
+      },
+      "gida_icecek|kucuk|yuksek": {
+        "delta": 0.07730444213297494,
+        "n": 185,
+        "thin": false
+      },
+      "gida_icecek|mikro|dusuk": {
+        "delta": 0.02699300577977004,
+        "n": 33,
+        "thin": true
+      },
+      "gida_icecek|mikro|orta": {
+        "delta": 0.07480991725696162,
+        "n": 201,
+        "thin": false
+      },
+      "gida_icecek|mikro|yuksek": {
+        "delta": 0.09184977990960963,
+        "n": 122,
+        "thin": false
+      },
+      "gida_icecek|orta|dusuk": {
+        "delta": 0.21704314717085893,
+        "n": 11,
+        "thin": true
+      },
+      "gida_icecek|orta|orta": {
+        "delta": 0.07237327880674904,
+        "n": 119,
+        "thin": false
+      },
+      "gida_icecek|orta|yuksek": {
+        "delta": 0.019516536678020557,
+        "n": 134,
+        "thin": false
+      },
+      "ilac|buyuk|orta": {
+        "delta": 0.027466114205376257,
+        "n": 6,
+        "thin": true
+      },
+      "ilac|buyuk|yuksek": {
+        "delta": 0.27012413844156224,
+        "n": 10,
+        "thin": true
+      },
+      "ilac|kucuk|dusuk": {
+        "delta": 0.26091385989975535,
+        "n": 12,
+        "thin": true
+      },
+      "ilac|kucuk|orta": {
+        "delta": 0.07540607316078063,
+        "n": 70,
+        "thin": false
+      },
+      "ilac|kucuk|yuksek": {
+        "delta": 0.07648534169842636,
+        "n": 68,
+        "thin": false
+      },
+      "ilac|mikro|dusuk": {
+        "delta": 0.12992512413723434,
+        "n": 10,
+        "thin": true
+      },
+      "ilac|mikro|orta": {
+        "delta": 0.11687212874905306,
+        "n": 96,
+        "thin": false
+      },
+      "ilac|mikro|yuksek": {
+        "delta": 0.174205039332318,
+        "n": 56,
+        "thin": true
+      },
+      "ilac|orta|dusuk": {
+        "delta": 0.0900270561282781,
+        "n": 3,
+        "thin": true
+      },
+      "ilac|orta|orta": {
+        "delta": 0.1901733752192909,
+        "n": 27,
+        "thin": true
+      },
+      "ilac|orta|yuksek": {
+        "delta": 0.11681375034537567,
+        "n": 20,
+        "thin": true
+      },
+      "kimya_boya|buyuk|orta": {
+        "delta": -0.015634323763334734,
+        "n": 12,
+        "thin": true
+      },
+      "kimya_boya|buyuk|yuksek": {
+        "delta": 0.09128757558802825,
+        "n": 32,
+        "thin": true
+      },
+      "kimya_boya|kucuk|dusuk": {
+        "delta": 1.468119943124781,
+        "n": 12,
+        "thin": true
+      },
+      "kimya_boya|kucuk|orta": {
+        "delta": 0.17495925932975176,
+        "n": 82,
+        "thin": false
+      },
+      "kimya_boya|kucuk|yuksek": {
+        "delta": 0.17806368205537204,
+        "n": 70,
+        "thin": false
+      },
+      "kimya_boya|mikro|dusuk": {
+        "delta": 0.46798484003039853,
+        "n": 11,
+        "thin": true
+      },
+      "kimya_boya|mikro|orta": {
+        "delta": 0.06547877207795638,
+        "n": 83,
+        "thin": false
+      },
+      "kimya_boya|mikro|yuksek": {
+        "delta": 0.1511803719804501,
+        "n": 56,
+        "thin": true
+      },
+      "kimya_boya|orta|dusuk": {
+        "delta": -0.03762207640801485,
+        "n": 2,
+        "thin": true
+      },
+      "kimya_boya|orta|orta": {
+        "delta": 0.03280626024944944,
+        "n": 28,
+        "thin": true
+      },
+      "kimya_boya|orta|yuksek": {
+        "delta": 0.13751257165729136,
+        "n": 20,
+        "thin": true
+      },
+      "kozmetik|buyuk|dusuk": {
+        "delta": -0.2063028602393997,
+        "n": 3,
+        "thin": true
+      },
+      "kozmetik|buyuk|orta": {
+        "delta": 0.18133126468770833,
+        "n": 27,
+        "thin": true
+      },
+      "kozmetik|buyuk|yuksek": {
+        "delta": 0.06581869637853366,
+        "n": 30,
+        "thin": true
+      },
+      "kozmetik|kucuk|dusuk": {
+        "delta": 0.4689130687828875,
+        "n": 9,
+        "thin": true
+      },
+      "kozmetik|kucuk|orta": {
+        "delta": 0.15504484664898044,
+        "n": 67,
+        "thin": false
+      },
+      "kozmetik|kucuk|yuksek": {
+        "delta": 0.07443301109792255,
+        "n": 72,
+        "thin": false
+      },
+      "kozmetik|mikro|dusuk": {
+        "delta": -0.007718644470061875,
+        "n": 9,
+        "thin": true
+      },
+      "kozmetik|mikro|orta": {
+        "delta": 0.18095531724200375,
+        "n": 86,
+        "thin": false
+      },
+      "kozmetik|mikro|yuksek": {
+        "delta": 0.09762897239414992,
+        "n": 43,
+        "thin": true
+      },
+      "kozmetik|orta|dusuk": {
+        "delta": 0.24810133281235336,
+        "n": 6,
+        "thin": true
+      },
+      "kozmetik|orta|orta": {
+        "delta": 0.29176667066756146,
+        "n": 45,
+        "thin": true
+      },
+      "kozmetik|orta|yuksek": {
+        "delta": 0.13686008061783017,
+        "n": 31,
+        "thin": true
+      },
+      "otomotiv_yan_sanayi|buyuk|dusuk": {
+        "delta": 0.04844157629983048,
+        "n": 1,
+        "thin": true
+      },
+      "otomotiv_yan_sanayi|buyuk|orta": {
+        "delta": 0.13741069367782366,
+        "n": 8,
+        "thin": true
+      },
+      "otomotiv_yan_sanayi|buyuk|yuksek": {
+        "delta": 0.07822914981602835,
+        "n": 5,
+        "thin": true
+      },
+      "otomotiv_yan_sanayi|kucuk|dusuk": {
+        "delta": 0.8039981497214244,
+        "n": 18,
+        "thin": true
+      },
+      "otomotiv_yan_sanayi|kucuk|orta": {
+        "delta": 0.17023834977274044,
+        "n": 108,
+        "thin": false
+      },
+      "otomotiv_yan_sanayi|kucuk|yuksek": {
+        "delta": 0.12991991457369334,
+        "n": 100,
+        "thin": false
+      },
+      "otomotiv_yan_sanayi|mikro|dusuk": {
+        "delta": 0.011154386064093025,
+        "n": 9,
+        "thin": true
+      },
+      "otomotiv_yan_sanayi|mikro|orta": {
+        "delta": 0.09640038518219285,
+        "n": 79,
+        "thin": false
+      },
+      "otomotiv_yan_sanayi|mikro|yuksek": {
+        "delta": 0.28867062831119616,
+        "n": 56,
+        "thin": true
+      },
+      "otomotiv_yan_sanayi|orta|dusuk": {
+        "delta": -0.15165009145490105,
+        "n": 5,
+        "thin": true
+      },
+      "otomotiv_yan_sanayi|orta|orta": {
+        "delta": 0.2636064756959815,
+        "n": 41,
+        "thin": true
+      },
+      "otomotiv_yan_sanayi|orta|yuksek": {
+        "delta": 0.2374438968810999,
+        "n": 48,
+        "thin": true
+      },
+      "tekstil|buyuk|dusuk": {
+        "delta": 0.13273720922495436,
+        "n": 4,
+        "thin": true
+      },
+      "tekstil|buyuk|orta": {
+        "delta": 0.20479770783276763,
+        "n": 31,
+        "thin": true
+      },
+      "tekstil|buyuk|yuksek": {
+        "delta": 0.052007713729608884,
+        "n": 35,
+        "thin": true
+      },
+      "tekstil|kucuk|dusuk": {
+        "delta": 0.42144193216811043,
+        "n": 12,
+        "thin": true
+      },
+      "tekstil|kucuk|orta": {
+        "delta": 0.13221206978600097,
+        "n": 128,
+        "thin": false
+      },
+      "tekstil|kucuk|yuksek": {
+        "delta": 0.24444506280100153,
+        "n": 112,
+        "thin": false
+      },
+      "tekstil|mikro|dusuk": {
+        "delta": 0.2610479529475258,
+        "n": 14,
+        "thin": true
+      },
+      "tekstil|mikro|orta": {
+        "delta": 0.1377855270628996,
+        "n": 115,
+        "thin": false
+      },
+      "tekstil|mikro|yuksek": {
+        "delta": 0.1816601874154733,
+        "n": 77,
+        "thin": false
+      },
+      "tekstil|orta|dusuk": {
+        "delta": -0.014039333855538239,
+        "n": 5,
+        "thin": true
+      },
+      "tekstil|orta|orta": {
+        "delta": 0.17346293826156067,
+        "n": 56,
+        "thin": true
+      },
+      "tekstil|orta|yuksek": {
+        "delta": 0.13478809299422423,
+        "n": 57,
+        "thin": true
+      }
+    },
+    {
+      "buyuk|dusuk": {
+        "delta": 0.13273720922495436,
+        "n": 10,
+        "thin": true
+      },
+      "buyuk|orta": {
+        "delta": 0.08877887319317601,
+        "n": 148,
+        "thin": false
+      },
+      "buyuk|yuksek": {
+        "delta": 0.07822914981602835,
+        "n": 180,
+        "thin": false
+      },
+      "kucuk|dusuk": {
+        "delta": 0.23762045675810306,
+        "n": 116,
+        "thin": false
+      },
+      "kucuk|orta": {
+        "delta": 0.12375165032540014,
+        "n": 806,
+        "thin": false
+      },
+      "kucuk|yuksek": {
+        "delta": 0.09589179837812356,
+        "n": 746,
+        "thin": false
+      },
+      "mikro|dusuk": {
+        "delta": 0.1006942838872642,
+        "n": 96,
+        "thin": false
+      },
+      "mikro|orta": {
+        "delta": 0.09640038518219285,
+        "n": 772,
+        "thin": false
+      },
+      "mikro|yuksek": {
+        "delta": 0.1375095194182414,
+        "n": 480,
+        "thin": false
+      },
+      "orta|dusuk": {
+        "delta": 0.0900270561282781,
+        "n": 37,
+        "thin": true
+      },
+      "orta|orta": {
+        "delta": 0.10712874058538358,
+        "n": 382,
+        "thin": false
+      },
+      "orta|yuksek": {
+        "delta": 0.10445932755716791,
+        "n": 375,
+        "thin": false
+      }
+    },
     {
       "elektronik|buyuk": {
         "delta": 0.1918607944068853,
@@ -181,6 +722,23 @@
       "tekstil|orta": {
         "delta": 0.13478809299422423,
         "n": 118,
+        "thin": false
+      }
+    },
+    {
+      "dusuk": {
+        "delta": 0.11617655745206457,
+        "n": 259,
+        "thin": false
+      },
+      "orta": {
+        "delta": 0.10286142524510522,
+        "n": 2108,
+        "thin": false
+      },
+      "yuksek": {
+        "delta": 0.1016223338763913,
+        "n": 1781,
         "thin": false
       }
     },

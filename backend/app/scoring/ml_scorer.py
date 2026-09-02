@@ -61,7 +61,13 @@ from app.scoring.base import (
     SignalOutcome,
 )
 from app.scoring.ml_features import build_features
-from app.scoring.ml_runtime import ArtifactError, MLRuntime, Prediction, SignalReading
+from app.scoring.ml_runtime import (
+    ArtifactError,
+    MLRuntime,
+    Prediction,
+    SignalReading,
+    lgb,
+)
 
 ARTIFACT_DIR = Path(__file__).resolve().parent.parent.parent / "models"
 
@@ -174,7 +180,17 @@ class MLScoringEngine(ScoringEngine):
             return {}
 
     def missing_artifacts(self) -> list[str]:
-        return [name for name in REQUIRED_ARTIFACTS if not (ARTIFACT_DIR / name).exists()]
+        """What stops this engine serving, named so the reason is reportable.
+
+        The runtime dependency is listed alongside the files. `resolve_engine`
+        decides on readiness before a request is served, so a deployment
+        without lightgbm has to fall back to the rule engine there rather than
+        fail once scoring is already under way.
+        """
+        missing = [name for name in REQUIRED_ARTIFACTS if not (ARTIFACT_DIR / name).exists()]
+        if lgb is None:
+            missing.append("lightgbm (not installed)")
+        return missing
 
     @property
     def ready(self) -> bool:
@@ -189,8 +205,10 @@ class MLScoringEngine(ScoringEngine):
         notes: list[str]
         if missing:
             notes = [
-                "The trained model has not been delivered yet, so the rule engine "
-                "remains in service.",
+                "lightgbm is not installed, so the model cannot run."
+                if lgb is None
+                else "The trained model has not been delivered yet.",
+                "The rule engine remains in service.",
                 "Switching to it changes no part of the interface: the result carries "
                 "the same fields, and each one still names the evidence behind it.",
             ]
@@ -393,7 +411,9 @@ class MLScoringEngine(ScoringEngine):
                 available=True,
                 score=round(reading.score, 1),
                 weight=weight,
-                contribution=round(reading.contribution, 4),
+                # Contributions are percentages of the score, as the rule
+                # engine reports them and as the interface renders them.
+                contribution=round(reading.contribution * 100.0, 1),
             )
             outcome.explanation, outcome.evidence = self._describe(
                 code, source, context, row, prediction, reading

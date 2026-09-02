@@ -16,7 +16,16 @@ halde iyi verili buyuk firmalarda fazla dar, ince verili mikro firmalarda
 fazla genis bir aralik ortalamada dogru gorunur ve denetciyi yanlis kapiya
 gonderir. Gruplar sirasiyla denenir:
 
-    (sector, size_band) -> sector -> size_band -> global
+    (sektor, olcek, veri guveni) -> (olcek, veri guveni) -> (sektor, olcek)
+    -> veri guveni -> sektor -> olcek -> global
+
+VERI GUVENI neden gruplama boyutu: model, veri kalitesi dustukce araligi zaten
+bir miktar genisletmeyi ogreniyor (test bolumunde ortanca bagil genislik
+yuksek guvende 0,85 iken dusuk guvende 0,95). Fakat bu kendiliginden yeterli
+degil - dusuk guvenli kayitlarda gozlenen kapsama yine de daha dusuk kaliyordu.
+Veri guvenini gruplama boyutu yapmak, kapsama garantisini bu kayitlar icin de
+ayri ayri kurar. Kotu verili bir firmaya dar aralik vermek, denetciyi yanlis
+kapiya gonderen hatadir.
 
 Bir grup `conformal_min_group` esigini tutmuyorsa bir ust gruba dusulur ve
 aralik `conformal_thin_widen` carpaniyla ayrica genisletilir; ince kalibrasyon
@@ -39,7 +48,10 @@ from .config import ModelConfig
 from .featureset import TARGET_COLUMN, log_target, unlog
 
 GROUP_LEVELS: Tuple[Tuple[str, ...], ...] = (
+    ("sector", "size_band", "f_data_confidence_level"),
+    ("size_band", "f_data_confidence_level"),
     ("sector", "size_band"),
+    ("f_data_confidence_level",),
     ("sector",),
     ("size_band",),
     (),

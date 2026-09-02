@@ -1,11 +1,11 @@
 ﻿mekanizma;n;truth;Top50_icinde;Top50_orani;Top100_icinde;Top100_orani;Top200_icinde;Top200_orani
 A01_tarihsel_dusus;9;9;5;0.5556;6;0.6667;7;0.7778
 A02_emsal_alti;5;5;2;0.4;2;0.4;2;0.4
-A03_beklenen_fark;10;8;5;0.5;7;0.7;9;0.9
+A03_beklenen_fark;10;8;4;0.4;7;0.7;9;0.9
 A04_faaliyet_uyumsuz;9;9;2;0.2222;4;0.4444;5;0.5556
 A06_mevsimsel_kirilma;3;3;1;0.3333;2;0.6667;2;0.6667
-A07_urun_agaci_uyumsuz;5;5;2;0.4;3;0.6;4;0.8
-A08_dis_kanit_uyumsuz;18;17;11;0.6111;11;0.6111;13;0.7222
-N00_normal;895;37;7;0.0078;27;0.0302;85;0.095
+A07_urun_agaci_uyumsuz;5;5;1;0.2;3;0.6;4;0.8
+A08_dis_kanit_uyumsuz;18;17;11;0.6111;12;0.6667;13;0.7222
+N00_normal;895;37;10;0.0112;27;0.0302;87;0.0972
 N09_veri_eksikligi;33;0;0;0.0;1;0.0303;4;0.1212
-N10_mesru_gorunum;213;4;15;0.0704;37;0.1737;69;0.3239
+N10_mesru_gorunum;213;4;14;0.0657;36;0.169;67;0.3146
