@@ -8,7 +8,12 @@ openpyxl>=3.1
 XlsxWriter>=3.2
 pyarrow>=15.0
 
-# Zorluk/sizinti probu icin (opsiyonel - yoksa prob atlanir)
+# Model katmani (src/gus_model). Quantile basliklari, fusion ve TreeSHAP
+# katkilari LightGBM'in kendi `pred_contrib` ciktisindan gelir; ayrica
+# `shap` paketine ihtiyac YOKTUR.
+lightgbm>=4.3
+
+# Izotonik kalibrasyon, zorluk/sizinti probu ve referans baseline'lar
 scikit-learn>=1.4
 
 # PDF kaynak dogrulamasi icin (opsiyonel)

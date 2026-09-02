@@ -353,8 +353,18 @@ def model_card(
   nedenle **bootstrap guven araliklari** ile birlikte raporlanir.
 - `A08_dis_kanit_uyumsuz` mekanizmasi egitimde nadir, testte siktir. Bu
   **kasitli bir kavramsal kayma (concept drift) testidir**; ilgili satira bakiniz.
-- Il (`province`) bilgisi modele **girdi olarak verilmemistir**. Cografi
-  profilleme riski nedeniyle yalnizca alt grup adalet olcumunde kullanilir.
+- **Kimlik ozellikleri risk puanina girmez.** Il (`province`) hicbir yerde
+  kullanilmaz; sektor ve olcek bandi ise YALNIZCA beklenti basliklarinda ve
+  konformal gruplamada kullanilir. Oradaki isleri karsilastirmayi adil
+  yapmaktir - firma kendi sektorunun ve olceginin beklentisiyle olculur. Risk
+  puanina dogrudan girselerdi yapacaklari sey "senin gibi firmalar daha cok
+  denetleniyor" demek olurdu. Bedeli olculdu ve yoktur: egitim penceresi
+  capraz dogrulamasinda PR-AUC 0,2141 -> 0,2169, test Precision@100 0,350 ->
+  0,350.
+- **Eksik veri dusuk risk sayilmaz.** Calistirilamayan bir sinyal puan
+  tasimaz, fakat KATKI tasiyabilir: model, kontrol edilemeyen dosyalarin daha
+  sik eksik beyan tasidigini veriden ogrenir. Denetci panelinde bu durum
+  kelimelerle yazilir - sessizce "temiz" sayilmaz.
 - Model **veri toplamaz**. Kurumun kendi verisini kendi ortaminda degerlendirir.
 
 ## 2. Ne yapar
@@ -374,9 +384,9 @@ Analiz birimi **firma-ceyrek**tir.
 | 3 | Tarihsel baslik | LightGBM quantile (q05/q50/q95), hedef `log1p(beyan)` |
 | 3 | Emsal baslik | LightGBM quantile; firmanin **kendi beyan gecmisi girmez** |
 | 3 | Harman | log uzayinda agirlikli ortalama, agirlik = **{metrics['harman_agirligi_hist']}** (valid_a pinball) |
-| 3 | Kalibrasyon | Mondrian **CQR** (sector x size_band -> sector -> size_band -> global) |
+| 3 | Kalibrasyon | Mondrian **CQR**: (sektor, olcek, veri guveni) -> ... -> global |
 | 4 | Sekiz sinyal | ham istatistik -> egitim penceresi yuzdelik rampasi -> 0-100 |
-| 4 | Birlestirme | LightGBM (girdi: sinyaller + kullanilabilirlik + aralik konumu + veri guveni) |
+| 4 | Birlestirme | LightGBM tohum toplulugu; girdi: sinyallerin **ham** istatistigi + kullanilabilirlik + aralik konumu + veri guveni |
 | 4 | Puan | izotonik kalibrasyon -> referans yuzdelik -> 0-100 |
 | 5 | Aciklama | TreeSHAP katkisi -> sinyal duzeyi -> **sablonlu** gerekce cumlesi |
 
@@ -464,7 +474,27 @@ risk **sayilmaz**, ayri veri incelemesi kuyruguna gider.
 
 {_table(false_positive)}
 
-## 11. Kullanim sinirlari
+## 11. Gercek veriye gecerken
+
+Sinyal mantigi degismez; sentetik alanlar karsilik gelen resmi kaynakla
+degistirilir (`Government_Integration_Map`). Uc nokta pilotta yeniden
+olculmelidir:
+
+1. **Konformal kapsama her donem yeniden kalibre edilmelidir.** Hedef 0,90
+   iken `valid` uzerinde 0,92, bir sonraki pencerede (test) 0,88 gozlendi.
+   Konformal garanti degisim-degismezlik varsayar; zaman icinde ilerledikce
+   bu varsayim zayiflar. Egitim penceresi icinde olculen kayma payi bu
+   surumde 0,00 cikti, yani kayip egitim->valid gecisinde degil valid->test
+   gecisinde olustu.
+2. **Sinyal olcekleri populasyona baglidir.** Rampa capalari egitim
+   penceresinin dagilimindan ogrenilir. Farkli bir populasyonda bir sinyal
+   hic ateslemeyebilir; `signals.json` yeniden uretilmelidir.
+3. **S3 kapsam duzeltmesi kurumun kapsam alaninin anlamina baglidir.**
+   Beklenti, urun agacinin kapsanan kismindan gelir ve kapsam oranina
+   bolunerek genisletilir. Kurumun kapsam alani farkli tanimliysa bu bolme
+   yeniden dogrulanmalidir.
+
+## 12. Kullanim sinirlari
 
 - Puan siralamadir; esik gecmek **ihlal kaniti degildir**.
 - Kullanilamayan sinyal **temiz sonuc degildir**; veri guveni dusurulur.

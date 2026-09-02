@@ -111,6 +111,9 @@ class SignalReading:
     raw: float
     score: float | None
     available: bool
+    # Signed SHAP contribution in log-odds, summed over the inputs belonging to
+    # this signal. Deliberately not normalised here: the caller knows which
+    # signals it will actually report, and shares have to add up over those.
     contribution: float
 
 
@@ -441,7 +444,7 @@ class MLRuntime:
         probability = _isotonic(self.calibration["probability"], probability_raw)
         priority = _score_map(self.calibration["score_map"], probability_raw)
 
-        shares = self._contribution_shares(contributions)
+        grouped = self._grouped_contributions(contributions)
         weights = self.calibration.get("policy_fusion", {}).get("weights", {})
         total_weight = sum(float(v) for v in weights.values()) or 1.0
 
@@ -455,7 +458,7 @@ class MLRuntime:
                         None if not available[code][index] else float(scores[code][index])
                     ),
                     available=bool(available[code][index]),
-                    contribution=float(shares[index, position]),
+                    contribution=float(grouped[index, position]),
                 )
                 for position, code in enumerate(SIGNAL_CODES)
             ]
@@ -480,13 +483,14 @@ class MLRuntime:
             )
         return results
 
-    def _contribution_shares(self, contributions: np.ndarray) -> np.ndarray:
-        """Positive SHAP mass per signal, normalised to sum to one.
+    def _grouped_contributions(self, contributions: np.ndarray) -> np.ndarray:
+        """SHAP contributions collapsed from inputs to signals.
 
         A signal's contribution is the sum over every input that belongs to it,
         which for this model is its raw statistic and its availability flag.
-        Only positive contributions are shared out: the question the panel
-        answers is what pushed this file up the queue.
+        The values stay signed and unnormalised; evidence that pushed a file
+        *down* the queue is as real as evidence that pushed it up, and the
+        caller decides how to present both.
         """
         order = self.manifest["feature_order"]["risk"]
         grouped = np.zeros((contributions.shape[0], len(SIGNAL_CODES)))
@@ -498,9 +502,7 @@ class MLRuntime:
             ]
             if columns:
                 grouped[:, position] = contributions[:, columns].sum(axis=1)
-        positive = np.clip(grouped, 0.0, None)
-        total = positive.sum(axis=1, keepdims=True)
-        return np.divide(positive, total, out=np.zeros_like(positive), where=total > 1e-12)
+        return grouped
 
 
 # --------------------------------------------------------------------------- #

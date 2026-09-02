@@ -86,11 +86,11 @@ REQUIRED_ARTIFACTS = (
 )
 
 # Which of the model's signals answers each of the interface's eight checks.
-# Seven line up exactly. E6 is the loosest fit: the interface calls it a
-# numerical pattern check, and the model's nearest equivalent asks whether the
-# reported material composition moved in a way the packaging matrix supports.
-# Both ask whether the reported figures are internally consistent, and the
-# explanation the model writes says which one it actually ran.
+# Seven line up exactly. E6 is the loosest fit: the rule engine reads rounding
+# and repetition in the amounts, while the model reads how the reported
+# material composition moves between periods. Both ask whether the reported
+# figures are internally consistent, which is why E6 is named for the question
+# rather than for either method, and the explanation says which one ran.
 SIGNAL_SOURCE: dict[str, str] = {
     "E1": "S1",  # against the company's own history
     "E2": "S5",  # against the volume placed on the domestic market
@@ -104,11 +104,11 @@ SIGNAL_SOURCE: dict[str, str] = {
 
 SIGNAL_NAMES: dict[str, str] = {
     "E1": "Historical shortfall",
-    "E2": "Domestic supply shortfall",
+    "E2": "Structural shortfall",
     "E3": "Peer deviation",
     "E4": "Production and declaration mismatch",
-    "E5": "Seasonal break",
-    "E6": "Packaging composition shift",
+    "E5": "Temporal inconsistency",
+    "E6": "Reporting pattern",
     "E7": "Field contradiction",
     "E8": "Customs tariff evidence",
 }
@@ -154,6 +154,53 @@ def _tonnes(value: float | None) -> str:
 
 def _pct(value: float) -> str:
     return f"{value * 100:.0f}%"
+
+
+ABSENCE_RAISED_PRIORITY = (
+    " Files where this check cannot be run have more often held a confirmed "
+    "shortfall, so its absence raised the priority here rather than lowering it."
+)
+
+
+def _share_out_contributions(
+    outcomes: list[SignalOutcome], readings: dict[str, SignalReading]
+) -> None:
+    """Turn SHAP values into the percentages the panel shows.
+
+    Only the evidence that pushed the file *up* the queue takes a share: the
+    question this panel answers is what put the file in front of the auditor.
+    Evidence that pulled the score down is real, but it explains why the file
+    ranks where it does, not why it was raised.
+
+    A check that could **not** run still takes a share when its absence is what
+    raised the score. The model learns that from the data — a company with no
+    product tree on file is more often the one with a shortfall — and an
+    auditor has to be able to see that this is why the file is here. Hiding it
+    would leave a file ranked high with a blank panel, and would quietly
+    reintroduce the rule the whole system exists to reject: that missing data
+    reads as nothing to find.
+
+    A file whose every signal pulled downwards has nothing to share out, and
+    every contribution is zero rather than an invented split of nothing.
+    """
+    positive = {
+        outcome.code: max(0.0, readings[SIGNAL_SOURCE[outcome.code]].contribution)
+        for outcome in outcomes
+        if outcome.status != STATUS_DISABLED and outcome.code in SIGNAL_SOURCE
+    }
+    total = sum(positive.values())
+    for outcome in outcomes:
+        if total <= 0 or outcome.code not in positive:
+            outcome.contribution = 0.0
+            continue
+        outcome.contribution = round(positive[outcome.code] / total * 100.0, 1)
+        if (
+            outcome.status == STATUS_UNAVAILABLE
+            and outcome.contribution > 0
+            and outcome.missing_data_reason
+            and ABSENCE_RAISED_PRIORITY not in outcome.missing_data_reason
+        ):
+            outcome.missing_data_reason += ABSENCE_RAISED_PRIORITY
 
 
 class MLScoringEngine(ScoringEngine):
@@ -411,9 +458,6 @@ class MLScoringEngine(ScoringEngine):
                 available=True,
                 score=round(reading.score, 1),
                 weight=weight,
-                # Contributions are percentages of the score, as the rule
-                # engine reports them and as the interface renders them.
-                contribution=round(reading.contribution * 100.0, 1),
             )
             outcome.explanation, outcome.evidence = self._describe(
                 code, source, context, row, prediction, reading
@@ -422,6 +466,7 @@ class MLScoringEngine(ScoringEngine):
             outcome.evidence["deviation_percentile"] = round(reading.score / 100.0, 3)
             outcomes.append(outcome)
 
+        _share_out_contributions(outcomes, readings)
         return outcomes
 
     def _describe(

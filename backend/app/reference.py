@@ -248,9 +248,15 @@ SIGNAL_CATALOG: list[SignalDef] = [
     {
         "code": "E6",
         "key": "NUMERICAL_PATTERN",
-        "name": "Numerical pattern",
-        "summary": "Rounding, repetition and threshold behaviour in the reported figures.",
-        "inputs": ["Declaration history"],
+        "name": "Reporting pattern",
+        # Deliberately broader than either engine's own wording. The rule
+        # engine reads rounding and repetition in the amounts; the model reads
+        # how the reported material composition moves between periods. Both
+        # ask the same question — whether the reported figures are internally
+        # consistent — and the label has to be true of whichever one ran.
+        "summary": "Internal consistency of the reported figures themselves, in how "
+        "they are composed and how they move between periods.",
+        "inputs": ["Declaration history", "Material breakdown"],
     },
     {
         "code": "E7",

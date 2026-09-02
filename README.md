@@ -10,7 +10,7 @@ it does not decide whether anyone has broken the law.
 ```
 Backend    FastAPI · SQLAlchemy 2.0 · Pydantic v2 · SQLite by default, PostgreSQL ready
 Frontend   React 19 · Vite · react-router · framer-motion · lucide
-Scoring    Eight independent signals behind one interface, rule engine in service
+Scoring    Eight evidence signals behind one interface, quantile model in service
 ```
 
 ---
@@ -116,33 +116,63 @@ Thresholds, signal weights and the blend are policy, not code:
 
 ---
 
-## Handing over to the model
+## The model
 
-The engine is an interface with two implementations. `MockScoringEngine` is in
-service; `MLScoringEngine` is the seat the trained model takes.
+The engine is an interface with two implementations, and both are in the
+repository.
 
 ```
 app/scoring/base.py          the contract: dataclasses in, ScoreOutcome out
-app/scoring/mock_scorer.py   deterministic rules, in service today
-app/scoring/ml_scorer.py     quantile models plus conformal calibration
+app/scoring/mock_scorer.py   deterministic rules, the reference and the fallback
+app/scoring/ml_scorer.py     the trained model, in service when its artefacts are present
+app/scoring/ml_runtime.py    reads the artefacts and runs them; numpy and lightgbm only
+app/scoring/ml_features.py   ScoringContext to the feature row the model was trained on
 app/scoring/registry.py      selection, and fallback when an engine cannot serve
 ```
 
 The engine never sees the ORM. It receives `ScoringContext` — plain dataclasses
 holding the company, its declaration history, its peer cohort, its site visits,
 its customs lines and its data quality — and returns `ScoreOutcome`. The API
-serialises that same shape whichever engine produced it, so **replacing the
+serialises that same shape whichever engine produced it, so **swapping the
 engine requires no frontend change**.
 
-To switch over: drop the artefacts into `backend/models/` and set
-`SCORING_ENGINE=ml`. Until they are present, `resolve_engine` falls back to the
-rule engine and every response says which engine actually produced it.
+`SCORING_ENGINE` selects one. It defaults to `ml`; when the artefacts or
+lightgbm are absent, `resolve_engine` falls back to the rule engine, and every
+response says which engine actually produced it.
 
-Two rules the implementation has to keep, and the current engine keeps:
+### What it does
+
+Two gradient boosted quantile heads produce the expected declaration — one from
+the company's own filing history, one from its peers and its output, which
+never sees the company's own history so a firm that has under-declared for
+years cannot talk its own expectation down. The two are blended and the
+interval is calibrated by Mondrian conformal prediction, per sector, size band
+and data confidence. Eight evidence signals are then read off, and a second
+model combines them into the 0-100 priority. Every result reports how much each
+signal contributed, computed by TreeSHAP over the model that actually ran.
+
+Trained and evaluated on the synthetic panel in `ZeroWaste ML`, on a temporal
+holdout: fitted through 2025Q2, calibrated on 2025Q3-Q4, measured once on
+2026Q1-Q2. Of the 100 highest ranked files, 36% held a confirmed shortfall
+against a base rate of 8.1% — a lift of 4.5, against 1.9 for the best simple
+baseline. **These are figures on synthetic data and are not evidence of
+performance on real declarations.** The model card is in the model repository
+under `reports/MODEL_KARTI.md`.
+
+### Rules the implementation keeps
 
 1. A feature that cannot be computed makes the checks that depend on it
    unavailable. It is not imputed to a neutral value and scored as observed.
-2. The conformal interval widens for groups with thin calibration data.
+2. The conformal interval widens for groups with thin calibration data, and a
+   record's own data confidence is one of the grouping dimensions.
+3. Absent data is not absolution. A check that could not run carries no score,
+   but it can still carry a contribution, and the panel says so in words: the
+   model learned that files it cannot check are more often the ones worth
+   checking.
+4. Sector and size band shape the *expectation* and the calibration, so a
+   company is measured against comparable companies. They are kept out of the
+   risk score itself, along with province, so no company is ranked up for what
+   it is rather than what it reported.
 
 ---
 

@@ -58,6 +58,29 @@ python src/generate_dataset.py --seed 20260902 --firms 600
 
 Ölçek `--firms` ile değiştirilebilir (300–2500 önerilir). **Aynı seed + aynı config = aynı dataset.**
 
+## Model eğitimi
+
+```bash
+python src/train_model.py --export ../../backend/models
+```
+
+Katman 3-5'i uçtan uca kurar: iki quantile başlık → harman → Mondrian konformal
+kalibrasyon → sekiz kanıt sinyali → birleştirme → TreeSHAP gerekçeleri. Çıktılar:
+
+| Çıktı | Açıklama |
+|---|---|
+| `models/` | Backend'in okuduğu teslim paketi (11 dosya + topluluk üyeleri) |
+| `reports/MODEL_KARTI.md` | Model kartı — sınırlılıklarla başlar |
+| `reports/*.csv` | 12 değerlendirme tablosu: sıralama, ablation, alt grup, kalibrasyon, fayda |
+| `reports/metrics.json` | Özet metrikler; `manifest.json` içine de gömülür |
+
+Teslim paketinin kendine yeterli olduğu ve eğitim hattıyla **birebir aynı**
+sonucu verdiği ayrıca doğrulanır:
+
+```bash
+python src/score_dataset.py --split test --verify
+```
+
 ## Doğrulama
 
 ```bash
@@ -91,8 +114,24 @@ src/gus_generator/  Üretici paket
   pipeline.py         Uçtan uca orkestrasyon + COP31/iklim senaryoları
   excel_builder.py    16 sayfalık .xlsx
 
-src/generate_dataset.py   Üretim komutu
-src/validate_dataset.py   Bağımsız doğrulama
+src/gus_model/      Model katmanı (ARCHITECTURE.md Katman 3-5)
+  config.py           Model parametreleri (tek doğruluk kaynağı)
+  dataset.py          Yükleme, bölümleme, sızıntı nöbeti
+  featureset.py       Üç ayrı özellik uzayı ve sözleşmeleri
+  quantile.py         LightGBM quantile başlıkları + yapısal çapa + çapraz uydurma
+  conformal.py        Mondrian CQR kalibrasyonu
+  signals.py          Sekiz kanıt sinyali ve yüzdelik tabanlı ölçekleme
+  risk.py             Tohum topluluklu birleştirme, izotonik kalibrasyon, puan haritası
+  explain.py          TreeSHAP → sinyal katkısı → şablonlu gerekçe
+  evaluate.py         Sıralama, ablation, alt grup, kayma, fayda metrikleri
+  report.py           Değerlendirme tabloları ve model kartı
+  export.py           Backend teslim paketi
+  serving.py          Paketten model yükleme (referans uygulama)
+
+src/generate_dataset.py   Dataset üretim komutu
+src/validate_dataset.py   Bağımsız dataset doğrulaması
+src/train_model.py        Model eğitimi, değerlendirme ve teslim
+src/score_dataset.py      Teslim paketiyle skorlama + tur-dönüş doğrulaması
 docs/ARCHITECTURE.md      Sistem mimarisi ve teknoloji gerekçeleri
 ```
 

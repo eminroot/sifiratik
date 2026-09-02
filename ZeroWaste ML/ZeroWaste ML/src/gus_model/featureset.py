@@ -113,7 +113,20 @@ _BOM: Tuple[str, ...] = ("f_s3_bom_expected", "f_s3_bom_coverage")
 HIST_FEATURES: Tuple[str, ...] = _STRUCTURAL + _OWN_HISTORY
 PEER_FEATURES: Tuple[str, ...] = _STRUCTURAL + _PEER
 
-# Risk modelinin sinyal disi baglam ozellikleri
+# Risk modelinin sinyal disi baglam ozellikleri.
+#
+# `sector` ve `size_band` BILINCLI OLARAK YOK. Ikisi de modele giriyor - fakat
+# BEKLENTI basliklarinda ve konformal gruplamada. Orada isleri karsilastirmayi
+# ADIL yapmaktir: firma kendi sektorunun ve olceginin beklentisiyle olculur.
+# Risk puanina dogrudan girdiklerinde ise yaptiklari sey baskadir: "senin gibi
+# firmalar daha cok denetleniyor" demek olur. Bu, `province` icin reddedilen
+# muhakemenin aynisidir ve sektor/olcek icin de reddedilir.
+#
+# Bedeli olculdu: egitim penceresi capraz dogrulamasinda PR-AUC 0,2141 ->
+# 0,2169, test Precision@100 0,350 -> 0,350. Yani bedeli yok.
+#
+# `log_production` kalir: oranlarin hangi olcekte okundugunu soyler ve
+# cikarilmasi olculebilir bir kayip veriyor (Precision@100 0,350 -> 0,320).
 RISK_CONTEXT: Tuple[str, ...] = (
     "f_active_signal_count",
     "f_data_quality_score",
@@ -125,8 +138,6 @@ RISK_CONTEXT: Tuple[str, ...] = (
     "f_s3_bom_coverage",
     "f_s7_matrix_age_years",
     "f_s2_peer_n_prev",
-    "sector",
-    "size_band",
     "log_production",
 )
 

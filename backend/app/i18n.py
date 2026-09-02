@@ -151,8 +151,10 @@ SIGNAL_SUMMARIES: dict[str, dict[str, str]] = {
         "tr": "Beyan edilen ambalaj yoğunluğunun raporlama dönemleri boyunca istikrarı.",
     },
     "E6": {
-        "en": "Rounding, repetition and threshold behaviour in the reported figures.",
-        "tr": "Bildirilen rakamlardaki yuvarlama, tekrar ve eşik davranışı.",
+        "en": "Internal consistency of the reported figures themselves, in how they "
+        "are composed and how they move between periods.",
+        "tr": "Bildirilen rakamların kendi içindeki tutarlılığı: nasıl bileştikleri ve "
+        "dönemler arasında nasıl değiştikleri.",
     },
     "E7": {
         "en": "Site observations set against what the company reported for the same period.",
@@ -168,6 +170,7 @@ SIGNAL_INPUTS: dict[str, str] = {
     "Declaration history": "Beyan geçmişi",
     "Production volume": "Üretim miktarı",
     "Import volume": "İthalat miktarı",
+    "Material breakdown": "Malzeme kırılımı",
     "Sector coefficients": "Sektör katsayıları",
     "Packaging coefficients": "Ambalaj katsayıları",
     "Peer cohort": "Emsal grubu",
