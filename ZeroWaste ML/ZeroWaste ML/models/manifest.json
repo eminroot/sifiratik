@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "version": "gus-ml-1.0.0",
   "data_version": "1.0.0",
-  "trained_at": "2026-09-02T15:22:22+00:00",
+  "trained_at": "2026-09-02T15:26:31+00:00",
   "seed": 20260902,
   "target_coverage": 0.9,
   "environment": {

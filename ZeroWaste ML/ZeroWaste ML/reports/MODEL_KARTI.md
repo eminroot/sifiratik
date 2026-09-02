@@ -85,11 +85,11 @@ ayni fonksiyonlari kullanir.
 | model | PR_AUC | ROC_AUC_ek_gosterge | Precision@50 | Precision@100 | Recall@100 | Lift@100 | Precision@100_CI_alt | Precision@100_CI_ust |
 |---|---|---|---|---|---|---|---|---|
 | GUS-DEDEKTIV (fusion) | 0.3251 | 0.6661 | 0.54 | 0.35 | 0.3608 | 4.33 | 0.26 | 0.46 |
-| politika agirlikli birlestirme | 0.1704 | 0.6504 | 0.22 | 0.29 | 0.299 | 3.588 | 0.2 | 0.37 |
-| bl_zscore_hist | 0.1592 | 0.6604 | 0.18 | 0.19 | 0.1959 | 2.351 | 0.12 | 0.27 |
+| politika agirlikli birlestirme | 0.1704 | 0.6504 | 0.22 | 0.29 | 0.299 | 3.588 | 0.18 | 0.37 |
+| bl_zscore_hist | 0.1592 | 0.6604 | 0.18 | 0.19 | 0.1959 | 2.351 | 0.11 | 0.27 |
 | bl_naive_8signal | 0.1587 | 0.6295 | 0.24 | 0.21 | 0.2165 | 2.598 | 0.13 | 0.3 |
 | bl_bom_gap | 0.1438 | 0.6162 | 0.26 | 0.19 | 0.1959 | 2.351 | 0.11 | 0.27 |
-| bl_expert_rule | 0.1227 | 0.6158 | 0.08 | 0.18 | 0.1856 | 2.227 | 0.11 | 0.26 |
+| bl_expert_rule | 0.1227 | 0.6158 | 0.08 | 0.18 | 0.1856 | 2.227 | 0.11 | 0.2652 |
 | bl_random | 0.0804 | 0.4972 | 0.04 | 0.07 | 0.0722 | 0.866 | 0.02 | 0.12 |
 | bl_peer | 0.0774 | 0.4858 | 0.1 | 0.07 | 0.0722 | 0.866 | 0.02 | 0.12 |
 
@@ -141,18 +141,7 @@ icindedir. Tek basina ayirt gucleri:
 
 ### Ablation - her sinyal cikarilarak yeniden egitim
 
-| cikarilan | ad | PR_AUC | Precision@100 | delta_PR_AUC | delta_Precision@100 |
-|---|---|---|---|---|---|
-| - | - | 0.3038 | 0.35 | 0.0 | 0.0 |
-| S1 | Tarihsel alt sinir ihlali | 0.3008 | 0.33 | -0.003 | -0.02 |
-| S2 | Emsal alt sinir ihlali | 0.2962 | 0.35 | -0.0076 | 0.0 |
-| S3 | Beklenen-gerceklesen tonaj farki | 0.2162 | 0.26 | -0.0876 | -0.09 |
-| S4 | Faaliyet esnekligi uyumsuzlugu | 0.2956 | 0.34 | -0.0082 | -0.01 |
-| S5 | Dis ticaret ve duzeltme dengesi | 0.3026 | 0.33 | -0.0012 | -0.02 |
-| S6 | Donemsel davranis kirilmasi | 0.3023 | 0.34 | -0.0015 | -0.01 |
-| S7 | Urun agaci / ambalaj matrisi uyumsuzlugu | 0.3008 | 0.36 | -0.003 | 0.01 |
-| S8 | Dis dogrulama kaniti | 0.2969 | 0.33 | -0.0069 | -0.02 |
-| konformal aralik | konformal aralik | 0.2826 | 0.34 | -0.0212 | -0.01 |
+_(uretilmedi)_
 
 
 ## 8. Alt grup davranisi

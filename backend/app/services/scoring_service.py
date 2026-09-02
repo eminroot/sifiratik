@@ -339,6 +339,8 @@ def run_scoring(
     started = time.perf_counter()
     engine = resolve_engine(engine_name)
     peer_index = build_peer_index(db, period)
+    earlier = previous_period(period)
+    prior_peer_index = build_peer_index(db, earlier) if earlier else {}
 
     query = select(Company).options(selectinload(Company.declarations))
     if company_ids:
@@ -348,7 +350,7 @@ def run_scoring(
     counts: dict[str, int] = {}
     scored = 0
     for company in companies:
-        outcome = score_company(db, company, period, engine, peer_index)
+        outcome = score_company(db, company, period, engine, peer_index, prior_peer_index)
         if outcome is None:
             continue
         persist_outcome(db, outcome)
