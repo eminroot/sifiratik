@@ -1,14 +1,14 @@
 ﻿kategori;sayi;pay;aciklama
 Top-100 toplam;100;1.0;
-dogrulanan eksik beyan;34;0.34;gercek pozitif
+dogrulanan eksik beyan;35;0.35;gercek pozitif
 A08_dis_kanit_uyumsuz;1;0.01;yanlis pozitif
-N00_normal;28;0.28;yanlis pozitif
+N00_normal;26;0.26;yanlis pozitif
 N09_veri_eksikligi;1;0.01;veri incelemesi kuyrugu
-N10_mesru_gorunum;36;0.36;yanlis pozitif
-  mesru neden: eskimis_ambalaj_agirlik_matrisi;2;0.02;denetci gerekce panelinde gorunur
-  mesru neden: gec_duzeltme_beyannamesi;7;0.07;denetci gerekce panelinde gorunur
-  mesru neden: ihracat_agirlikli_donem;14;0.14;denetci gerekce panelinde gorunur
-  mesru neden: mevsimsel_uretim_duraklamasi;10;0.1;denetci gerekce panelinde gorunur
-  mesru neden: urun_gami_degisikligi;1;0.01;denetci gerekce panelinde gorunur
+N10_mesru_gorunum;37;0.37;yanlis pozitif
+  mesru neden: eskimis_ambalaj_agirlik_matrisi;5;0.05;denetci gerekce panelinde gorunur
+  mesru neden: gec_duzeltme_beyannamesi;9;0.09;denetci gerekce panelinde gorunur
+  mesru neden: ihracat_agirlikli_donem;10;0.1;denetci gerekce panelinde gorunur
+  mesru neden: mevsimsel_uretim_duraklamasi;7;0.07;denetci gerekce panelinde gorunur
+  mesru neden: urun_gami_degisikligi;4;0.04;denetci gerekce panelinde gorunur
   mesru neden: yasal_muafiyet_istisna;1;0.01;denetci gerekce panelinde gorunur
   mesru neden: yeni_firma_kisa_tarihce;1;0.01;denetci gerekce panelinde gorunur

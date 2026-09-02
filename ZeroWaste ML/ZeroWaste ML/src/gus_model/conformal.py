@@ -48,12 +48,6 @@ GROUP_LEVELS: Tuple[Tuple[str, ...], ...] = (
 GLOBAL_KEY = "*"
 
 
-def group_key(row: pd.Series, level: Tuple[str, ...]) -> str:
-    if not level:
-        return GLOBAL_KEY
-    return "|".join(str(row[c]) for c in level)
-
-
 def group_keys(frame: pd.DataFrame, level: Tuple[str, ...]) -> pd.Series:
     if not level:
         return pd.Series(GLOBAL_KEY, index=frame.index)
@@ -133,19 +127,6 @@ class ConformalCalibrator:
         return self
 
     # -------------------------------------------------------------- resolve --
-
-    def _lookup(self, row_keys: List[str]) -> Tuple[float, int, str, bool]:
-        """Yeterli ornegi olan EN OZEL gruptan genisletme payini alir."""
-        for depth, (table, level) in enumerate(zip(self.tables, GROUP_LEVELS)):
-            entry = table.get(row_keys[depth])
-            if entry and entry["n"] >= self.min_group:
-                return float(entry["delta"]), int(entry["n"]), "|".join(level) or GLOBAL_KEY, False
-        # Hicbir seviye esigi tutmuyor: en ozel MEVCUT gruba dus, genislet.
-        for depth, (table, level) in enumerate(zip(self.tables, GROUP_LEVELS)):
-            entry = table.get(row_keys[depth])
-            if entry:
-                return float(entry["delta"]), int(entry["n"]), "|".join(level) or GLOBAL_KEY, True
-        return float("nan"), 0, GLOBAL_KEY, True
 
     def resolve(self, frame: pd.DataFrame) -> Dict[str, np.ndarray]:
         """Her satir icin genisletme payi, kaynak grup ve incelik bayragi.

@@ -53,6 +53,10 @@ class PeriodFacts:
     production_volume: float | None
     import_volume: float | None
     export_volume: float | None
+    # Tonnes per material for this period, keyed as in `reference.MATERIALS`.
+    # The rule engine has no use for it; the model reads the composition to
+    # see whether the reported mix moved without an explanation.
+    material_breakdown: dict[str, float] | None = None
 
     @property
     def basis(self) -> float | None:
@@ -95,6 +99,13 @@ class PeerCohort:
     member_count: int
     median_intensity: float | None
     p25_intensity: float | None
+    # Packaging per tonne of *production alone*, excluding imports. The rule
+    # engine compares against output as a whole; the model was trained on the
+    # production-only ratio, and feeding it a differently defined statistic
+    # would move the peer expectation without anyone noticing.
+    median_per_production: float | None = None
+    p10_per_production: float | None = None
+    iqr_per_production: float | None = None
 
 
 @dataclass(frozen=True)
@@ -117,6 +128,10 @@ class ScoringContext:
     quality: DataQuality
     sector_coefficient: float
     import_coefficient: float
+    # The cohort as it stood in the *previous* period. A company must not be
+    # compared against a cohort statistic its own declaration helped set, so
+    # the model's peer expectation is built from the period before.
+    peers_prior: PeerCohort | None = None
 
     @property
     def current(self) -> PeriodFacts:

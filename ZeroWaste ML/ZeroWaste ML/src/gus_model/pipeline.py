@@ -18,9 +18,7 @@ aksi halde kapsama orani ve olasilik kalibrasyonu iyimser cikar.
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
@@ -41,7 +39,6 @@ from .dataset import Bundle
 from .explain import contribution_shares, signal_contributions
 from .featureset import HIST_FEATURES, PEER_FEATURES, RISK_FEATURES, TARGET_COLUMN, log_target
 from .quantile import (
-    QUANTILE_NAMES,
     BlendedExpectation,
     QuantileHead,
     fit_cross_fitted,
@@ -200,9 +197,9 @@ class GusModel:
         self.probability = ProbabilityCalibrator().fit(
             oof_prob, y_train, fitted_on="train (out-of-fold)"
         )
-        calibrated_oof = self.probability.transform(oof_prob)
         self.score_map = ScoreMap().fit(
-            calibrated_oof, prevalence=float(np.mean(y_train)), fitted_on="train (out-of-fold)"
+            oof_prob, prevalence=float(np.mean(y_train)),
+            fitted_on="train (out-of-fold, ham olasilik)",
         )
 
         # --- Tani bilgileri -----------------------------------------------
@@ -252,7 +249,7 @@ class GusModel:
         expectation = self._expectation_from_log(hist_log, peer_log)
         calibrated = self.conformal.apply(frame, blend_log)
         raw = raw_statistics(frame, expectation)
-        scores = self.scaler.transform(raw) if self.scaler.anchors else _provisional(raw)
+        scores = self.scaler.transform(raw)
         intervals = interval_features(frame, calibrated)
         raw_only = raw[[f"raw_{c.lower()}" for c in SIGNAL_CODES]]
         return pd.concat([frame, raw_only, scores, intervals], axis=1)
@@ -279,7 +276,7 @@ class GusModel:
         inputs = pd.concat([frame, raw, scores, intervals], axis=1)
         prob_raw = self.risk.predict_proba(inputs)
         prob = self.probability.transform(prob_raw)
-        priority = self.score_map.transform(prob)
+        priority = self.score_map.transform(prob_raw)
         level = self.score_map.levels(priority)
 
         shap_frame = self.risk.shap_values(inputs)
@@ -337,17 +334,6 @@ class GusModel:
             ),
             "seed": self.cfg.seed,
         }
-
-
-def _provisional(raw: pd.DataFrame) -> pd.DataFrame:
-    """Olcek henuz uydurulmadan once gecici sinyal cercevesi."""
-    out = pd.DataFrame(index=raw.index)
-    for code in SIGNAL_CODES:
-        key = code.lower()
-        out[f"sig_{key}"] = np.nan
-        out[f"avail_{key}"] = raw[f"avail_{key}"].astype(int)
-    out["active_signal_count"] = out[[f"avail_{c.lower()}" for c in SIGNAL_CODES]].sum(axis=1)
-    return out
 
 
 __all__ = ["GusModel", "FitDiagnostics"]

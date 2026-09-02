@@ -195,11 +195,13 @@ PRIORITY_BANDS: Tuple[Tuple[str, float, float], ...] = (
     ("CRITICAL", 75.0, 100.0),
 )
 
-# Veri guveni esikleri
+# Veri guveni esikleri.
+# `f_data_quality_score` dataset'te 0-1 olceginde tutulur (backend ayni degeri
+# 0-100 olceginde tasir ve adaptorde bolerek gecirir). Esikler 0-1'dedir.
 CONFIDENCE_HIGH_COVERAGE = 0.75
 CONFIDENCE_LOW_COVERAGE = 0.55
-CONFIDENCE_HIGH_QUALITY = 70.0
-CONFIDENCE_LOW_QUALITY = 45.0
+CONFIDENCE_HIGH_QUALITY = 0.70
+CONFIDENCE_LOW_QUALITY = 0.45
 
 # Politika agirliklari - backend `ScoringPolicy` ile ayni sirada tutulur.
 # Ogrenilmis fusion devre disi birakildiginda seffaf yedek budur.

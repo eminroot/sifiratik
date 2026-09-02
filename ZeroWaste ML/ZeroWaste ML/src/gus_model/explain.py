@@ -99,8 +99,8 @@ TEMPLATES: Dict[str, Dict[str, str]] = {
         "en": "Peers of the same sector and size imply {beklenen} t; the declaration is {beyan} t, {fark}% below.",
     },
     "S3": {
-        "tr": "Urun agacindan beklenen ambalaj tonaji {beklenen} ton, beyan {beyan} ton (%{fark} altinda).",
-        "en": "The product tree implies {beklenen} t of packaging against a declaration of {beyan} t, {fark}% below.",
+        "tr": "Urun agacindan beklenen ambalaj tonaji {beklenen} ton (agirlik matrisi kapsami %{kapsam}), beyan {beyan} ton (%{fark} altinda).",
+        "en": "The product tree implies {beklenen} t of packaging ({kapsam}% matrix coverage) against a declaration of {beyan} t, {fark}% below.",
     },
     "S4": {
         "tr": "Uretim %{uretim} degisirken ambalaj beyani %{beyan_degisim} degisti; ayrisma {fark} puan.",
@@ -181,8 +181,17 @@ def signal_sentence(
         expected = float(expectation.get("peer_q50", np.nan))
         return template.format(beklenen=_ton(expected), beyan=_ton(declared), fark=_pct(max(raw, 0.0)))
     if code == "S3":
-        expected = float(row.get("f_s3_bom_expected", np.nan))
-        return template.format(beklenen=_ton(expected), beyan=_ton(declared), fark=_pct(max(raw, 0.0)))
+        # Gosterilen beklenti, kapsam oranina bolunerek tam urun agacina
+        # genisletilmis olandir - sinyalin uzerinde calistigi buyukluk budur.
+        coverage = float(row.get("f_s3_bom_coverage", np.nan))
+        partial = float(row.get("f_s3_bom_expected", np.nan))
+        expected = partial / coverage if np.isfinite(coverage) and coverage > 0 else np.nan
+        return template.format(
+            beklenen=_ton(expected),
+            kapsam=_pct(coverage) if np.isfinite(coverage) else "-",
+            beyan=_ton(declared),
+            fark=_pct(max(raw, 0.0)),
+        )
     if code == "S4":
         prod = float(row.get("f_s4_prod_yoy", row.get("f_s4_prod_qoq", np.nan)))
         decl = float(row.get("f_s1_decl_yoy", row.get("f_s1_decl_qoq", np.nan)))

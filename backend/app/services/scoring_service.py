@@ -59,7 +59,16 @@ def _period_facts(declaration: Declaration) -> PeriodFacts:
         production_volume=declaration.production_volume,
         import_volume=declaration.import_volume,
         export_volume=declaration.export_volume,
+        material_breakdown=declaration.material_breakdown,
     )
+
+
+def _quantile(values: list[float], share: float) -> float | None:
+    """Nearest-rank quantile of an already sorted list."""
+    if not values:
+        return None
+    position = max(0, min(len(values) - 1, int(round(share * (len(values) - 1)))))
+    return values[position]
 
 
 def build_peer_index(db: Session, period: str) -> dict[tuple[str, str], PeerCohort]:
@@ -68,6 +77,10 @@ def build_peer_index(db: Session, period: str) -> dict[tuple[str, str], PeerCoho
     Built from every company that reported both an amount and an output figure
     for the period, so the cohort a company is measured against is the cohort
     that actually filed.
+
+    Two ratios are kept. `*_intensity` divides by production plus imports and
+    is what the rule engine compares against. `*_per_production` divides by
+    production alone, which is the ratio the model was trained on.
     """
     rows = db.execute(
         select(
@@ -82,23 +95,58 @@ def build_peer_index(db: Session, period: str) -> dict[tuple[str, str], PeerCoho
     ).all()
 
     buckets: dict[tuple[str, str], list[float]] = {}
+    production_buckets: dict[tuple[str, str], list[float]] = {}
     for sector, size, declared, production, imports in rows:
-        basis = (production or 0.0) + (imports or 0.0)
-        if not basis or declared is None:
+        if declared is None:
             continue
-        buckets.setdefault((sector, size), []).append(declared / basis)
+        basis = (production or 0.0) + (imports or 0.0)
+        if basis:
+            buckets.setdefault((sector, size), []).append(declared / basis)
+        if production:
+            production_buckets.setdefault((sector, size), []).append(declared / production)
 
     index: dict[tuple[str, str], PeerCohort] = {}
-    for key, values in buckets.items():
-        values.sort()
+    for key in set(buckets) | set(production_buckets):
+        values = sorted(buckets.get(key, []))
+        per_production = sorted(production_buckets.get(key, []))
+        p25 = _quantile(per_production, 0.25)
+        p75 = _quantile(per_production, 0.75)
         index[key] = PeerCohort(
             sector=key[0],
             company_size=key[1],
-            member_count=len(values),
-            median_intensity=statistics.median(values),
-            p25_intensity=values[max(0, int(len(values) * 0.25) - 1)],
+            member_count=len(values) or len(per_production),
+            median_intensity=statistics.median(values) if values else None,
+            p25_intensity=values[max(0, int(len(values) * 0.25) - 1)] if values else None,
+            median_per_production=(
+                statistics.median(per_production) if per_production else None
+            ),
+            p10_per_production=_quantile(per_production, 0.10),
+            iqr_per_production=(
+                p75 - p25 if p25 is not None and p75 is not None else None
+            ),
         )
     return index
+
+
+def _empty_cohort(company: Company) -> PeerCohort:
+    return PeerCohort(
+        sector=company.sector,
+        company_size=company.company_size,
+        member_count=0,
+        median_intensity=None,
+        p25_intensity=None,
+    )
+
+
+def previous_period(period: str) -> str | None:
+    """The quarter before `period`, or None if it cannot be parsed."""
+    try:
+        year, quarter = int(period[:4]), int(period[5:])
+    except (ValueError, IndexError):
+        return None
+    if quarter <= 1:
+        return f"{year - 1}Q4"
+    return f"{year}Q{quarter - 1}"
 
 
 def build_context(
@@ -106,6 +154,7 @@ def build_context(
     company: Company,
     period: str,
     peer_index: dict[tuple[str, str], PeerCohort] | None = None,
+    prior_peer_index: dict[tuple[str, str], PeerCohort] | None = None,
 ) -> ScoringContext | None:
     """Assemble everything the engine needs for one company and period."""
     declarations = (
@@ -152,17 +201,13 @@ def build_context(
 
     if peer_index is None:
         peer_index = build_peer_index(db, period)
+    if prior_peer_index is None:
+        earlier = previous_period(period)
+        prior_peer_index = build_peer_index(db, earlier) if earlier else {}
 
-    cohort = peer_index.get(
-        (company.sector, company.company_size),
-        PeerCohort(
-            sector=company.sector,
-            company_size=company.company_size,
-            member_count=0,
-            median_intensity=None,
-            p25_intensity=None,
-        ),
-    )
+    key = (company.sector, company.company_size)
+    cohort = peer_index.get(key, _empty_cohort(company))
+    prior_cohort = prior_peer_index.get(key)
 
     quality = build_quality(company, list(declarations), list(observations), bool(gtip_lines))
     sector = SECTORS[company.sector]
@@ -204,6 +249,7 @@ def build_context(
         quality=quality,
         sector_coefficient=sector["packaging_per_production"],
         import_coefficient=sector["packaging_per_import"],
+        peers_prior=prior_cohort,
     )
 
 
@@ -275,9 +321,10 @@ def score_company(
     period: str,
     engine: ScoringEngine | None = None,
     peer_index: dict[tuple[str, str], PeerCohort] | None = None,
+    prior_peer_index: dict[tuple[str, str], PeerCohort] | None = None,
 ) -> ScoreOutcome | None:
     engine = engine or resolve_engine()
-    context = build_context(db, company, period, peer_index)
+    context = build_context(db, company, period, peer_index, prior_peer_index)
     if context is None:
         return None
     return engine.score(context)

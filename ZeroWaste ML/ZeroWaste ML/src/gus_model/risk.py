@@ -295,7 +295,15 @@ class ProbabilityCalibrator:
 # --------------------------------------------------------------------------
 @dataclass
 class ScoreMap:
-    """Kalibre olasilik -> referans populasyondaki yuzdelik -> 0-100 puan."""
+    """Ham olasilik -> referans populasyondaki yuzdelik -> 0-100 puan.
+
+    Harita KALIBRE edilmis olasilik uzerine degil HAM olasilik uzerine
+    kurulur. Izotonik regresyon basamak fonksiyonudur: 3548 satirda yalnizca
+    18 farkli deger uretiyor, dolayisiyla kuyrugun tepesindeki onlarca dosya
+    ayni puani aliyor ve siralanamiyordu. Ham olasilik sureklidir; siralama
+    modelin kendi siralamasidir. Kalibre olasilik ayrica raporlanir - orada
+    isi siralamak degil "bu ne kadar olasi" sorusuna durust cevap vermektir.
+    """
 
     reference: List[float] = field(default_factory=list)   # 0-1 arasi 1001 quantile
     anchors: Tuple[Tuple[float, float], ...] = SCORE_ANCHORS

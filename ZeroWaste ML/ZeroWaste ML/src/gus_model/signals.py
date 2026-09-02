@@ -11,15 +11,15 @@ Ucuncu durum asla ikinciye katlanmaz. "Veri yok" dusuk risk DEGILDIR.
 OLCEKLEME
 ---------
 Sinyallerin ham istatistikleri farkli birimlerdedir (oransal fark, L1 kayma,
-esneklik). Bunlari toplayabilmek icin her biri EGITIM PENCERESINDEN ogrenilen
-iki capa ile 0-100'e oturtulur:
+esneklik) ve kuyruk kalinliklari cok farklidir. Bunlari toplayabilmek icin her
+biri EGITIM PENCERESINDEKI KENDI DAGILIMININ yuzdeligine cevrilir, sonra
+`SIGNAL_RAMP_LOW_PCT` ile 100 arasi gerilir. Boylece "60 puan" her sinyalde
+ayni seyi ifade eder: egitim penceresinde bu kadar nadir. Ayrintili gerekce
+`SignalScaler` icindedir.
 
-    low  = max(egitim yuzdelik 70, 0)     bu degerin altinda puan 0
-    high = egitim yuzdelik 99             bu degerin ustunde puan 100
-
-Tabanin sifirda kirpilmasi kasitlidir: beklentisinin USTUNDE beyan veren bir
-kayit, "ortalamanin biraz altinda" oldugu icin puan almaz. Capalar
-`signals.json` icine yazilir; boylece backend ayni olcegi kullanir.
+Notr taban korunur: ham istatistik sifirin altindaysa - yani beyan beklentinin
+USTUNDEYSE - puan her halukarda 0'dir. Yuzdelik capalari ve donusum tablosu
+`signals.json` icine yazilir; backend ayni olcegi kullanir.
 
 Sinyaller BAGIMSIZ DEGILDIR, AYRIDIR. Korelasyonlari `evaluate.py` icinde
 korelasyon matrisi ve ablation ile olculur.
@@ -49,6 +49,11 @@ _EPS = 1e-9
 STATUS_ACTIVE = "ACTIVE"
 STATUS_CLEAR = "CLEAR"
 STATUS_UNAVAILABLE = "UNAVAILABLE"
+
+# Urun agaci beklentisinin kapsam oranina bolunerek genisletilebilmesi icin
+# gereken en dusuk kapsam. Bunun altinda bolme sayisal olarak guvenilmez ve
+# S3 kullanilamaz isaretlenir - dataset ureticinin de kullandigi esiktir.
+MIN_BOM_COVERAGE = 0.05
 
 # S7'de eskimis agirlik matrisi ham istatistigi buyuten carpan. Matris
 # guncellenmemisse ayni malzeme kaymasi daha suphelidir.
@@ -106,9 +111,29 @@ def raw_statistics(
     out["raw_s2"] = 1.0 - _safe_ratio(declared, peer_q50)
     out["available_s2"] = _flag(frame, "f_avail_s2") & np.isfinite(peer_q50) & (peer_q50 > _EPS)
 
-    # S3 - urun agacindan beklenen tonaja gore eksiklik
-    out["raw_s3"] = _col(frame, "f_s3_bom_gap_rel")
-    out["available_s3"] = _flag(frame, "f_avail_s3") & np.isfinite(out["raw_s3"].to_numpy())
+    # S3 - urun agacindan beklenen tonaja gore eksiklik.
+    #
+    # Ham `f_s3_bom_gap_rel`, urun agacinin YALNIZCA KAPSANAN kismindan gelen
+    # beklentiyi kullanir. Kapsam ortalama %58 oldugu icin bu beklenti butun
+    # firmalarda sistematik olarak DUSUKTUR: kayitlarin yalnizca %3,4'unde
+    # beyan bu kismi beklentinin altinda kalir. Yani ham istatistik esas olarak
+    # KAPSAMI olcer, eksik beyani degil.
+    #
+    # Kapsam orani gozlenen bir alandir; beklenti ona bolunerek tam urun
+    # agacina genisletilir. Dedektorun latent beklentiyi gozlenen alanlardan
+    # CIKARSAMASI beklenir - yapilan islem tam olarak budur. Olculdu:
+    # tek basina ROC-AUC 0,611 -> 0,666, PR-AUC 0,138 -> 0,233 (test).
+    bom = _col(frame, "f_s3_bom_expected")
+    coverage = _col(frame, "f_s3_bom_coverage")
+    usable_coverage = np.isfinite(coverage) & (coverage > MIN_BOM_COVERAGE)
+    expected_full = np.divide(
+        bom, coverage, out=np.full(len(frame), np.nan), where=usable_coverage
+    )
+    out["raw_s3"] = 1.0 - _safe_ratio(declared, expected_full)
+    out["available_s3"] = (
+        _flag(frame, "f_avail_s3") & usable_coverage & np.isfinite(expected_full)
+        & (expected_full > _EPS)
+    )
 
     # S4 - faaliyet ile beyan hareketinin ayrismasi (beyan geride kaliyorsa risk)
     div_yoy = _col(frame, "f_s4_divergence_yoy")
@@ -145,11 +170,31 @@ def raw_statistics(
 # --------------------------------------------------------------------------
 # Olcekleme
 # --------------------------------------------------------------------------
+GRID_POINTS = 201
+
+
 @dataclass
 class SignalScaler:
-    """Ham istatistigi 0-100 kanit puanina cevirir."""
+    """Ham istatistigi 0-100 kanit puanina cevirir.
+
+    Donusum DOGRUSAL DEGIL, YUZDELIK tabanlidir: ham deger once egitim
+    penceresindeki kendi dagiliminin yuzdeligine cevrilir, sonra `low_pct`
+    ile 100 arasi gerilir.
+
+    Neden dogrusal rampa degil: sekiz istatistigin kuyruk kalinliklari cok
+    farklidir. Dogrusal rampada S3'un uzun kuyrugu tum olcegi yutuyor ve
+    kayitlarin yalnizca %2,9'u atesliyordu; S1 ise %17,8. Ayni "60 puan" iki
+    sinyalde bambaska bir seyrekligi ifade ediyordu - halbuki puanlarin
+    toplanabilmesi icin AYNI seyi ifade etmeleri gerekir. Yuzdelik tabanli
+    donusumde 60 puan her sinyalde ayni sey demektir: "egitim penceresinde bu
+    kadar nadir".
+
+    Notr taban korunur: ham istatistik sifirin altindaysa (yani beyan
+    beklentinin USTUNDE) puan her halukarda 0'dir.
+    """
 
     anchors: Dict[str, Dict[str, float]] = field(default_factory=dict)
+    breaks: Dict[str, List[float]] = field(default_factory=dict)
     active_threshold: float = SIGNAL_ACTIVE_THRESHOLD
     low_pct: float = SIGNAL_RAMP_LOW_PCT
     high_pct: float = SIGNAL_RAMP_HIGH_PCT
@@ -157,36 +202,47 @@ class SignalScaler:
 
     def fit(self, raw: pd.DataFrame, fitted_on: str = "") -> "SignalScaler":
         self.anchors = {}
+        self.breaks = {}
+        grid = np.linspace(0.0, 1.0, GRID_POINTS)
         for code in SIGNAL_CODES:
             key = code.lower()
             values = raw.loc[raw[f"available_{key}"], f"raw_{key}"].to_numpy(dtype=float)
             values = values[np.isfinite(values)]
             if len(values) < 30:
-                # Cok az gozlem: capalar guvenilir degil. Notrden 1'e kadar
-                # muhafazakar bir varsayilan rampa kullanilir.
-                low, high = 0.0, 1.0
+                # Cok az gozlem: dagilim guvenilir degil. Notrden 1'e kadar
+                # muhafazakar bir dogrusal varsayilan kullanilir.
+                quantiles = list(np.linspace(0.0, 1.0, GRID_POINTS))
             else:
-                low = max(float(np.percentile(values, self.low_pct)), 0.0)
-                high = float(np.percentile(values, self.high_pct))
-                if high <= low:
-                    high = low + max(abs(low), 1.0) * 0.25
+                quantiles = [float(v) for v in np.quantile(values, grid)]
+            self.breaks[code] = quantiles
             self.anchors[code] = {
-                "low": round(low, 6),
-                "high": round(high, 6),
+                "low": round(float(np.interp(self.low_pct / 100.0, grid, quantiles)), 6),
+                "high": round(float(np.interp(self.high_pct / 100.0, grid, quantiles)), 6),
                 "n": int(len(values)),
                 "availability_rate": round(float(raw[f"available_{key}"].mean()), 4),
             }
         self.fitted_on = fitted_on
         return self
 
+    def _percentile(self, code: str, values: np.ndarray) -> np.ndarray:
+        quantiles = np.asarray(self.breaks.get(code) or [], dtype=float)
+        if quantiles.size == 0:
+            low = float(self.anchors.get(code, {}).get("low", 0.0))
+            high = float(self.anchors.get(code, {}).get("high", 1.0))
+            return np.clip((values - low) / max(high - low, _EPS), 0.0, 1.0)
+        grid = np.linspace(0.0, 1.0, len(quantiles))
+        return np.interp(values, quantiles, grid)
+
     def transform(self, raw: pd.DataFrame) -> pd.DataFrame:
+        floor = self.low_pct / 100.0
         out = pd.DataFrame(index=raw.index)
         for code in SIGNAL_CODES:
             key = code.lower()
-            anchor = self.anchors.get(code, {"low": 0.0, "high": 1.0})
-            low, high = float(anchor["low"]), float(anchor["high"])
             values = raw[f"raw_{key}"].to_numpy(dtype=float)
-            score = np.clip((values - low) / max(high - low, _EPS), 0.0, 1.0) * 100.0
+            percentile = self._percentile(code, values)
+            score = np.clip((percentile - floor) / max(1.0 - floor, _EPS), 0.0, 1.0) * 100.0
+            # Notr taban: beklentinin ustunde beyan asla puan almaz.
+            score = np.where(np.isfinite(values) & (values <= 0.0), 0.0, score)
             score = np.where(raw[f"available_{key}"].to_numpy(), score, np.nan)
             out[f"sig_{key}"] = np.round(score, 2)
             out[f"avail_{key}"] = raw[f"available_{key}"].astype(int)
@@ -210,10 +266,14 @@ class SignalScaler:
 
     def to_dict(self) -> Dict:
         return {
-            "method": "train_window_percentile_ramp",
+            "method": "train_window_percentile_rank",
+            "grid_points": GRID_POINTS,
             "low_percentile": self.low_pct,
             "high_percentile": self.high_pct,
             "active_threshold": self.active_threshold,
+            "neutral_floor": (
+                "raw <= 0 => score 0 (beyan beklentinin ustunde)"
+            ),
             "fitted_on": self.fitted_on,
             "stale_matrix_multiplier": STALE_MATRIX_MULTIPLIER,
             "signals": {
@@ -225,6 +285,7 @@ class SignalScaler:
                     "availability_feature": spec["avail"],
                     "unavailable_reason": spec["avail_reason"],
                     **self.anchors.get(spec["code"], {}),
+                    "breaks": self.breaks.get(spec["code"], []),
                 }
                 for spec in SIGNAL_SPECS
             },
@@ -247,6 +308,11 @@ class SignalScaler:
             code: {"low": float(item["low"]), "high": float(item["high"])}
             for code, item in payload.get("signals", {}).items()
             if "low" in item and "high" in item
+        }
+        scaler.breaks = {
+            code: [float(v) for v in item.get("breaks", [])]
+            for code, item in payload.get("signals", {}).items()
+            if item.get("breaks")
         }
         return scaler
 
@@ -338,20 +404,6 @@ def contribution_shares(
     )
 
 
-def signal_frame(
-    frame: pd.DataFrame,
-    expectation: pd.DataFrame,
-    calibrated: pd.DataFrame,
-    scaler: SignalScaler,
-) -> pd.DataFrame:
-    """Ham istatistik -> puan -> durum -> aralik ozellikleri, tek cercevede."""
-    raw = raw_statistics(frame, expectation)
-    scores = scaler.transform(raw)
-    status = scaler.status(scores)
-    intervals = interval_features(frame, calibrated)
-    return pd.concat([raw, scores, status, intervals], axis=1)
-
-
 def unavailable_reasons(row: pd.Series) -> List[Dict[str, str]]:
     reasons: List[Dict[str, str]] = []
     for code in SIGNAL_CODES:
@@ -368,7 +420,6 @@ __all__ = [
     "interval_features",
     "policy_fusion",
     "contribution_shares",
-    "signal_frame",
     "unavailable_reasons",
     "STATUS_ACTIVE",
     "STATUS_CLEAR",

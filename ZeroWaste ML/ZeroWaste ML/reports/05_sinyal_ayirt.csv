@@ -1,9 +1,9 @@
 ﻿sinyal;ad;kullanilabilirlik;n;PR_AUC;ROC_AUC;atesleme_orani
-S1;Tarihsel alt sinir ihlali;0.9992;1199;0.1483;0.6547;0.1776
-S2;Emsal alt sinir ihlali;0.9925;1191;0.0745;0.4658;0.2309
-S3;Beklenen-gerceklesen tonaj farki;0.9942;1193;0.1309;0.5431;0.0285
-S4;Faaliyet esnekligi uyumsuzlugu;0.8858;1063;0.1175;0.5926;0.1571
-S5;Dis ticaret ve duzeltme dengesi;0.82;984;0.1772;0.6641;0.1636
-S6;Donemsel davranis kirilmasi;0.9392;1127;0.1336;0.615;0.1837
-S7;Urun agaci / ambalaj matrisi uyumsuzlugu;0.9933;1192;0.1153;0.5304;0.182
-S8;Dis dogrulama kaniti;0.1983;238;0.1882;0.6495;0.2017
+S1;Tarihsel alt sinir ihlali;0.9992;1199;0.1487;0.6547;0.2477
+S2;Emsal alt sinir ihlali;0.9925;1191;0.0745;0.4658;0.2065
+S3;Beklenen-gerceklesen tonaj farki;0.9942;1193;0.2335;0.6621;0.2372
+S4;Faaliyet esnekligi uyumsuzlugu;0.8858;1063;0.1175;0.5926;0.2333
+S5;Dis ticaret ve duzeltme dengesi;0.82;984;0.1651;0.664;0.2449
+S6;Donemsel davranis kirilmasi;0.9392;1127;0.1302;0.6149;0.2458
+S7;Urun agaci / ambalaj matrisi uyumsuzlugu;0.9933;1192;0.1074;0.5304;0.2844
+S8;Dis dogrulama kaniti;0.1983;238;0.1882;0.6495;0.2395
