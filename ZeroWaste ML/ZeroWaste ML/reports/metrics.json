@@ -4,21 +4,21 @@
   "test": {
     "n": 1200,
     "prevalans": 0.0808,
-    "PR_AUC": 0.2877,
-    "ROC_AUC": 0.6782,
-    "Precision@100": 0.32,
+    "PR_AUC": 0.2752,
+    "ROC_AUC": 0.6646,
+    "Precision@100": 0.34,
     "Precision@100_CI": [
-      0.22,
-      0.42
+      0.23,
+      0.4302
     ],
-    "Recall@100": 0.3299,
-    "Lift@100": 3.959,
-    "Precision@50": 0.44,
-    "Lift@50": 5.443
+    "Recall@100": 0.3505,
+    "Lift@100": 4.206,
+    "Precision@50": 0.42,
+    "Lift@50": 5.196
   },
   "valid": {
-    "PR_AUC": 0.2842,
-    "Precision@100": 0.31
+    "PR_AUC": 0.2882,
+    "Precision@100": 0.28
   },
   "en_iyi_baseline": {
     "ad": "bl_zscore_hist",
@@ -27,36 +27,36 @@
   },
   "konformal": {
     "hedef_kapsama": 0.9,
-    "gozlenen_valid": 0.91,
-    "gozlenen_test": 0.875,
-    "ortanca_bagil_genislik_test": 0.853
+    "gozlenen_valid": 0.9142,
+    "gozlenen_test": 0.8792,
+    "ortanca_bagil_genislik_test": 0.867
   },
   "olasilik_kalibrasyonu": {
-    "brier": 0.06696,
-    "ece": 0.0204,
-    "ortalama_tahmin": 0.06655,
+    "brier": 0.06793,
+    "ece": 0.03068,
+    "ortalama_tahmin": 0.06476,
     "gozlenen_prevalans": 0.08083
   },
   "fayda_top100": {
     "K": 100,
-    "dogrulanan_vaka": 32,
-    "vaka_100_denetim_basina": 32.0,
-    "duzeltilen_tonaj": 2304.97,
-    "toplam_tonajin_payi": 0.7851,
-    "denetim_maliyeti_try": 3890592.65,
-    "ton_basina_maliyet_try": 1687.92,
-    "toplam_inceleme_gunu": 1241
+    "dogrulanan_vaka": 34,
+    "vaka_100_denetim_basina": 34.0,
+    "duzeltilen_tonaj": 2550.92,
+    "toplam_tonajin_payi": 0.8688,
+    "denetim_maliyeti_try": 4015992.76,
+    "ton_basina_maliyet_try": 1574.33,
+    "toplam_inceleme_gunu": 1270
   },
   "kavramsal_kayma_A08": {
     "mekanizma": "A08_dis_kanit_uyumsuz",
     "n": 18,
     "truth": 17,
-    "Top50_icinde": 4,
-    "Top50_orani": 0.2222,
+    "Top50_icinde": 6,
+    "Top50_orani": 0.3333,
     "Top100_icinde": 10,
     "Top100_orani": 0.5556,
-    "Top200_icinde": 13,
-    "Top200_orani": 0.7222
+    "Top200_icinde": 12,
+    "Top200_orani": 0.6667
   },
   "harman_agirligi_hist": 0.95
 }

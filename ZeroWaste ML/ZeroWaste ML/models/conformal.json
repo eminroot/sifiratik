@@ -3,9 +3,9 @@
   "target_coverage": 0.9,
   "min_group": 60,
   "thin_widen": 1.15,
-  "delta_scale": 0.5,
+  "delta_scale": 0.55,
   "fitted_on": "train(OOF) + valid_b",
-  "scale_fitted_on": "valid_a",
+  "scale_fitted_on": "valid_a (hedef 0.9 + 1 standart hata = 0.9122)",
   "space": "log1p",
   "levels": [
     [

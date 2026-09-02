@@ -70,12 +70,12 @@ Konformal artiklar ek olarak egitim bolumunun **capraz uydurulmus
 | Metrik | Deger |
 |---|---|
 | Kayit / pozitif | 1200 / prevalans 0.0808 |
-| PR-AUC | **0.2877** |
-| ROC-AUC (ek gosterge) | 0.6782 |
-| Precision@50 | 0.44 (Lift 5.443) |
-| Precision@100 | **0.32** (bootstrap %95 GA 0.22 - 0.42) |
-| Recall@100 | 0.3299 |
-| Lift@100 | **3.959** |
+| PR-AUC | **0.2752** |
+| ROC-AUC (ek gosterge) | 0.6646 |
+| Precision@50 | 0.42 (Lift 5.196) |
+| Precision@100 | **0.34** (bootstrap %95 GA 0.23 - 0.4302) |
+| Recall@100 | 0.3505 |
+| Lift@100 | **4.206** |
 
 ### Referans baseline'lar ile ayni tabloda
 
@@ -84,7 +84,7 @@ ayni fonksiyonlari kullanir.
 
 | model | PR_AUC | ROC_AUC_ek_gosterge | Precision@50 | Precision@100 | Recall@100 | Lift@100 | Precision@100_CI_alt | Precision@100_CI_ust |
 |---|---|---|---|---|---|---|---|---|
-| GUS-DEDEKTIV (fusion) | 0.2877 | 0.6782 | 0.44 | 0.32 | 0.3299 | 3.959 | 0.22 | 0.42 |
+| GUS-DEDEKTIV (fusion) | 0.2752 | 0.6646 | 0.42 | 0.34 | 0.3505 | 4.206 | 0.23 | 0.4302 |
 | bl_zscore_hist | 0.1592 | 0.6604 | 0.18 | 0.19 | 0.1959 | 2.351 | 0.12 | 0.27 |
 | bl_naive_8signal | 0.1587 | 0.6295 | 0.24 | 0.21 | 0.2165 | 2.598 | 0.13 | 0.3 |
 | bl_bom_gap | 0.1438 | 0.6162 | 0.26 | 0.19 | 0.1959 | 2.351 | 0.11 | 0.27 |
@@ -97,29 +97,29 @@ ayni fonksiyonlari kullanir.
 ## 6. Beklenen aralik ve kalibrasyon
 
 Hedef kapsama **0.9**.
-Gozlenen kapsama: valid **0.91**, test **0.875**.
-Test bolumunde ortanca bagil aralik genisligi **0.853**.
+Gozlenen kapsama: valid **0.9142**, test **0.8792**.
+Test bolumunde ortanca bagil aralik genisligi **0.867**.
 
 | grup | n | gozlenen_kapsama | ortanca_genislik_ton | ortanca_bagil_genislik |
 |---|---|---|---|---|
-| tumu | 1200 | 0.875 | 53.023 | 0.853 |
-| size_band=buyuk | 100 | 0.89 | 750.771 | 0.717 |
-| size_band=kucuk | 488 | 0.8566 | 60.133 | 0.854 |
-| size_band=mikro | 384 | 0.901 | 14.579 | 0.944 |
-| size_band=orta | 228 | 0.864 | 189.262 | 0.735 |
-| sector=elektronik | 118 | 0.8898 | 108.941 | 0.811 |
-| sector=ev_temizlik | 90 | 0.9333 | 51.964 | 0.854 |
-| sector=gida_icecek | 320 | 0.9 | 31.295 | 0.783 |
-| sector=ilac | 108 | 0.8519 | 47.36 | 0.838 |
-| sector=kimya_boya | 116 | 0.8879 | 68.363 | 0.816 |
-| sector=kozmetik | 124 | 0.8952 | 66.171 | 0.857 |
-| sector=otomotiv_yan_sanayi | 138 | 0.8333 | 56.674 | 0.97 |
-| sector=tekstil | 186 | 0.8172 | 48.726 | 1.023 |
+| tumu | 1200 | 0.8792 | 54.061 | 0.867 |
+| size_band=buyuk | 100 | 0.89 | 759.461 | 0.726 |
+| size_band=kucuk | 488 | 0.8607 | 61.334 | 0.868 |
+| size_band=mikro | 384 | 0.9089 | 14.778 | 0.962 |
+| size_band=orta | 228 | 0.864 | 191.898 | 0.75 |
+| sector=elektronik | 118 | 0.8983 | 111.128 | 0.827 |
+| sector=ev_temizlik | 90 | 0.9444 | 52.759 | 0.871 |
+| sector=gida_icecek | 320 | 0.9031 | 31.658 | 0.789 |
+| sector=ilac | 108 | 0.8519 | 48.019 | 0.848 |
+| sector=kimya_boya | 116 | 0.8966 | 69.137 | 0.826 |
+| sector=kozmetik | 124 | 0.8952 | 66.972 | 0.867 |
+| sector=otomotiv_yan_sanayi | 138 | 0.8406 | 57.478 | 0.992 |
+| sector=tekstil | 186 | 0.8172 | 49.381 | 1.043 |
 
 
-Olasilik kalibrasyonu (test): Brier **0.06696**,
-ECE **0.0204**,
-ortalama tahmin 0.06655 vs
+Olasilik kalibrasyonu (test): Brier **0.06793**,
+ECE **0.03068**,
+ortalama tahmin 0.06476 vs
 gozlenen prevalans 0.08083.
 
 ## 7. Sinyaller
@@ -143,54 +143,54 @@ icindedir. Tek basina ayirt gucleri:
 
 | cikarilan | ad | PR_AUC | Precision@100 | delta_PR_AUC | delta_Precision@100 |
 |---|---|---|---|---|---|
-| - | - | 0.2736 | 0.32 | 0.0 | 0.0 |
-| S1 | Tarihsel alt sinir ihlali | 0.2783 | 0.35 | 0.0047 | 0.03 |
-| S2 | Emsal alt sinir ihlali | 0.2667 | 0.32 | -0.0069 | 0.0 |
-| S3 | Beklenen-gerceklesen tonaj farki | 0.2309 | 0.26 | -0.0427 | -0.06 |
-| S4 | Faaliyet esnekligi uyumsuzlugu | 0.2658 | 0.31 | -0.0078 | -0.01 |
-| S5 | Dis ticaret ve duzeltme dengesi | 0.2864 | 0.33 | 0.0128 | 0.01 |
-| S6 | Donemsel davranis kirilmasi | 0.2782 | 0.32 | 0.0046 | 0.0 |
-| S7 | Urun agaci / ambalaj matrisi uyumsuzlugu | 0.2835 | 0.32 | 0.0099 | 0.0 |
-| S8 | Dis dogrulama kaniti | 0.2831 | 0.34 | 0.0095 | 0.02 |
-| konformal aralik | konformal aralik | 0.2578 | 0.29 | -0.0158 | -0.03 |
+| - | - | 0.2706 | 0.31 | 0.0 | 0.0 |
+| S1 | Tarihsel alt sinir ihlali | 0.2723 | 0.33 | 0.0017 | 0.02 |
+| S2 | Emsal alt sinir ihlali | 0.2722 | 0.3 | 0.0016 | -0.01 |
+| S3 | Beklenen-gerceklesen tonaj farki | 0.2162 | 0.26 | -0.0544 | -0.05 |
+| S4 | Faaliyet esnekligi uyumsuzlugu | 0.2649 | 0.33 | -0.0057 | 0.02 |
+| S5 | Dis ticaret ve duzeltme dengesi | 0.2823 | 0.33 | 0.0117 | 0.02 |
+| S6 | Donemsel davranis kirilmasi | 0.2727 | 0.32 | 0.0021 | 0.01 |
+| S7 | Urun agaci / ambalaj matrisi uyumsuzlugu | 0.2778 | 0.32 | 0.0072 | 0.01 |
+| S8 | Dis dogrulama kaniti | 0.2766 | 0.34 | 0.006 | 0.03 |
+| konformal aralik | konformal aralik | 0.2578 | 0.29 | -0.0128 | -0.02 |
 
 
 ## 8. Alt grup davranisi
 
 | boyut | grup | n | prevalans | PR_AUC | Top100_payi |
 |---|---|---|---|---|---|
-| sector | elektronik | 118 | 0.0932 | 0.5139 | 0.0593 |
-| sector | ev_temizlik | 90 | 0.1111 | 0.4318 | 0.0667 |
-| sector | gida_icecek | 320 | 0.0563 | 0.1958 | 0.0594 |
-| sector | ilac | 108 | 0.1667 | 0.4806 | 0.1481 |
-| sector | kimya_boya | 116 | 0.1121 | 0.3753 | 0.0862 |
-| sector | kozmetik | 124 | 0.0403 | 0.3187 | 0.0565 |
-| sector | otomotiv_yan_sanayi | 138 | 0.1014 | 0.3162 | 0.0652 |
-| sector | tekstil | 186 | 0.043 | 0.1309 | 0.1398 |
-| size_band | buyuk | 100 | 0.08 | 0.3809 | 0.06 |
-| size_band | kucuk | 488 | 0.0799 | 0.2158 | 0.0799 |
-| size_band | mikro | 384 | 0.0859 | 0.3642 | 0.0833 |
-| size_band | orta | 228 | 0.0746 | 0.4213 | 0.1009 |
-| f_data_confidence_level | dusuk | 65 | 0.0769 | 0.5089 | 0.0769 |
-| f_data_confidence_level | orta | 630 | 0.081 | 0.2147 | 0.0825 |
-| f_data_confidence_level | yuksek | 505 | 0.0812 | 0.3812 | 0.0851 |
-| province | Adana | 52 | 0.0577 | 0.4518 | 0.1538 |
-| province | Ankara | 122 | 0.0738 | 0.3975 | 0.0738 |
-| province | Antalya | 48 | 0.1458 | 0.3446 | 0.1042 |
-| province | Balikesir | 26 | 0.1154 | 0.6032 | 0.0769 |
-| province | Bursa | 88 | 0.0795 | 0.4467 | 0.0909 |
-| province | Eskisehir | 50 | 0.02 | 0.0323 | 0.02 |
-| province | Gaziantep | 40 | 0.1 | 0.4221 | 0.075 |
-| province | Istanbul | 272 | 0.0956 | 0.2456 | 0.0919 |
-| province | Izmir | 104 | 0.0481 | 0.1613 | 0.0865 |
-| province | Kayseri | 40 | 0.025 | 0.0476 | 0.1 |
-| province | Kocaeli | 82 | 0.0488 | 0.0649 | 0.0732 |
-| province | Konya | 52 | 0.0962 | 0.3545 | 0.0769 |
+| sector | elektronik | 118 | 0.0932 | 0.526 | 0.0678 |
+| sector | ev_temizlik | 90 | 0.1111 | 0.3807 | 0.0667 |
+| sector | gida_icecek | 320 | 0.0563 | 0.1939 | 0.0531 |
+| sector | ilac | 108 | 0.1667 | 0.4718 | 0.1389 |
+| sector | kimya_boya | 116 | 0.1121 | 0.399 | 0.1121 |
+| sector | kozmetik | 124 | 0.0403 | 0.1759 | 0.0645 |
+| sector | otomotiv_yan_sanayi | 138 | 0.1014 | 0.3149 | 0.058 |
+| sector | tekstil | 186 | 0.043 | 0.131 | 0.1344 |
+| size_band | buyuk | 100 | 0.08 | 0.3944 | 0.08 |
+| size_band | kucuk | 488 | 0.0799 | 0.195 | 0.0758 |
+| size_band | mikro | 384 | 0.0859 | 0.3278 | 0.0859 |
+| size_band | orta | 228 | 0.0746 | 0.416 | 0.0965 |
+| f_data_confidence_level | dusuk | 65 | 0.0769 | 0.4271 | 0.0769 |
+| f_data_confidence_level | orta | 630 | 0.081 | 0.2005 | 0.0762 |
+| f_data_confidence_level | yuksek | 505 | 0.0812 | 0.3811 | 0.0931 |
+| province | Adana | 52 | 0.0577 | 0.52 | 0.0769 |
+| province | Ankara | 122 | 0.0738 | 0.389 | 0.0574 |
+| province | Antalya | 48 | 0.1458 | 0.3869 | 0.1458 |
+| province | Balikesir | 26 | 0.1154 | 0.6095 | 0.0385 |
+| province | Bursa | 88 | 0.0795 | 0.3788 | 0.1023 |
+| province | Eskisehir | 50 | 0.02 | 0.0526 | 0.04 |
+| province | Gaziantep | 40 | 0.1 | 0.4026 | 0.075 |
+| province | Istanbul | 272 | 0.0956 | 0.2215 | 0.0882 |
+| province | Izmir | 104 | 0.0481 | 0.1698 | 0.0865 |
+| province | Kayseri | 40 | 0.025 | 0.04 | 0.075 |
+| province | Kocaeli | 82 | 0.0488 | 0.05 | 0.0854 |
+| province | Konya | 52 | 0.0962 | 0.3869 | 0.1346 |
 | province | Manisa | 30 | 0.0 |  | 0.0333 |
-| province | Mersin | 28 | 0.1429 | 0.622 | 0.0714 |
-| province | Sakarya | 34 | 0.1176 | 0.5161 | 0.1176 |
-| province | Samsun | 32 | 0.125 | 0.5623 | 0.0938 |
-| province | Tekirdag | 44 | 0.0682 | 0.693 | 0.0455 |
+| province | Mersin | 28 | 0.1429 | 0.5845 | 0.0714 |
+| province | Sakarya | 34 | 0.1176 | 0.5219 | 0.1471 |
+| province | Samsun | 32 | 0.125 | 0.5781 | 0.0938 |
+| province | Tekirdag | 44 | 0.0682 | 0.7067 | 0.0455 |
 
 
 ## 9. Mekanizma bazli yakalama ve kavramsal kayma
@@ -199,25 +199,25 @@ icindedir. Tek basina ayirt gucleri:
 |---|---|---|---|---|---|---|---|---|
 | A01_tarihsel_dusus | 9 | 9 | 5 | 0.5556 | 6 | 0.6667 | 8 | 0.8889 |
 | A02_emsal_alti | 5 | 5 | 2 | 0.4 | 2 | 0.4 | 2 | 0.4 |
-| A03_beklenen_fark | 10 | 8 | 4 | 0.4 | 7 | 0.7 | 8 | 0.8 |
-| A04_faaliyet_uyumsuz | 9 | 9 | 4 | 0.4444 | 4 | 0.4444 | 5 | 0.5556 |
-| A06_mevsimsel_kirilma | 3 | 3 | 2 | 0.6667 | 2 | 0.6667 | 2 | 0.6667 |
-| A07_urun_agaci_uyumsuz | 5 | 5 | 1 | 0.2 | 2 | 0.4 | 4 | 0.8 |
-| A08_dis_kanit_uyumsuz | 18 | 17 | 4 | 0.2222 | 10 | 0.5556 | 13 | 0.7222 |
-| N00_normal | 895 | 37 | 12 | 0.0134 | 24 | 0.0268 | 79 | 0.0883 |
-| N09_veri_eksikligi | 33 | 0 | 1 | 0.0303 | 1 | 0.0303 | 3 | 0.0909 |
-| N10_mesru_gorunum | 213 | 4 | 15 | 0.0704 | 42 | 0.1972 | 76 | 0.3568 |
+| A03_beklenen_fark | 10 | 8 | 2 | 0.2 | 7 | 0.7 | 8 | 0.8 |
+| A04_faaliyet_uyumsuz | 9 | 9 | 3 | 0.3333 | 5 | 0.5556 | 5 | 0.5556 |
+| A06_mevsimsel_kirilma | 3 | 3 | 1 | 0.3333 | 2 | 0.6667 | 2 | 0.6667 |
+| A07_urun_agaci_uyumsuz | 5 | 5 | 2 | 0.4 | 3 | 0.6 | 4 | 0.8 |
+| A08_dis_kanit_uyumsuz | 18 | 17 | 6 | 0.3333 | 10 | 0.5556 | 12 | 0.6667 |
+| N00_normal | 895 | 37 | 12 | 0.0134 | 28 | 0.0313 | 77 | 0.086 |
+| N09_veri_eksikligi | 33 | 0 | 0 | 0.0 | 1 | 0.0303 | 3 | 0.0909 |
+| N10_mesru_gorunum | 213 | 4 | 17 | 0.0798 | 36 | 0.169 | 79 | 0.3709 |
 
 
 ## 10. Denetim faydasi
 
 | K | dogrulanan_vaka | vaka_100_denetim_basina | duzeltilen_tonaj | toplam_tonajin_payi | denetim_maliyeti_try | ton_basina_maliyet_try | toplam_inceleme_gunu |
 |---|---|---|---|---|---|---|---|
-| 25 | 13 | 52.0 | 1290.17 | 0.4394 | 1113754.54 | 863.26 | 336 |
-| 50 | 22 | 44.0 | 1883.94 | 0.6417 | 2078016.76 | 1103.01 | 664 |
-| 100 | 32 | 32.0 | 2304.97 | 0.7851 | 3890592.65 | 1687.92 | 1241 |
-| 200 | 44 | 22.0 | 2689.81 | 0.9161 | 7956164.64 | 2957.89 | 2425 |
-| 400 | 58 | 14.5 | 2784.49 | 0.9484 | 15878358.34 | 5702.43 | 4751 |
+| 25 | 14 | 56.0 | 1297.63 | 0.442 | 967191.59 | 745.35 | 296 |
+| 50 | 21 | 42.0 | 1838.26 | 0.6261 | 2115432.2 | 1150.78 | 680 |
+| 100 | 34 | 34.0 | 2550.92 | 0.8688 | 4015992.76 | 1574.33 | 1270 |
+| 200 | 43 | 21.5 | 2625.09 | 0.8941 | 7858084.92 | 2993.45 | 2414 |
+| 400 | 53 | 13.2 | 2860.78 | 0.9744 | 15663338.05 | 5475.2 | 4704 |
 
 
 ### Top-100 icindeki negatiflerin profili
@@ -229,17 +229,17 @@ risk **sayilmaz**, ayri veri incelemesi kuyruguna gider.
 | kategori | sayi | pay | aciklama |
 |---|---|---|---|
 | Top-100 toplam | 100 | 1.0 |  |
-| dogrulanan eksik beyan | 32 | 0.32 | gercek pozitif |
+| dogrulanan eksik beyan | 34 | 0.34 | gercek pozitif |
 | A08_dis_kanit_uyumsuz | 1 | 0.01 | yanlis pozitif |
-| N00_normal | 24 | 0.24 | yanlis pozitif |
+| N00_normal | 28 | 0.28 | yanlis pozitif |
 | N09_veri_eksikligi | 1 | 0.01 | veri incelemesi kuyrugu |
-| N10_mesru_gorunum | 42 | 0.42 | yanlis pozitif |
-|   mesru neden: eskimis_ambalaj_agirlik_matrisi | 1 | 0.01 | denetci gerekce panelinde gorunur |
-|   mesru neden: gec_duzeltme_beyannamesi | 8 | 0.08 | denetci gerekce panelinde gorunur |
-|   mesru neden: ihracat_agirlikli_donem | 16 | 0.16 | denetci gerekce panelinde gorunur |
-|   mesru neden: mevsimsel_uretim_duraklamasi | 11 | 0.11 | denetci gerekce panelinde gorunur |
+| N10_mesru_gorunum | 36 | 0.36 | yanlis pozitif |
+|   mesru neden: eskimis_ambalaj_agirlik_matrisi | 2 | 0.02 | denetci gerekce panelinde gorunur |
+|   mesru neden: gec_duzeltme_beyannamesi | 7 | 0.07 | denetci gerekce panelinde gorunur |
+|   mesru neden: ihracat_agirlikli_donem | 14 | 0.14 | denetci gerekce panelinde gorunur |
+|   mesru neden: mevsimsel_uretim_duraklamasi | 10 | 0.1 | denetci gerekce panelinde gorunur |
 |   mesru neden: urun_gami_degisikligi | 1 | 0.01 | denetci gerekce panelinde gorunur |
-|   mesru neden: yasal_muafiyet_istisna | 4 | 0.04 | denetci gerekce panelinde gorunur |
+|   mesru neden: yasal_muafiyet_istisna | 1 | 0.01 | denetci gerekce panelinde gorunur |
 |   mesru neden: yeni_firma_kisa_tarihce | 1 | 0.01 | denetci gerekce panelinde gorunur |
 
 

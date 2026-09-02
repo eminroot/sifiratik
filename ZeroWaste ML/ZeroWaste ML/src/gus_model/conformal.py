@@ -228,6 +228,7 @@ class ConformalCalibrator:
         pred_log: pd.DataFrame,
         fitted_on: str = "",
         grid: Optional[np.ndarray] = None,
+        extra_margin: float = 0.0,
     ) -> "ConformalCalibrator":
         """Duzeltme carpanini AYRI TUTULAN bir bolumde ayarlar.
 
@@ -240,6 +241,10 @@ class ConformalCalibrator:
         gereginden GENIS aralik beyan acigini kucuk gosterir (denetci gitmez),
         gereginden DAR aralik ise normal bir firmanin beyanini acikli gosterir
         ve denetciyi yanlis kapiya gonderir. Ikincisi daha pahalidir.
+
+        `extra_margin`, aralik kalibre edildigi donemde DEGIL bir sonraki
+        donemde kullanildigi icin olusan kapsama kaybinin tahminidir; nasil
+        olculdugu `pipeline.estimate_coverage_drift` icindedir.
         """
         y_log = log_target(frame[TARGET_COLUMN])
         candidates = np.arange(0.50, 2.001, 0.01) if grid is None else np.asarray(grid)
