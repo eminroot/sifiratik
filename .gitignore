@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Local database and environment
+backend/*.db
+backend/.env
+
+# Model artefacts, delivered separately
+backend/models/*
+!backend/models/.gitkeep
+
+# Node
+node_modules/
+frontend/dist/
+
+# Editors and OS
+.DS_Store
+.idea/
+.vscode/

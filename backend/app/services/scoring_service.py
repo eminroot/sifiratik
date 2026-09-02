@@ -1,0 +1,341 @@
+"""Turning stored records into scoring contexts, and results back into rows.
+
+The engine never sees the ORM. This module is the only place that knows about
+both, which is what lets the model team develop against `ScoringContext` alone.
+"""
+
+from __future__ import annotations
+
+import statistics
+import time
+from dataclasses import dataclass
+
+from sqlalchemy import delete, select
+from sqlalchemy.orm import Session, selectinload
+
+from app.config import get_policy
+from app.models import (
+    Company,
+    Declaration,
+    FieldObservation,
+    GtipLine,
+    ScoreResult,
+    SignalResult,
+)
+from app.reference import SECTORS
+from app.scoring.base import (
+    CompanyFacts,
+    GtipFacts,
+    ObservationFacts,
+    PeerCohort,
+    PeriodFacts,
+    ScoreOutcome,
+    ScoringContext,
+    ScoringEngine,
+)
+from app.scoring.registry import resolve_engine
+from app.services.quality_service import build_quality
+
+
+@dataclass
+class RunSummary:
+    period: str
+    engine: str
+    model_version: str
+    companies_scored: int
+    duration_ms: int
+    level_counts: dict[str, int]
+
+
+# --------------------------------------------------------------------------- #
+# Context assembly
+# --------------------------------------------------------------------------- #
+
+
+def _period_facts(declaration: Declaration) -> PeriodFacts:
+    return PeriodFacts(
+        period=declaration.period,
+        declared_tonnage=declaration.declared_packaging_tonnage,
+        production_volume=declaration.production_volume,
+        import_volume=declaration.import_volume,
+        export_volume=declaration.export_volume,
+    )
+
+
+def build_peer_index(db: Session, period: str) -> dict[tuple[str, str], PeerCohort]:
+    """Packaging intensity distribution per sector and size class.
+
+    Built from every company that reported both an amount and an output figure
+    for the period, so the cohort a company is measured against is the cohort
+    that actually filed.
+    """
+    rows = db.execute(
+        select(
+            Company.sector,
+            Company.company_size,
+            Declaration.declared_packaging_tonnage,
+            Declaration.production_volume,
+            Declaration.import_volume,
+        )
+        .join(Declaration, Declaration.company_id == Company.id)
+        .where(Declaration.period == period)
+    ).all()
+
+    buckets: dict[tuple[str, str], list[float]] = {}
+    for sector, size, declared, production, imports in rows:
+        basis = (production or 0.0) + (imports or 0.0)
+        if not basis or declared is None:
+            continue
+        buckets.setdefault((sector, size), []).append(declared / basis)
+
+    index: dict[tuple[str, str], PeerCohort] = {}
+    for key, values in buckets.items():
+        values.sort()
+        index[key] = PeerCohort(
+            sector=key[0],
+            company_size=key[1],
+            member_count=len(values),
+            median_intensity=statistics.median(values),
+            p25_intensity=values[max(0, int(len(values) * 0.25) - 1)],
+        )
+    return index
+
+
+def build_context(
+    db: Session,
+    company: Company,
+    period: str,
+    peer_index: dict[tuple[str, str], PeerCohort] | None = None,
+) -> ScoringContext | None:
+    """Assemble everything the engine needs for one company and period."""
+    declarations = (
+        db.execute(
+            select(Declaration)
+            .where(Declaration.company_id == company.id, Declaration.period <= period)
+            .order_by(Declaration.period.asc())
+        )
+        .scalars()
+        .all()
+    )
+
+    observations = (
+        db.execute(
+            select(FieldObservation)
+            .where(FieldObservation.company_id == company.id, FieldObservation.period <= period)
+            .order_by(FieldObservation.period.asc())
+        )
+        .scalars()
+        .all()
+    )
+
+    gtip_lines = (
+        db.execute(select(GtipLine).where(GtipLine.company_id == company.id, GtipLine.period == period))
+        .scalars()
+        .all()
+    )
+
+    history = [_period_facts(d) for d in declarations]
+
+    # A company that never filed still has to be scoreable: the absence of a
+    # declaration against known output is itself the finding.
+    if not history or history[-1].period != period:
+        latest_volumes = declarations[-1] if declarations else None
+        history.append(
+            PeriodFacts(
+                period=period,
+                declared_tonnage=None,
+                production_volume=latest_volumes.production_volume if latest_volumes else None,
+                import_volume=latest_volumes.import_volume if latest_volumes else None,
+                export_volume=None,
+            )
+        )
+
+    if peer_index is None:
+        peer_index = build_peer_index(db, period)
+
+    cohort = peer_index.get(
+        (company.sector, company.company_size),
+        PeerCohort(
+            sector=company.sector,
+            company_size=company.company_size,
+            member_count=0,
+            median_intensity=None,
+            p25_intensity=None,
+        ),
+    )
+
+    quality = build_quality(company, list(declarations), list(observations), bool(gtip_lines))
+    sector = SECTORS[company.sector]
+
+    return ScoringContext(
+        company=CompanyFacts(
+            id=company.id,
+            company_name=company.company_name,
+            tax_identifier=company.tax_identifier,
+            sector=company.sector,
+            region=company.region,
+            company_size=company.company_size,
+            registry_status=company.registry_status,
+            gtip_coverage=company.gtip_coverage,
+        ),
+        period=period,
+        history=history,
+        peers=cohort,
+        observations=[
+            ObservationFacts(
+                period=o.period,
+                observed_packaging_tonnage=o.observed_packaging_tonnage,
+                observation=o.observation,
+                inspector=o.inspector,
+                observed_at=o.observed_at,
+            )
+            for o in observations
+        ],
+        gtip_lines=[
+            GtipFacts(
+                period=g.period,
+                gtip_code=g.gtip_code,
+                description=g.description,
+                quantity_tonnes=g.quantity_tonnes,
+                packaging_coefficient=g.packaging_coefficient,
+            )
+            for g in gtip_lines
+        ],
+        quality=quality,
+        sector_coefficient=sector["packaging_per_production"],
+        import_coefficient=sector["packaging_per_import"],
+    )
+
+
+# --------------------------------------------------------------------------- #
+# Persistence
+# --------------------------------------------------------------------------- #
+
+
+def persist_outcome(db: Session, outcome: ScoreOutcome) -> ScoreResult:
+    # Clear the signals first and by hand. A bulk delete does not run the ORM
+    # cascade, and SQLite reuses the row ids it just freed, so the replacement
+    # result would otherwise adopt the previous run's signal rows as well.
+    superseded = (
+        db.execute(
+            select(ScoreResult.id).where(
+                ScoreResult.company_id == outcome.company_id,
+                ScoreResult.period == outcome.period,
+            )
+        )
+        .scalars()
+        .all()
+    )
+    if superseded:
+        db.execute(delete(SignalResult).where(SignalResult.score_result_id.in_(superseded)))
+        db.execute(delete(ScoreResult).where(ScoreResult.id.in_(superseded)))
+
+    result = ScoreResult(
+        company_id=outcome.company_id,
+        period=outcome.period,
+        priority_score=outcome.priority_score,
+        priority_level=outcome.priority_level,
+        declared_tonnage=outcome.declared_tonnage,
+        expected_lower_bound=outcome.expected_lower_bound,
+        expected_median=outcome.expected_median,
+        expected_upper_bound=outcome.expected_upper_bound,
+        position=outcome.position,
+        shortfall_tonnage=outcome.shortfall_tonnage,
+        estimated_gekap_gap_try=outcome.estimated_gekap_gap_try,
+        data_quality_score=outcome.data_quality_score,
+        signal_coverage=outcome.signal_coverage,
+        confidence=outcome.confidence,
+        scoring_engine=outcome.scoring_engine,
+        model_version=outcome.model_version,
+        policy_version=outcome.policy_version,
+    )
+    result.signals = [
+        SignalResult(
+            signal_code=signal.code,
+            signal_key=signal.key,
+            signal_name=signal.name,
+            status=signal.status,
+            available=signal.available,
+            score=signal.score,
+            weight=signal.weight,
+            contribution=signal.contribution,
+            explanation=signal.explanation,
+            missing_data_reason=signal.missing_data_reason,
+            evidence=signal.evidence or None,
+        )
+        for signal in outcome.signals
+    ]
+    db.add(result)
+    return result
+
+
+def score_company(
+    db: Session,
+    company: Company,
+    period: str,
+    engine: ScoringEngine | None = None,
+    peer_index: dict[tuple[str, str], PeerCohort] | None = None,
+) -> ScoreOutcome | None:
+    engine = engine or resolve_engine()
+    context = build_context(db, company, period, peer_index)
+    if context is None:
+        return None
+    return engine.score(context)
+
+
+def run_scoring(
+    db: Session,
+    period: str,
+    engine_name: str | None = None,
+    company_ids: list[int] | None = None,
+) -> RunSummary:
+    started = time.perf_counter()
+    engine = resolve_engine(engine_name)
+    peer_index = build_peer_index(db, period)
+
+    query = select(Company).options(selectinload(Company.declarations))
+    if company_ids:
+        query = query.where(Company.id.in_(company_ids))
+    companies = db.execute(query).scalars().all()
+
+    counts: dict[str, int] = {}
+    scored = 0
+    for company in companies:
+        outcome = score_company(db, company, period, engine, peer_index)
+        if outcome is None:
+            continue
+        persist_outcome(db, outcome)
+        counts[outcome.priority_level] = counts.get(outcome.priority_level, 0) + 1
+        scored += 1
+
+    db.commit()
+
+    return RunSummary(
+        period=period,
+        engine=engine.name,
+        model_version=engine.version,
+        companies_scored=scored,
+        duration_ms=int((time.perf_counter() - started) * 1000),
+        level_counts=counts,
+    )
+
+
+def latest_period(db: Session) -> str:
+    period = db.execute(select(Declaration.period).order_by(Declaration.period.desc()).limit(1)).scalar_one_or_none()
+    if period:
+        return period
+    from app.config import CURRENT_PERIOD
+
+    return CURRENT_PERIOD
+
+
+def all_periods(db: Session) -> list[str]:
+    return list(
+        db.execute(select(Declaration.period).distinct().order_by(Declaration.period.asc()))
+        .scalars()
+        .all()
+    )
+
+
+def active_policy_version() -> str:
+    return get_policy().version

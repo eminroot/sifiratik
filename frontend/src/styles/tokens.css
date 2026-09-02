@@ -1,0 +1,198 @@
+/* ==========================================================================
+   Monochrome console — tokens
+
+   Drop this in first. Everything else in the system reads from here.
+
+   The palette is near-monochrome on purpose. Colour is reserved for status —
+   approve, review, block — so that when something is coloured it means
+   something. Contrast is deliberate too: every text colour clears WCAG AA
+   against the surface it sits on, in both themes.
+
+   Theme is switched by `document.documentElement.dataset.theme`. Paint it
+   before first paint with the inline script at the foot of this file, or a
+   dark-mode user gets a white flash on every reload.
+   ========================================================================== */
+
+:root {
+  color-scheme: light;
+
+  /* surfaces, back to front */
+  --bg: #fbfbfa;
+  --surface: #ffffff;
+  --surface-2: #f3f3f1;
+  --surface-3: #e9e9e5;
+
+  /* ink, strongest to faintest */
+  --ink: #0d0d0e;
+  --ink-2: #4a4a50;
+  --ink-3: #6d6d75;
+  --ink-4: #9a9aa2;
+  --on-ink: #ffffff;
+
+  --rule: #e8e8e4;
+  --rule-hard: #d5d5cf;
+
+  /* The only colour in the system. Each is text / fill / border. */
+  --ok: #14603d;   --ok-bg: #e7f1eb;   --ok-line: #bfd7c9;
+  --warn: #7a4d0a; --warn-bg: #f8eeda; --warn-line: #e2cfa6;
+  --stop: #8e2323; --stop-bg: #f8e7e7; --stop-line: #e0c0c0;
+  --cool: #1d4674; --cool-bg: #e9eff6; --cool-line: #c2d3e5;
+
+  --focus: rgba(13, 13, 14, 0.10);
+
+  --shadow-1: 0 1px 2px rgba(13, 13, 14, 0.05);
+  --shadow-2: 0 4px 14px -4px rgba(13, 13, 14, 0.10), 0 1px 3px rgba(13, 13, 14, 0.04);
+  --shadow-3: 0 18px 44px -14px rgba(13, 13, 14, 0.22), 0 4px 12px -4px rgba(13, 13, 14, 0.07);
+
+  --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'Geist Mono', ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
+
+  --gutter: 48px;
+  --measure: 1220px;
+  --dock-clearance: 148px;
+
+  --ease: cubic-bezier(0.22, 0.8, 0.3, 1);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #0a0a0b;
+  --surface: #111113;
+  --surface-2: #1a1a1d;
+  --surface-3: #232327;
+
+  --ink: #f5f5f6;
+  --ink-2: #b6b6bd;
+  --ink-3: #8d8d95;
+  --ink-4: #66666e;
+  --on-ink: #0a0a0b;
+
+  --rule: #232326;
+  --rule-hard: #33333a;
+
+  /* Lifted and desaturated: the light-theme values would vibrate on black. */
+  --ok: #6ddba1;   --ok-bg: #10241a;   --ok-line: #1e4030;
+  --warn: #e8b866; --warn-bg: #271d0d; --warn-line: #47341a;
+  --stop: #f08a8a; --stop-bg: #2a1414; --stop-line: #4a2323;
+  --cool: #8fbcf0; --cool-bg: #101e2c; --cool-line: #1e3550;
+
+  --focus: rgba(245, 245, 246, 0.14);
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-2: 0 4px 14px -4px rgba(0, 0, 0, 0.6), 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-3: 0 18px 44px -14px rgba(0, 0, 0, 0.75), 0 4px 12px -4px rgba(0, 0, 0, 0.5);
+}
+
+/* ----------------------------------------------------------------- base -- */
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  /* tnum keeps columns of figures aligned; the cv/ss features are Inter's
+     straight-sided alternates, which read better at small sizes. */
+  font-feature-settings: 'tnum' 1, 'cv05' 1, 'ss01' 1, 'cv11' 1;
+  transition: background 220ms var(--ease), color 220ms var(--ease);
+}
+
+h1, h2, h3, h4 { margin: 0; font-weight: 600; letter-spacing: -0.02em; }
+p { margin: 0; }
+a { color: inherit; }
+
+button, input, select, textarea { font: inherit; color: inherit; }
+
+::selection { background: var(--ink); color: var(--on-ink); }
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+::-webkit-scrollbar-thumb {
+  background: var(--rule-hard);
+  border: 3px solid var(--bg);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover { background: var(--ink-4); }
+
+/* ----------------------------------------------------------------- type -- */
+
+.display {
+  font-weight: 600;
+  letter-spacing: -0.032em;
+  line-height: 1.08;
+  color: var(--ink);
+}
+
+/* Small, wide, and heavy enough to read at 11px. */
+.label {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.mono {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: -0.01em;
+}
+
+.muted { color: var(--ink-2); }
+.faint { color: var(--ink-3); }
+.num { font-variant-numeric: tabular-nums; }
+
+@media (max-width: 960px) {
+  :root { --gutter: 20px; --dock-clearance: 132px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ==========================================================================
+   In <head>, before the stylesheet:
+
+   <link rel="preconnect" href="https://fonts.googleapis.com" />
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,100..900&display=swap" rel="stylesheet" />
+   <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300..600&display=swap" rel="stylesheet" />
+
+   Two separate requests so a failure on one cannot take the other down with it.
+
+   And, inline, so the stored theme is painted before anything else:
+
+   <script>
+     (function () {
+       try {
+         var saved = localStorage.getItem('app.theme');
+         var dark = saved === 'dark' ||
+           (saved !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+         document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+       } catch (e) {
+         document.documentElement.dataset.theme = 'light';
+       }
+     })();
+   </script>
+   ========================================================================== */

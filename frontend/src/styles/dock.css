@@ -1,0 +1,174 @@
+/* ==========================================================================
+   Dock — a magnifying bar, in the macOS manner.
+
+   Shared by the React (Dock.jsx) and the vanilla (dock.js) versions. The only
+   difference between them is who sets the tile width: framer-motion, or the
+   rAF loop in dock.js.
+
+   Tokens are read with fallbacks so this file works dropped into a project on
+   its own. Supply the real ones from references/tokens.css to get both themes.
+   ========================================================================== */
+
+:root {
+  /* The room a page must leave at its foot so nothing hides behind the dock. */
+  --dock-clearance: 148px;
+}
+
+/* The rail is a tall, invisible, click-through box. Its top padding is the
+   room the magnified tiles and their labels rise into: put a scroll container
+   any closer and the browser clips both, because an element with one axis
+   scrollable treats the other as scrollable too. */
+.dock-rail {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 20px;
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 66px 12px 0;
+  pointer-events: none;
+}
+
+.dock {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 0 12px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--rule, #e8e8e4);
+  background: color-mix(in srgb, var(--surface, #fff) 78%, transparent);
+  backdrop-filter: saturate(180%) blur(22px);
+  -webkit-backdrop-filter: saturate(180%) blur(22px);
+  box-shadow: var(--shadow-3, 0 18px 44px -14px rgba(13, 13, 14, 0.22), 0 4px 12px -4px rgba(13, 13, 14, 0.07));
+  max-width: 100%;
+  pointer-events: auto;
+}
+
+:root[data-theme='dark'] .dock {
+  border-color: var(--rule-hard, #33333a);
+  background: color-mix(in srgb, var(--surface-2, #1a1a1d) 80%, transparent);
+}
+
+.dock-sep {
+  width: 1px;
+  height: 26px;
+  flex: 0 0 1px;
+  align-self: center;
+  margin: 0 2px 8px;
+  background: var(--rule-hard, #d5d5cf);
+}
+
+.dock-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border: none;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--surface-2, #f3f3f1);
+  color: var(--ink-2, #4a4a50);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 160ms var(--ease, cubic-bezier(0.22, 0.8, 0.3, 1)),
+              color 160ms var(--ease, cubic-bezier(0.22, 0.8, 0.3, 1));
+}
+
+/* Without JS, or before it runs, the tiles hold the resting size. */
+.dock-item:not([style*='width']) { width: 44px; height: 44px; }
+
+.dock-item:hover { background: var(--surface-3, #e9e9e5); color: var(--ink, #0d0d0e); }
+.dock-item:focus-visible { outline: 2px solid var(--ink, #0d0d0e); outline-offset: 3px; }
+
+/* `.active` is what Dock.jsx writes; `.is-active` is friendlier in hand-written
+   markup. Both are honoured so the two versions share this file. */
+.dock-item.active,
+.dock-item.is-active { background: var(--ink, #0d0d0e); color: var(--on-ink, #fff); }
+
+.dock-item.active:hover,
+.dock-item.is-active:hover { background: var(--ink, #0d0d0e); }
+
+/* The dot under the live destination, the way a dock marks a running app. */
+.dock-item.active::after,
+.dock-item.is-active::after {
+  content: '';
+  position: absolute;
+  bottom: -7px;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: var(--ink, #0d0d0e);
+}
+
+.dock-icon { display: grid; place-items: center; }
+.dock-icon svg { width: 100%; height: 100%; stroke-width: 1.75; }
+
+/* The vanilla version has no <DockIcon> wrapper, so the svg is sized directly. */
+.dock-item > svg { width: 42%; height: 42%; stroke-width: 1.75; }
+
+.dock-label {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 9px;
+  border-radius: 7px;
+  border: 1px solid var(--rule, #e8e8e4);
+  background: var(--surface, #fff);
+  color: var(--ink, #0d0d0e);
+  box-shadow: var(--shadow-2, 0 4px 14px -4px rgba(13, 13, 14, 0.1), 0 1px 3px rgba(13, 13, 14, 0.04));
+  font-size: 12px;
+  font-weight: 550;
+  letter-spacing: -0.005em;
+  white-space: pre;
+  pointer-events: none;
+}
+
+/* dock.js animates the tooltip itself; framer-motion animates the React one. */
+.dock-label.js {
+  opacity: 0;
+  transform: translateX(-50%) translateY(6px) scale(0.94);
+  transition: opacity 160ms var(--ease, cubic-bezier(0.22, 0.8, 0.3, 1)),
+              transform 160ms var(--ease, cubic-bezier(0.22, 0.8, 0.3, 1));
+}
+
+.dock-label.js.shown {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+/* No pointer to magnify towards down here, so the tiles hold one size and the
+   bar scrolls sideways instead. Clipping the labels costs nothing on touch. */
+@media (max-width: 760px) {
+  .dock-rail { padding: 20px 10px 0; }
+
+  .dock {
+    gap: 6px;
+    padding: 0 9px 8px;
+    border-radius: 17px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .dock::-webkit-scrollbar { display: none; }
+  .dock-sep { height: 22px; }
+  .dock-item:not([style*='width']) { width: 38px; height: 38px; }
+}
+
+@media (max-width: 960px) {
+  :root { --dock-clearance: 132px; }
+}
+
+@supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
+  .dock { background: var(--surface, #fff); }
+  :root[data-theme='dark'] .dock { background: var(--surface-2, #1a1a1d); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dock-item, .dock-label { transition-duration: 0.01ms !important; }
+}
