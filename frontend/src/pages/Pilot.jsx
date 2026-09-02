@@ -11,9 +11,9 @@ import {
 
 import { useApp } from '../App.jsx';
 import { post, query, useApi } from '../lib/api.js';
-import { lira, num, percent, tonnes } from '../lib/format.js';
+import { lira, num, percent, splitUnit, tonnes } from '../lib/format.js';
 import QueueTable from '../components/QueueTable.jsx';
-import { PageHead, Panel, Resource, Section, Stat } from '../components/ui.jsx';
+import { Figures, PageHead, Panel, Resource, Section, Stat } from '../components/ui.jsx';
 
 const SHORTLIST_SIZES = [25, 50, 100, 200];
 
@@ -77,7 +77,6 @@ export default function Pilot() {
                 eyebrow="Pilot"
                 icon={Target}
                 title={config.name}
-                lede="The whole platform pointed at one province: load the records, score them, rank them, and carry the result through to impact."
               >
                 <button type="button" className="btn btn-primary" onClick={run} disabled={running}>
                   {running ? <span className="spin on-ink" /> : <Play size={15} strokeWidth={1.9} />}
@@ -157,7 +156,7 @@ export default function Pilot() {
                   </div>
                 </Panel>
 
-                <div className="stack">
+                <Figures rows>
                   <Stat
                     icon={Boxes}
                     label="Shortlisted"
@@ -167,26 +166,27 @@ export default function Pilot() {
                   <Stat
                     icon={CircleDollarSign}
                     label="Contribution at stake"
-                    value={lira(findings.estimated_gekap_try)}
+                    {...splitUnit(lira(findings.estimated_gekap_try))}
                     note={`${tonnes(findings.additional_tonnage)} below the expected range`}
                   />
                   <Stat
                     icon={Recycle}
                     label="Recovery potential"
-                    value={tonnes(findings.recovery_potential_tonnes)}
+                    {...splitUnit(tonnes(findings.recovery_potential_tonnes))}
                     note="projected from the confirmation rate of closed inspections"
                   />
                   <Stat
                     icon={Cloud}
                     label="Emissions avoided"
-                    value={`${num(findings.co2e_avoided_tonnes)} t`}
-                    note={`CO2e, at ${percent(findings.average_data_quality)} mean data quality`}
+                    value={num(findings.co2e_avoided_tonnes)}
+                    unit="t CO2e"
+                    note={`at ${percent(findings.average_data_quality)} mean data quality`}
                   />
-                </div>
+                </Figures>
               </div>
 
               {findings.by_material.length > 0 && (
-                <Section icon={Boxes} title="Material at stake in the shortlist">
+                <Section icon={Boxes} title="Material in the shortlist">
                   <div className="table-wrap">
                     <table className="table">
                       <thead>

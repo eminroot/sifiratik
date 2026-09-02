@@ -14,8 +14,8 @@ import {
 
 import { useApp } from '../App.jsx';
 import { query, useApi } from '../lib/api.js';
-import { lira, num, tonnes } from '../lib/format.js';
-import { PageHead, Panel, Resource, Section, Stat } from '../components/ui.jsx';
+import { lira, num, splitUnit, tonnes } from '../lib/format.js';
+import { Figures, PageHead, Panel, Resource, Section, Stat } from '../components/ui.jsx';
 
 export default function Impact() {
   const { period } = useApp();
@@ -30,46 +30,42 @@ export default function Impact() {
 
           return (
             <>
-              <PageHead
-                eyebrow="COP31 impact"
-                icon={Leaf}
-                title="From audits to recovered material"
-                lede="Identified tonnage is what the analysis suggests. Confirmed tonnage is what inspections established. Only the second one is carried forward."
-              >
+              <PageHead eyebrow="COP31" icon={Leaf} title="Climate impact">
                 <Link className="btn btn-ghost" to="/pilot">
                   <Target size={15} strokeWidth={1.9} />
                   Antalya pilot
                 </Link>
               </PageHead>
 
-              <div className="grid grid-4">
+              <Figures columns={4}>
                 <Stat
                   icon={Boxes}
                   label="Identified"
-                  value={tonnes(data.additional_tonnage_identified)}
+                  {...splitUnit(tonnes(data.additional_tonnage_identified))}
                   note={`across ${num(data.companies_flagged)} flagged companies`}
                 />
                 <Stat
                   icon={Recycle}
                   label="Confirmed by inspection"
-                  value={tonnes(data.additional_tonnage_confirmed)}
+                  {...splitUnit(tonnes(data.additional_tonnage_confirmed))}
                   note={`${num(data.companies_inspected)} inspections closed`}
                 />
                 <Stat
                   icon={CircleDollarSign}
                   label="Contribution recovered"
-                  value={lira(data.confirmed_gekap_revenue_try)}
+                  {...splitUnit(lira(data.confirmed_gekap_revenue_try))}
                   note={`${lira(data.estimated_gekap_revenue_try)} identified but not yet confirmed`}
                 />
                 <Stat
                   icon={Cloud}
                   label="Emissions avoided"
-                  value={`${num(data.co2e_avoided_tonnes)} t`}
-                  note="CO2e, against disposal of the same material"
+                  value={num(data.co2e_avoided_tonnes)}
+                  unit="t CO2e"
+                  note="against disposal of the same material"
                 />
-              </div>
+              </Figures>
 
-              <Section icon={Recycle} title="The chain, end to end">
+              <Section icon={Recycle} title="Impact chain">
                 <div className="grid grid-side">
                   <Panel>
                     <div className="chain">

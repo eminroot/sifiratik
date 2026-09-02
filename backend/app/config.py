@@ -30,6 +30,17 @@ class Settings(BaseSettings):
     seed_random_state: int = 20260101
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173"
 
+    # The in-app assistant. Without a key the endpoint reports itself as
+    # unconfigured and the interface hides the panel rather than failing.
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-2.5-flash"
+    gemini_api_base: str = "https://generativelanguage.googleapis.com/v1beta"
+    gemini_timeout_seconds: float = 45.0
+
+    @property
+    def assistant_enabled(self) -> bool:
+        return bool(self.gemini_api_key.strip())
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]

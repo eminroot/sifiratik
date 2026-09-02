@@ -75,12 +75,7 @@ export default function Queue() {
 
   return (
     <div className="page wide">
-      <PageHead
-        eyebrow="Operations"
-        icon={ClipboardList}
-        title="Inspection queue"
-        lede="Ordered by priority score. Rank is fixed for the period, so it holds whatever filter is applied."
-      />
+      <PageHead eyebrow="Operations" icon={ClipboardList} title="Inspection queue" />
 
       <div className="filters">
         <div className="filter-search">

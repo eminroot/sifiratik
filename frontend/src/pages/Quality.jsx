@@ -10,8 +10,9 @@ import {
   num,
   percent,
   qualityTone,
+  splitUnit,
 } from '../lib/format.js';
-import { Meter, PageHead, Panel, Pill, Resource, Section, Stat } from '../components/ui.jsx';
+import { Figures, Meter, PageHead, Panel, Pill, Resource, Section, Stat } from '../components/ui.jsx';
 
 const STATE_CLASS = { AVAILABLE: 'ok', PARTIAL: 'warn', MISSING: 'stop' };
 
@@ -39,18 +40,13 @@ export default function Quality() {
 
           return (
             <>
-              <PageHead
-                eyebrow="Evidence"
-                icon={Gauge}
-                title="What the platform can see"
-                lede="A quiet check and a check that never ran are different findings. This page keeps them apart."
-              />
+              <PageHead eyebrow="Evidence" icon={Gauge} title="Data quality" />
 
-              <div className="grid grid-4">
+              <Figures columns={4}>
                 <Stat
                   icon={Gauge}
                   label="Mean data quality"
-                  value={percent(data.average_data_quality)}
+                  {...splitUnit(percent(data.average_data_quality))}
                   note={`across ${num(data.companies_analysed)} scored companies`}
                 />
                 <Stat
@@ -74,7 +70,7 @@ export default function Quality() {
                   )}
                   note="held out of the calculation"
                 />
-              </div>
+              </Figures>
 
               <Section icon={Database} title="Coverage by field">
                 <Panel>
@@ -107,7 +103,7 @@ export default function Quality() {
                 </Panel>
               </Section>
 
-              <Section icon={Layers} title="Why checks could not run">
+              <Section icon={Layers} title="Checks that could not run">
                 <div className="table-wrap">
                   <table className="table">
                     <thead>
@@ -153,7 +149,7 @@ export default function Quality() {
 
               <Section
                 icon={ScanSearch}
-                title="Weakest records first"
+                title="Weakest records"
                 actions={
                   <span className="stat-note" style={{ marginTop: 0 }}>
                     {Math.min(MATRIX_ROWS, data.companies.length)} of {num(data.companies_analysed)}{' '}

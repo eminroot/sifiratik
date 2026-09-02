@@ -7,3 +7,5 @@ SQLAlchemy>=2.0.29
 psycopg[binary]>=3.1 ; platform_system != "Emscripten"
 # Schema migrations. Optional in development, where tables are created directly.
 alembic>=1.13
+# Outbound calls to Gemini for the in-app assistant.
+httpx>=0.27

@@ -12,6 +12,7 @@ import {
   Target,
 } from 'lucide-react';
 
+import Assistant from './components/Assistant.jsx';
 import { Dock, DockIcon, DockItem, DockLabel } from './components/Dock.jsx';
 import Topbar from './components/Topbar.jsx';
 import { Toasts } from './components/ui.jsx';
@@ -82,7 +83,7 @@ export default function App() {
   }, []);
 
   const value = useMemo(
-    () => ({ period, setPeriod, reference: reference.data, toast }),
+    () => ({ period, reference: reference.data, toast }),
     [period, reference.data, toast],
   );
 
@@ -140,6 +141,7 @@ export default function App() {
           </DockItem>
         </Dock>
 
+        <Assistant />
         <Toasts items={toasts} />
       </div>
     </AppContext.Provider>

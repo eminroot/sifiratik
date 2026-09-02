@@ -18,27 +18,6 @@
   margin-top: -1px;
 }
 
-.period-select {
-  height: 30px;
-  padding: 0 26px 0 10px;
-  border: 1px solid var(--rule);
-  border-radius: 8px;
-  background: var(--surface);
-  color: var(--ink-2);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  appearance: none;
-  cursor: pointer;
-  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
-    linear-gradient(135deg, currentColor 50%, transparent 50%);
-  background-position: calc(100% - 13px) 13px, calc(100% - 9px) 13px;
-  background-size: 4px 4px, 4px 4px;
-  background-repeat: no-repeat;
-  transition: border-color 140ms var(--ease), color 140ms var(--ease);
-}
-
-.period-select:hover { border-color: var(--rule-hard); color: var(--ink); }
-
 .route {
   animation: route-in 180ms var(--ease);
 }
@@ -463,7 +442,7 @@
 .table .cell-name em { font-style: normal; font-size: 12px; color: var(--ink-3); }
 .table .cell-name em .mono { font-size: 11.5px; }
 
-.table .cell-reason { min-width: 236px; max-width: 340px; }
+.table .cell-reason { min-width: 208px; max-width: 320px; }
 .table .cell-reason > span { display: block; font-size: 12.5px; color: var(--ink-3); }
 
 .reason-inline {
@@ -501,6 +480,61 @@
 .meter i.warn { background: var(--warn); }
 .meter i.ok { background: var(--ok); }
 .meter i.cool { background: var(--cool); }
+
+/* ------------------------------------------------------------ row actions -- */
+
+/* The two decisions that can be taken without opening the company. They sit
+   quiet until the row is under the pointer, so a long list still reads as a
+   list of findings rather than a wall of buttons. */
+.table th.col-actions,
+.table td.col-actions { width: 72px; text-align: right; padding-left: 6px; }
+
+.row-actions { display: inline-flex; gap: 4px; justify-content: flex-end; }
+
+.row-action {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: none;
+  color: var(--ink-4);
+  cursor: pointer;
+  transition: color 140ms var(--ease), background 140ms var(--ease),
+              border-color 140ms var(--ease), transform 140ms var(--ease);
+}
+
+.table tbody tr:hover .row-action:not(:disabled) {
+  border-color: var(--rule-hard);
+  background: var(--surface);
+  color: var(--ink-2);
+}
+
+.row-action:not(:disabled):hover { transform: translateY(-1px); }
+
+.row-action.flag:not(:disabled):hover {
+  color: var(--warn);
+  border-color: var(--warn-line);
+  background: var(--warn-bg);
+}
+
+.row-action.clear:not(:disabled):hover {
+  color: var(--ok);
+  border-color: var(--ok-line);
+  background: var(--ok-bg);
+}
+
+/* The standing already recorded. Filled, not disabled-looking: it is the
+   answer to "what did we decide", not a control that failed to load. */
+.row-action.on { cursor: default; opacity: 1; }
+.row-action.on.flag { color: var(--warn); border-color: var(--warn-line); background: var(--warn-bg); }
+.row-action.on.clear { color: var(--ok); border-color: var(--ok-line); background: var(--ok-bg); }
+
+.row-action:disabled:not(.on) { opacity: 0.4; cursor: not-allowed; }
+.row-action .spin { width: 12px; height: 12px; }
 
 .pager {
   display: flex;
@@ -809,13 +843,21 @@
 
 /* The working screens are tables first, so they get more width than the
    reading measure allows. Reading pages keep the narrower default. */
-.page.wide { max-width: 1460px; }
+.page.wide { max-width: 1520px; }
 
 
-/* Nine columns have to sit inside the measure, so the queue runs tighter than
+/* Ten columns have to sit inside the measure, so the queue runs tighter than
    the default table rhythm. */
 .table-wrap .table th,
 .table-wrap .table td { padding-left: 14px; padding-right: 14px; }
+
+/* The overview shows the same table inside the narrower reading measure, so
+   it gives up the padding and some of the reason column to keep the action
+   buttons on screen rather than behind a scrollbar. */
+.table-wrap.compact .table th,
+.table-wrap.compact .table td { padding-left: 11px; padding-right: 11px; }
+.table-wrap.compact .cell-reason { min-width: 200px; }
+.table-wrap.compact .cell-name { min-width: 172px; }
 
 .quality-ok { color: var(--ink); }
 .quality-warn { color: var(--warn); font-weight: 550; }
@@ -828,9 +870,4 @@
 .table th.prose-cell { text-align: left; white-space: normal; }
 
 
-@media (max-width: 700px) {
-  /* The strapline is the first thing to go: the mark alone identifies the
-     platform, and the period chip has to stay reachable. */
-  .brand-sub { display: none; }
-  .topbar { gap: 10px; }
-}
+

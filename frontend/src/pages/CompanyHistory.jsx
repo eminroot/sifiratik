@@ -27,12 +27,7 @@ export default function CompanyHistory() {
               <PageHead
                 eyebrow="History"
                 icon={History}
-                title="Behaviour over time"
-                lede={
-                  below === 0
-                    ? 'Every filed period has landed inside its expected range.'
-                    : `${below} of ${data.periods.length} periods fell below the range expected at the time.`
-                }
+                title="History"
               >
                 <div className="page-head-figures">
                   <div className="head-figure">

@@ -34,6 +34,21 @@ export function percent(value, digits = 0) {
   return `${num(value, digits)}%`;
 }
 
+const UNIT_SUFFIXES = [' TL', ' t'];
+
+/**
+ * Splits a formatted figure into the quantity and its unit, so a component can
+ * set the two at different weights. A value with no unit it recognises comes
+ * back whole, which keeps a string like "No filing" intact.
+ */
+export function splitUnit(text) {
+  if (typeof text !== 'string') return { value: text };
+  if (text.length > 1 && text.endsWith('%')) return { value: text.slice(0, -1), unit: '%' };
+  const suffix = UNIT_SUFFIXES.find((candidate) => text.endsWith(candidate));
+  if (!suffix) return { value: text };
+  return { value: text.slice(0, -suffix.length), unit: suffix.trim() };
+}
+
 export function date(value, { time = false } = {}) {
   if (!value) return '--';
   const parsed = new Date(value);

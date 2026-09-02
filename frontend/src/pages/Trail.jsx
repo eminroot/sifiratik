@@ -39,7 +39,6 @@ export default function Trail() {
         eyebrow="Traceability"
         icon={ScrollText}
         title="Decision log"
-        lede="Every decision carries the digest of the one before it. Changing a past entry breaks the chain from that point on."
       >
         <button type="button" className="btn btn-ghost" onClick={reverify} disabled={verifying}>
           {verifying ? <span className="spin" /> : <ShieldCheck size={15} strokeWidth={1.9} />}

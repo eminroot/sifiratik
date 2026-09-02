@@ -1,0 +1,260 @@
+/* ==========================================================================
+   Assistant — a panel at the foot of the window, opposite the dock.
+
+   It is chrome, not a page, so it holds the console vocabulary exactly: one
+   surface, one 1px rule, one shadow. The only ink-filled shape is the
+   launcher, the same licence the brand glyph takes in the topbar.
+   ========================================================================== */
+
+.assistant-launcher {
+  position: fixed;
+  right: 24px;
+  bottom: 26px;
+  z-index: 55;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--rule-hard);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-2);
+  cursor: pointer;
+  transition: transform 160ms var(--ease), background 160ms var(--ease),
+              color 160ms var(--ease), border-color 160ms var(--ease);
+}
+
+.assistant-launcher:hover { transform: translateY(-2px); border-color: var(--ink-4); }
+.assistant-launcher:active { transform: scale(0.96); }
+
+.assistant-launcher.open {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--on-ink);
+}
+
+.assistant-launcher:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+/* ------------------------------------------------------------------ panel -- */
+
+.assistant {
+  position: fixed;
+  right: 24px;
+  bottom: 84px;
+  z-index: 56;
+  display: flex;
+  flex-direction: column;
+  width: 392px;
+  max-width: calc(100vw - 32px);
+  height: min(600px, calc(100vh - 150px));
+  border: 1px solid var(--rule);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow-3);
+  overflow: hidden;
+  animation: assistant-in 200ms var(--ease);
+}
+
+@keyframes assistant-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.985); }
+}
+
+.assistant-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 12px 13px 18px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--surface-2);
+}
+
+.assistant-title { font-size: 14px; font-weight: 600; letter-spacing: -0.014em; color: var(--ink); }
+
+.assistant-sub {
+  font-size: 11px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.35;
+}
+
+/* -------------------------------------------------------------------- log -- */
+
+.assistant-log {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.assistant-intro p {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-3);
+  margin-bottom: 16px;
+}
+
+.assistant-openers { display: flex; flex-direction: column; gap: 6px; }
+
+/* Openers the data can actually answer. Left-aligned, because they are
+   sentences and not buttons in the usual sense. */
+.assistant-opener {
+  text-align: left;
+  padding: 9px 12px;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--surface);
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: border-color 140ms var(--ease), background 140ms var(--ease),
+              color 140ms var(--ease);
+}
+
+.assistant-opener:hover {
+  border-color: var(--ink-4);
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.assistant-turn {
+  max-width: 92%;
+  font-size: 13.5px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* The operator's own words are the filled shape; the answer is set on the
+   page itself, the way a document reads. */
+.assistant-turn.user {
+  align-self: flex-end;
+  max-width: 88%;
+  padding: 9px 13px;
+  border-radius: 13px 13px 3px 13px;
+  background: var(--ink);
+  color: var(--on-ink);
+  font-weight: 500;
+}
+
+.assistant-turn.assistant {
+  align-self: flex-start;
+  max-width: 100%;
+  color: var(--ink-2);
+  white-space: normal;
+}
+
+.assistant-turn.assistant p + p { margin-top: 9px; }
+.assistant-turn.assistant ul { margin: 9px 0 0; padding-left: 17px; }
+.assistant-turn.assistant li { margin-bottom: 4px; }
+
+.assistant-turn.failed {
+  padding: 10px 13px;
+  border: 1px solid var(--stop-line);
+  border-radius: 10px;
+  background: var(--stop-bg);
+  color: var(--stop);
+  font-size: 12.5px;
+}
+
+/* Three dots, at the weight of the answer that is about to replace them. */
+.assistant-turn.thinking { display: flex; gap: 4px; align-items: center; padding: 6px 0; }
+
+.assistant-turn.thinking span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ink-4);
+  animation: assistant-pulse 1.1s var(--ease) infinite;
+}
+
+.assistant-turn.thinking span:nth-child(2) { animation-delay: 0.15s; }
+.assistant-turn.thinking span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes assistant-pulse {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-3px); }
+}
+
+/* --------------------------------------------------------------- composer -- */
+
+.assistant-composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 12px 12px 12px 16px;
+  border-top: 1px solid var(--rule);
+  background: var(--surface);
+}
+
+.assistant-composer textarea {
+  flex: 1;
+  min-width: 0;
+  max-height: 132px;
+  padding: 7px 0;
+  border: none;
+  background: none;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink);
+  resize: none;
+  outline: none;
+  field-sizing: content;
+}
+
+.assistant-composer textarea::placeholder { color: var(--ink-4); }
+.assistant-composer textarea:disabled { cursor: not-allowed; }
+
+.assistant-send {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: none;
+  border-radius: 9px;
+  background: var(--ink);
+  color: var(--on-ink);
+  cursor: pointer;
+  transition: opacity 140ms var(--ease), transform 140ms var(--ease);
+}
+
+.assistant-send:disabled { opacity: 0.28; cursor: not-allowed; }
+.assistant-send:not(:disabled):active { transform: scale(0.94); }
+
+.assistant-foot {
+  padding: 9px 18px 11px;
+  border-top: 1px solid var(--rule);
+  background: var(--surface-2);
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--ink-3);
+}
+
+/* ------------------------------------------------------------ responsive -- */
+
+/* On a phone the panel takes the window, and the dock is behind it anyway. */
+@media (max-width: 560px) {
+  .assistant {
+    right: 12px;
+    left: 12px;
+    bottom: 78px;
+    width: auto;
+    height: min(70vh, calc(100vh - 140px));
+  }
+
+  .assistant-launcher { right: 14px; bottom: 18px; width: 42px; height: 42px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assistant { animation: none; }
+  .assistant-turn.thinking span { animation: none; opacity: 0.55; }
+}

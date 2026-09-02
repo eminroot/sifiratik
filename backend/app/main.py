@@ -15,6 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.database.database import create_all
 from app.routers import (
+    assistant,
     climate_impact,
     companies,
     dashboard,
@@ -64,6 +65,7 @@ for router in (
     climate_impact.router,
     transparency.router,
     scoring.router,
+    assistant.router,
 ):
     app.include_router(router, prefix=settings.api_prefix)
 

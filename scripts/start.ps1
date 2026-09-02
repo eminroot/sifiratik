@@ -1,5 +1,5 @@
 <#
-    GÜS-DEDEKTİV launcher.
+    GUS-DEDEKTIV launcher.
 
     Starts the API and the interface together, waits until both actually
     answer, opens the browser, and streams both logs into this one window.
@@ -8,6 +8,10 @@
     Run it from start.bat, or directly:
 
         powershell -ExecutionPolicy Bypass -File scripts\start.ps1
+
+    Kept to plain ASCII on purpose: Windows PowerShell reads a .ps1 as ANSI
+    unless the file carries a byte order mark, and an editor that drops the
+    mark would garble anything else.
 #>
 
 [CmdletBinding()]
@@ -35,13 +39,6 @@ function Write-Step($text) { Write-Host "  $text" -ForegroundColor DarkGray }
 function Write-Good($text) { Write-Host "  $text" -ForegroundColor Green }
 function Write-Warn($text) { Write-Host "  $text" -ForegroundColor Yellow }
 function Write-Bad($text) { Write-Host "  $text" -ForegroundColor Red }
-
-function Write-Banner {
-    Write-Host ''
-    Write-Host '  GUS-DEDEKTIV' -ForegroundColor White
-    Write-Host '  Inspection prioritisation for GEKAP declarations' -ForegroundColor DarkGray
-    Write-Host ''
-}
 
 function Test-Port([int]$Port) {
     $client = New-Object System.Net.Sockets.TcpClient
@@ -80,23 +77,28 @@ function Resolve-Python {
     return $null
 }
 
-# Track what we start so a window closed with the X can still be cleaned up
-# on the next run, when the OS has left the processes behind.
 function Stop-Tree([int]$ProcessId) {
     if ($ProcessId -le 0) { return }
-    $running = Get-Process -Id $ProcessId -ErrorAction SilentlyContinue
-    if ($null -eq $running) { return }
-    Start-Process -FilePath 'taskkill.exe' -ArgumentList '/PID', $ProcessId, '/T', '/F' `
-        -NoNewWindow -Wait -ErrorAction SilentlyContinue | Out-Null
+    if ($null -eq (Get-Process -Id $ProcessId -ErrorAction SilentlyContinue)) { return }
+    $noise = Join-Path $RunDir 'taskkill.txt'
+    try {
+        Start-Process -FilePath 'taskkill.exe' -ArgumentList '/PID', $ProcessId, '/T', '/F' `
+            -NoNewWindow -Wait -RedirectStandardOutput $noise -ErrorAction SilentlyContinue | Out-Null
+    } catch {
+        # The tree was already gone, which is the outcome we wanted anyway.
+    }
+    Remove-Item $noise -Force -ErrorAction SilentlyContinue
 }
 
+# A window closed with the X leaves the children running, so the pid files
+# from the previous run are cleared before this one starts.
 function Stop-Previous {
     if (-not (Test-Path $RunDir)) { return }
     foreach ($file in Get-ChildItem -Path $RunDir -Filter '*.pid' -ErrorAction SilentlyContinue) {
         $recorded = 0
         if ([int]::TryParse((Get-Content $file.FullName -Raw).Trim(), [ref]$recorded)) {
             $process = Get-Process -Id $recorded -ErrorAction SilentlyContinue
-            # Only ours: a leftover launcher child is always a cmd wrapper.
+            # Only ever ours: every service is started through a cmd wrapper.
             if ($null -ne $process -and $process.ProcessName -eq 'cmd') {
                 Write-Step "Clearing a process left behind by an earlier run (pid $recorded)"
                 Stop-Tree $recorded
@@ -106,26 +108,33 @@ function Stop-Previous {
     }
 }
 
+<#
+    Each service runs from a generated .cmd file rather than a long cmd /c
+    argument. cmd.exe applies its own quote-stripping rules to /c, which
+    quietly folded the output redirect into the last option of the command.
+    Putting the redirect inside a script file avoids the question entirely.
+#>
 function Start-Service([string]$Name, [string]$WorkingDirectory, [string]$CommandLine, [string]$LogPath) {
     if (Test-Path $LogPath) { Remove-Item $LogPath -Force -ErrorAction SilentlyContinue }
 
-    # cmd.exe wraps the command so both streams land in one file, which keeps
-    # the log readable when a traceback and ordinary output interleave.
-    $arguments = '/c "' + $CommandLine + '" > "' + $LogPath + '" 2>&1'
-    $process = Start-Process -FilePath $env:ComSpec -ArgumentList $arguments `
-        -WorkingDirectory $WorkingDirectory -NoNewWindow -PassThru
+    $scriptPath = Join-Path $RunDir "$Name.cmd"
+    $lines = @(
+        '@echo off',
+        'cd /d "' + $WorkingDirectory + '"',
+        $CommandLine + ' > "' + $LogPath + '" 2>&1'
+    )
+    Set-Content -Path $scriptPath -Value $lines -Encoding ascii
 
+    $process = Start-Process -FilePath $scriptPath -WorkingDirectory $WorkingDirectory `
+        -NoNewWindow -PassThru
     Set-Content -Path (Join-Path $RunDir "$Name.pid") -Value $process.Id -Encoding ascii
     return $process
 }
 
-function Get-LogTail([string]$Path, [int]$Lines = 18) {
-    if (-not (Test-Path $Path)) { return @() }
-    try {
-        return Get-Content -Path $Path -Tail $Lines -ErrorAction SilentlyContinue
-    } catch {
-        return @()
-    }
+function Show-LogTail([string]$Path, [int]$Lines = 20) {
+    if (-not (Test-Path $Path)) { return }
+    Get-Content -Path $Path -Tail $Lines -ErrorAction SilentlyContinue |
+        ForEach-Object { Write-Host "    $_" -ForegroundColor DarkGray }
 }
 
 function New-Follower([string]$Path, [string]$Tag, [string]$Colour) {
@@ -138,7 +147,7 @@ function Show-NewOutput($Follower) {
     if ($length -lt $Follower.Position) { $Follower.Position = 0 }
     if ($length -eq $Follower.Position) { return }
 
-    # Shared read: the child process still has the file open for writing.
+    # Shared read: the service still holds the file open for writing.
     $stream = [System.IO.File]::Open($Follower.Path, 'Open', 'Read', 'ReadWrite')
     try {
         $stream.Seek($Follower.Position, 'Begin') | Out-Null
@@ -159,32 +168,37 @@ function Show-NewOutput($Follower) {
 
 # ------------------------------------------------------------------ checks --
 
-Clear-Host
-Write-Banner
+try { Clear-Host } catch { }
+Write-Host ''
+Write-Host '  GUS-DEDEKTIV' -ForegroundColor White
+Write-Host '  Inspection prioritisation for GEKAP declarations' -ForegroundColor DarkGray
+Write-Host ''
 
 $python = Resolve-Python
 if ($null -eq $python) {
     Write-Bad 'Python was not found on PATH.'
     Write-Step 'Install Python 3.11 or newer from python.org, then run this again.'
-    Read-Host '  Press Enter to close'
     exit 1
 }
 
-$npm = Get-Command 'npm' -ErrorAction SilentlyContinue
-if ($null -eq $npm) {
+if ($null -eq (Get-Command 'npm' -ErrorAction SilentlyContinue)) {
     Write-Bad 'npm was not found on PATH.'
     Write-Step 'Install Node.js 20 or newer from nodejs.org, then run this again.'
-    Read-Host '  Press Enter to close'
     exit 1
 }
 
 $pythonExe = $python.Exe
 $pythonPrefix = @()
 if ($python.ContainsKey('Prefix')) { $pythonPrefix = $python.Prefix }
-$pythonCommand = $pythonExe
-if ($pythonPrefix.Count -gt 0) { $pythonCommand = "$pythonExe $($pythonPrefix -join ' ')" }
 
-Write-Step "$($python.Version.Trim())  ·  npm $(& npm --version)"
+# How the generated .cmd will invoke it. A resolved path can contain spaces.
+if ($pythonPrefix.Count -gt 0) {
+    $pythonInvocation = $pythonExe + ' ' + ($pythonPrefix -join ' ')
+} else {
+    $pythonInvocation = '"' + $pythonExe + '"'
+}
+
+Write-Step "$($python.Version.Trim())  |  npm $(& npm --version)"
 
 New-Item -ItemType Directory -Path $RunDir -Force | Out-Null
 Stop-Previous
@@ -203,7 +217,6 @@ try {
         & $pythonExe @pythonPrefix -m pip install -r requirements.txt --quiet --disable-pip-version-check
         if ($LASTEXITCODE -ne 0) {
             Write-Bad 'Backend dependencies failed to install.'
-            Read-Host '  Press Enter to close'
             exit 1
         }
     }
@@ -223,7 +236,6 @@ if ($Install.IsPresent -or -not (Test-Path (Join-Path $Frontend 'node_modules'))
         & npm install --no-audit --no-fund --silent
         if ($LASTEXITCODE -ne 0) {
             Write-Bad 'Frontend dependencies failed to install.'
-            Read-Host '  Press Enter to close'
             exit 1
         }
     } finally {
@@ -243,12 +255,11 @@ if ($apiAlreadyUp) {
     Write-Warn "Port $ApiPort is already serving the API, reusing it"
 } elseif (Test-Port $ApiPort) {
     Write-Bad "Port $ApiPort is taken by something else. Free it, or pass -ApiPort."
-    Read-Host '  Press Enter to close'
     exit 1
 } else {
     Write-Step "Starting the API on port $ApiPort"
     $apiProcess = Start-Service 'api' $Backend `
-        "$pythonCommand -m uvicorn app.main:app --host 127.0.0.1 --port $ApiPort --reload" $apiLog
+        "$pythonInvocation -m uvicorn app.main:app --host 127.0.0.1 --port $ApiPort --reload" $apiLog
 }
 
 $webAlreadyUp = Test-Port $WebPort
@@ -272,9 +283,7 @@ try {
         }
         if (-not $ready) {
             Write-Bad 'The API did not come up.'
-            Get-LogTail $apiLog | ForEach-Object { Write-Host "    $_" -ForegroundColor DarkGray }
-            Stop-Tree $(if ($null -ne $webProcess) { $webProcess.Id } else { 0 })
-            Read-Host '  Press Enter to close'
+            Show-LogTail $apiLog
             exit 1
         }
     }
@@ -289,9 +298,7 @@ try {
         }
         if (-not $ready) {
             Write-Bad 'The interface did not come up.'
-            Get-LogTail $webLog | ForEach-Object { Write-Host "    $_" -ForegroundColor DarkGray }
-            Stop-Tree $(if ($null -ne $apiProcess) { $apiProcess.Id } else { 0 })
-            Read-Host '  Press Enter to close'
+            Show-LogTail $webLog
             exit 1
         }
     }
@@ -307,7 +314,7 @@ try {
         (New-Follower $apiLog 'api' 'DarkCyan'),
         (New-Follower $webLog 'web' 'DarkYellow')
     )
-    # Skip the output produced before the banner, it has already been summarised.
+    # Skip the startup output, already summarised above.
     foreach ($follower in $followers) {
         if (Test-Path $follower.Path) { $follower.Position = (Get-Item $follower.Path).Length }
     }

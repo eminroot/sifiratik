@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { createContext, useContext, useEffect } from 'react';
 import { AlertTriangle, Check, Inbox, X } from 'lucide-react';
 
 export function PageHead({ eyebrow, icon: Icon, title, lede, note, children }) {
@@ -47,24 +47,46 @@ export function Pill({ tone = 'mute', children }) {
   return <span className={`pill ${tone}`}>{children}</span>;
 }
 
-export function Stat({ icon: Icon, label, value, note, tone, children, large = false }) {
+const FiguresContext = createContext(false);
+
+/**
+ * A run of figures reading as one instrument, not as a row of cards floating
+ * apart from each other. The 1px grid gap draws the dividers, so the cells
+ * stay separated however the row wraps.
+ */
+export function Figures({ columns = 3, rows = false, children, className = '' }) {
+  const shape = rows ? 'rows' : `cols-${columns}`;
   return (
-    <div className="panel">
-      <div className="panel-body">
-        <div className="stat-head">
-          {Icon && (
-            <span className="stat-chip">
-              <Icon size={14} strokeWidth={1.9} />
-            </span>
-          )}
-          <span className="label">{label}</span>
-        </div>
-        <div className={`stat-value${large ? '' : ' sm'}`}>{value}</div>
-        {note && <div className={`stat-note${tone ? ` ${tone}` : ''}`}>{note}</div>}
-        {children}
-      </div>
-    </div>
+    <FiguresContext.Provider value>
+      <div className={`figures ${shape} ${className}`.trim()}>{children}</div>
+    </FiguresContext.Provider>
   );
+}
+
+/**
+ * One figure. Inside <Figures> it is a cell of the strip; on its own it keeps
+ * its own surface, so the component can still be dropped anywhere.
+ */
+export function Stat({ icon: Icon, label, value, unit, note, tone, children, large = false }) {
+  const joined = useContext(FiguresContext);
+
+  const body = (
+    <>
+      <div className="figure-head">
+        <span className="label">{label}</span>
+        {Icon && <Icon size={13} strokeWidth={1.9} />}
+      </div>
+      <div className={`figure-value${large ? ' lg' : ''}`}>
+        <span>{value}</span>
+        {unit && <span className="figure-unit">{unit}</span>}
+      </div>
+      {note && <div className={`figure-note${tone ? ` ${tone}` : ''}`}>{note}</div>}
+      {children}
+    </>
+  );
+
+  if (joined) return <div className="figure">{body}</div>;
+  return <div className="figure figure-solo">{body}</div>;
 }
 
 export function Meter({ value, tone }) {

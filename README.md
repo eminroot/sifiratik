@@ -46,6 +46,24 @@ Run the tests:
 cd backend && python -m pytest
 ```
 
+### The in-app assistant
+
+The chat panel at the foot of the window answers questions about the period on
+screen. It is off until a Gemini key is present, and says so rather than
+failing quietly. Copy `backend/.env.example` to `backend/.env`, set the key,
+and restart the API.
+
+```
+GEMINI_API_KEY=your-key
+GEMINI_MODEL=gemini-2.5-flash
+```
+
+Every request carries a briefing assembled from the current period — the band
+distribution, exposure, field coverage, the eight checks, the top of the queue,
+and the company being viewed if there is one — so an answer quotes the same
+figures the page is showing. The briefing is passed as reference data, never as
+instruction.
+
 ### PostgreSQL
 
 Set `DATABASE_URL` and apply the migrations. Nothing else changes; every column
@@ -136,7 +154,7 @@ backend/
     main.py            application, CORS, router mounting
     config.py          settings, and the scoring policy an authority can tune
     reference.py       GEKAP tariffs, sector coefficients, signal catalogue
-    routers/           dashboard, companies, inspections, impact, transparency
+    routers/           dashboard, companies, inspections, impact, transparency, assistant
     schemas/           the wire contract
     services/          queries, workflow, audit chain, impact, pilot
     scoring/           the engine interface and its implementations
@@ -148,9 +166,9 @@ backend/
 frontend/
   src/
     pages/             the nine screens
-    components/        dock, tables, charts, the review sheet
+    components/        dock, tables, charts, the review sheet, the assistant
     lib/               API client, formatting, domain vocabulary
-    styles/            tokens, components, dock, app
+    styles/            tokens, components, dock, assistant, app
 ```
 
 ---
@@ -177,6 +195,9 @@ GET  /api/scoring/policy    PUT to change thresholds and weights
 GET  /api/audit/events                   the decision log
 GET  /api/audit/verify                   recompute every link in the chain
 GET  /api/meta/reference                 filter values and labels
+GET  /api/assistant/status               whether a Gemini key is configured
+GET  /api/assistant/suggestions          openers the current period can answer
+POST /api/assistant/chat                 one turn, grounded in the period briefing
 ```
 
 ---

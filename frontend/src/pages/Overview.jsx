@@ -21,9 +21,10 @@ import {
   lira,
   num,
   percent,
+  splitUnit,
   tonnes,
 } from '../lib/format.js';
-import { PageHead, Panel, Pill, Resource, Section, Stat } from '../components/ui.jsx';
+import { Figures, PageHead, Panel, Pill, Resource, Section, Stat } from '../components/ui.jsx';
 import QueueTable from '../components/QueueTable.jsx';
 
 const MIX_TONE = { CRITICAL: 'stop', HIGH: 'warn', MEDIUM: 'mute', LOW: 'ok' };
@@ -52,10 +53,9 @@ export default function Overview() {
         {(data) => (
           <>
             <PageHead
-              eyebrow="Overview"
+              eyebrow={`Period ${data.period}`}
               icon={LayoutGrid}
-              title="Where to look first"
-              lede={`${num(data.companies_analysed)} companies scored for ${data.period}, ranked by how strongly the evidence points to a shortfall.`}
+              title="Overview"
             >
               <button
                 type="button"
@@ -85,7 +85,10 @@ export default function Overview() {
                   </div>
 
                   <div className="stat-value">{num(data.companies_analysed)}</div>
-                  <div className="stat-note">companies analysed this period</div>
+                  <div className="stat-note">
+                    companies scored across {data.regions_covered} provinces and{' '}
+                    {data.sectors_covered} sectors
+                  </div>
 
                   <div className="mix">
                     {data.by_level.map((band) => (
@@ -102,13 +105,14 @@ export default function Overview() {
                       <li key={band.level}>
                         <i className={MIX_TONE[band.level]} />
                         {LEVEL_LABEL[band.level]} <b>{num(band.count)}</b>
+                        <em>{percent(band.share)}</em>
                       </li>
                     ))}
                   </ul>
                 </div>
               </div>
 
-              <div className="stack">
+              <Figures rows>
                 <Stat
                   icon={ListChecks}
                   label="Awaiting a decision"
@@ -122,35 +126,35 @@ export default function Overview() {
                   note="Output is known, a declaration is not"
                   tone={data.companies_without_declaration ? 'warn' : undefined}
                 />
-              </div>
+              </Figures>
             </div>
 
-            <Section icon={Coins} title="What is at stake">
-              <div className="grid grid-3">
+            <Section icon={Coins} title="Exposure">
+              <Figures columns={3}>
                 <Stat
                   icon={Boxes}
                   label="Tonnage identified"
-                  value={tonnes(data.additional_tonnage_identified)}
-                  note="Below the expected range, high and critical priority"
+                  {...splitUnit(tonnes(data.additional_tonnage_identified))}
+                  note="Below the expected range, at high and critical priority"
                 />
                 <Stat
                   icon={Coins}
                   label="Contribution at stake"
-                  value={lira(data.estimated_gekap_gap_try)}
-                  note={`2026 tariff applied to the unexplained tonnage`}
+                  {...splitUnit(lira(data.estimated_gekap_gap_try))}
+                  note="2026 tariff applied to the unexplained tonnage"
                 />
                 <Stat
                   icon={Crosshair}
                   label="Concentration"
-                  value={percent(data.exposure_share_in_top_50)}
+                  {...splitUnit(percent(data.exposure_share_in_top_50))}
                   note={`of that sits in the top 50 companies, worth ${lira(data.exposure_in_top_50_try)}`}
                 />
-              </div>
+              </Figures>
             </Section>
 
             <Section
               icon={ListChecks}
-              title="Top of the queue"
+              title="Priority queue"
               actions={
                 <Link className="btn btn-ghost btn-sm" to="/queue">
                   All {num(data.companies_analysed)} companies
@@ -161,7 +165,7 @@ export default function Overview() {
               <QueueTable items={data.priority_queue} compact />
             </Section>
 
-            <Section icon={Gauge} title="What the platform can see">
+            <Section icon={Gauge} title="Coverage">
               <div className="grid grid-side">
                 <Panel>
                   <div className="stat-head" style={{ marginBottom: 14 }}>
@@ -224,9 +228,9 @@ export default function Overview() {
                       ))}
                     </tbody>
                   </table>
-                  <p className="stat-note" style={{ marginTop: 12 }}>
-                    A signal that cannot run is left out of the calculation. It is never counted as
-                    a check that passed.
+                  <p className="figure-note" style={{ marginTop: 14, paddingTop: 0 }}>
+                    A check that cannot run is held out of the calculation, never counted as a
+                    check that passed.
                   </p>
                 </Panel>
               </div>

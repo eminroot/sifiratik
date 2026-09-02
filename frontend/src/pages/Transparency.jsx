@@ -12,12 +12,7 @@ export default function Transparency() {
       <Resource state={state} rows={3}>
         {(data) => (
           <>
-            <PageHead
-              eyebrow="How this works"
-              icon={Scale}
-              title="What the platform claims"
-              lede="The score sets an order of inspection. It does not settle a question of compliance."
-            />
+            <PageHead eyebrow="Method" icon={Scale} title="How this works" />
 
             <div className="disclaimer">
               <span className="label">Standing disclaimer</span>
@@ -52,7 +47,7 @@ export default function Transparency() {
               </div>
             </Section>
 
-            <Section icon={Layers} title="Principles the scoring holds to">
+            <Section icon={Layers} title="Principles">
               <Panel>
                 {data.principles.map((principle) => (
                   <div className="principle" key={principle.title}>

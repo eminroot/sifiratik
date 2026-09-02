@@ -6,6 +6,7 @@ import App from './App.jsx';
 import './styles/tokens.css';
 import './styles/components.css';
 import './styles/dock.css';
+import './styles/assistant.css';
 import './styles/app.css';
 
 createRoot(document.getElementById('root')).render(
