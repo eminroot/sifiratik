@@ -124,6 +124,7 @@ def build_peer_index(db: Session, period: str) -> dict[tuple[str, str], PeerCoho
             iqr_per_production=(
                 p75 - p25 if p25 is not None and p75 is not None else None
             ),
+            members_per_production=len(per_production),
         )
     return index
 

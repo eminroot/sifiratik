@@ -358,9 +358,18 @@ class MLRuntime:
 
     # --------------------------------------------------------------- score --
 
-    def predict(self, rows: Sequence[dict]) -> list[Prediction]:
+    def predict(
+        self, rows: Sequence[dict], disabled: Iterable[str] = ()
+    ) -> list[Prediction]:
+        """Score a batch of feature rows.
+
+        `disabled` names model signals the operator has switched off. Their
+        inputs are masked before the fusion runs, so a withdrawn signal stops
+        affecting the score rather than continuing to act invisibly.
+        """
         if not rows:
             return []
+        withheld = {code.upper() for code in disabled}
 
         hist_log = self._quantiles_log(rows, "hist")
         peer_log = self._quantiles_log(rows, "peer")
@@ -389,6 +398,9 @@ class MLRuntime:
 
         statistics = self._raw_statistics(rows, hist_median, peer_median)
         raw, available = statistics["raw"], statistics["available"]
+        for code in withheld & set(SIGNAL_CODES):
+            raw[code] = np.full(len(rows), np.nan)
+            available[code] = np.zeros(len(rows), dtype=bool)
         scores = self._signal_scores(raw, available)
 
         declared = _column(rows, "declared_packaging_tonnage")

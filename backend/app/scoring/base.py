@@ -106,6 +106,7 @@ class PeerCohort:
     median_per_production: float | None = None
     p10_per_production: float | None = None
     iqr_per_production: float | None = None
+    members_per_production: int = 0
 
 
 @dataclass(frozen=True)
