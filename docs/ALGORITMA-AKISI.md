@@ -58,16 +58,23 @@ Aşağıdaki yedi adım tek bir `(firma, dönem)` kaydı için çalışır ve so
 aralığı, gerekçeyi ve karar kimliğini birlikte üretir.
 
 ```mermaid
-flowchart LR
-    A["ScoringContext<br/>firma · beyan geçmişi · emsal<br/>saha · GTİP · veri kalitesi"] --> B["Özellik satırı<br/>manifest.feature_order<br/>bağlayıcı"]
-    B --> C["Beklenen aralık<br/>2 quantile başlığı<br/>harman + konformal"]
-    C --> D{"Sekiz kontrol"}
-    D -->|"girdi var"| E["tetiklendi / sessiz<br/>0–100 sinyal puanı"]
-    D -->|"girdi yok"| F["çalıştırılamadı<br/><b>ağırlık paydadan düşer</b>"]
-    E --> G["Birleştirme<br/>ağırlıklı ortalama ⊕ en güçlü bulgu"]
+flowchart TD
+    A["<b>1 · Bağlam</b><br/>ScoringContext — firma · beyan geçmişi<br/>emsal · saha · GTİP · veri kalitesi"]
+    B["<b>2 · Özellik satırı</b><br/>manifest.feature_order bağlayıcı<br/>hesaplanamayan özellik eksik bırakılır"]
+    C["<b>3 · Beklenen aralık</b><br/>iki quantile başlığı → harman (w = 0,95)<br/>Mondrian CQR ile kalibrasyon"]
+    D{"<b>4 · Sekiz kontrol</b><br/>E1 … E8"}
+    E["<b>tetiklendi / sessiz</b><br/>0–100 sinyal puanı"]
+    F["<b>çalıştırılamadı</b><br/>ağırlık paydadan düşer<br/>sıfır sayılmaz"]
+    G["<b>5 · Birleştirme</b><br/>ağırlıklı ortalama ⊕ en güçlü bulgu<br/>puan = 0,65 · ortalama + 0,35 · en güçlü"]
+    H["<b>6 · Gerekçe</b><br/>TreeSHAP katkısı → şablonlu cümle"]
+    I["<b>7 · Karar kaydı</b><br/>decision_id + SHA-256 hash-chain"]
+
+    A --> B --> C --> D
+    D -->|"girdi var"| E
+    D -->|"girdi yok"| F
+    E --> G
     F -->|"dayanak kapsamı düşer"| G
-    G --> H["TreeSHAP → şablonlu gerekçe"]
-    H --> I["decision_id + hash-chain"]
+    G --> H --> I
 ```
 
 ### 2.1 · Bağlam toplanır

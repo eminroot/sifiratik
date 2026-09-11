@@ -45,7 +45,7 @@ Takım **KinetiX** · TEKNOFEST 2026 Sıfır Atık ve Döngüsel Ekonomi
 
 <br>
 
-[![CI](https://github.com/eminroot/zerowasteapp/actions/workflows/ci.yml/badge.svg)](https://github.com/eminroot/zerowasteapp/actions/workflows/ci.yml)
+[![CI](https://github.com/eminroot/zerowaste/actions/workflows/ci.yml/badge.svg)](https://github.com/eminroot/zerowaste/actions/workflows/ci.yml)
 ![Platform](https://img.shields.io/badge/PLATFORM-WEB-2b2b31?style=flat-square&labelColor=1a1a1d)
 ![Lisans](https://img.shields.io/badge/LİSANS-MIT-14603d?style=flat-square&labelColor=1a1a1d)
 ![Dil](https://img.shields.io/badge/ARAYÜZ-TÜRKÇE%20%7C%20İNGİLİZCE-1d4674?style=flat-square&labelColor=1a1a1d)
@@ -168,16 +168,23 @@ prototipten alınmıştır.
 ### Bir kayıt nasıl puanlanır
 
 ```mermaid
-flowchart LR
-    A["ScoringContext<br/>firma · beyan geçmişi · emsal<br/>saha · GTİP · veri kalitesi"] --> B["Özellik satırı<br/>manifest.feature_order<br/>bağlayıcı"]
-    B --> C["Beklenen aralık<br/>2 quantile başlığı<br/>harman + konformal"]
-    C --> D{"Sekiz kontrol"}
-    D -->|"girdi var"| E["tetiklendi / sessiz<br/>0–100 sinyal puanı"]
-    D -->|"girdi yok"| F["çalıştırılamadı<br/><b>ağırlık paydadan düşer</b>"]
-    E --> G["Birleştirme<br/>ağırlıklı ortalama ⊕ en güçlü bulgu"]
+flowchart TD
+    A["<b>1 · Bağlam</b><br/>ScoringContext — firma · beyan geçmişi<br/>emsal · saha · GTİP · veri kalitesi"]
+    B["<b>2 · Özellik satırı</b><br/>manifest.feature_order bağlayıcı<br/>hesaplanamayan özellik eksik bırakılır"]
+    C["<b>3 · Beklenen aralık</b><br/>iki quantile başlığı → harman (w = 0,95)<br/>Mondrian CQR ile kalibrasyon"]
+    D{"<b>4 · Sekiz kontrol</b><br/>E1 … E8"}
+    E["<b>tetiklendi / sessiz</b><br/>0–100 sinyal puanı"]
+    F["<b>çalıştırılamadı</b><br/>ağırlık paydadan düşer<br/>sıfır sayılmaz"]
+    G["<b>5 · Birleştirme</b><br/>ağırlıklı ortalama ⊕ en güçlü bulgu<br/>puan = 0,65 · ortalama + 0,35 · en güçlü"]
+    H["<b>6 · Gerekçe</b><br/>TreeSHAP katkısı → şablonlu cümle"]
+    I["<b>7 · Karar kaydı</b><br/>decision_id + SHA-256 hash-chain"]
+
+    A --> B --> C --> D
+    D -->|"girdi var"| E
+    D -->|"girdi yok"| F
+    E --> G
     F -->|"dayanak kapsamı düşer"| G
-    G --> H["TreeSHAP → şablonlu gerekçe"]
-    H --> I["decision_id + hash-chain"]
+    G --> H --> I
 ```
 
 **Beklenen aralık.** İki LightGBM quantile başlığı ayrı ayrı tahmin verir —
@@ -315,7 +322,7 @@ python -m app.database.gus_import
 ## Depo yapısı
 
 ```
-zerowasteapp/
+zerowaste/
 ├── backend/                  FastAPI servisi
 │   ├── app/
 │   │   ├── main.py             uygulama, CORS, router bağlama
