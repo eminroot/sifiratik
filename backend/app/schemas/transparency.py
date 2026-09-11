@@ -15,8 +15,18 @@ class Principle(BaseModel):
 class TariffRow(BaseModel):
     key: str
     name: str
-    tariff_try_per_kg: float
+    # Null where the tariff is set per unit rather than per kilogram, which is
+    # the case for wood. A tonnage cannot be turned into a liability there, and
+    # the interface says so instead of showing a rate that does not exist.
+    tariff_try_per_kg: float | None
+    tariff_basis: str
+    tariff_source_id: str | None = None
     co2e_tonnes_avoided_per_tonne: float
+    # The same factor with the assumption that does not carry to Turkey taken
+    # out. For paper that is forest carbon, which is most of the headline.
+    co2e_conservative_per_tonne: float
+    co2e_factor_id: str
+    co2e_geography: str
 
 
 class FieldRow(BaseModel):

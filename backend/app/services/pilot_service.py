@@ -16,7 +16,6 @@ from sqlalchemy.orm import Session
 from app import i18n
 from app.models import (
     AuditReview,
-    CollectorProgram,
     Company,
     Declaration,
     GtipLine,
@@ -126,10 +125,11 @@ def run_pilot(
         for sector_key, amount in tonnage_by_sector.items()
     )
 
+    # The scope of the pilot is the obligors in the province, counted from the
+    # register. It used to be read off the collector programme ledger, which
+    # described a programme nobody has run.
     municipalities = db.execute(
-        select(func.count(func.distinct(CollectorProgram.municipality))).where(
-            CollectorProgram.region == region
-        )
+        select(func.count()).select_from(Company).where(Company.region == region)
     ).scalar_one()
 
     findings = PilotFindings(

@@ -11,8 +11,12 @@ class MaterialTonnage(BaseModel):
     key: str
     name: str
     tonnes: float
-    gekap_value_try: float
+    # Null when this material's tariff is set per unit, so a weight cannot be
+    # valued. The tonnage is still reported; only the money is withheld.
+    gekap_value_try: float | None
+    priced_by_weight: bool
     co2e_avoided_tonnes: float
+    co2e_conservative_tonnes: float
 
 
 class ChainStep(BaseModel):

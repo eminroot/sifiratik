@@ -43,8 +43,15 @@ def test_queue_is_ordered_and_ranked(client):
 
 def test_rank_survives_filtering(client):
     """A company keeps the rank it was given for the period, filtered or not."""
-    unfiltered = client.get("/api/inspection-queue?limit=200").json()["items"]
-    by_id = {item["company_id"]: item["rank"] for item in unfiltered}
+    by_id: dict[int, int] = {}
+    offset = 0
+    while True:
+        page = client.get(f"/api/inspection-queue?limit=200&offset={offset}").json()
+        by_id.update({item["company_id"]: item["rank"] for item in page["items"]})
+        offset += len(page["items"])
+        if offset >= page["total"] or not page["items"]:
+            break
+    assert len(by_id) == page["total"]
 
     filtered = client.get("/api/inspection-queue?level=CRITICAL&limit=50").json()["items"]
     assert filtered
@@ -162,10 +169,32 @@ def test_pilot_keeps_projection_apart_from_outcome(client):
 
 
 def test_climate_separates_identified_from_confirmed(client):
+    """A projection is never reported as an outcome.
+
+    The two headline tonnages cover different ground: one is the period being
+    worked now, the other is every filing already inspected. Neither bounds the
+    other, so the check is that they stay separate figures, that anything
+    carried forward comes only from what inspections established, and that the
+    chain names the point where the scope changes.
+    """
     payload = client.get("/api/climate-impact").json()
-    assert payload["additional_tonnage_confirmed"] <= payload["additional_tonnage_identified"]
+
+    assert payload["additional_tonnage_identified"] >= 0
+    assert payload["additional_tonnage_confirmed"] >= 0
+    # Recovery and emissions are carried from confirmed tonnage alone.
     assert payload["tonnage_to_formal_recovery"] <= payload["additional_tonnage_confirmed"]
-    assert payload["confirmed_gekap_revenue_try"] <= payload["estimated_gekap_revenue_try"]
+    if payload["additional_tonnage_confirmed"] == 0:
+        assert payload["co2e_avoided_tonnes"] == 0
+
+    chain = {step["key"]: step for step in payload["impact_chain"]}
+    assert {"identified", "inspected", "confirmed", "recovery"} <= set(chain)
+    # The chain has to say where the scope changes, because the step before it
+    # is the period being worked and the step after is every period already
+    # worked. Confirmed tonnage is deliberately not bounded by the flagged
+    # figure: the shortfall is measured against the bottom of the expected
+    # range, so inspections routinely establish more than was claimed.
+    assert "inspected" in chain["inspected"]["note"]
+    assert chain["inspected"]["value"] >= 0
 
 
 def test_data_quality_marks_every_field(client):

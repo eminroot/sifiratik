@@ -278,6 +278,11 @@ export const STRINGS = {
     'impact.byMaterial': 'By material',
     'impact.share': 'Share',
     'impact.contributionAtTariff': 'Contribution at the 2026 tariff',
+    'impact.notPricedByWeight': 'not priced by weight',
+    'impact.notPricedByWeightNote':
+      'Wood packaging is charged per unit rather than per kilogram, so a tonnage '
+      + 'cannot be converted into a contribution. The tonnage is shown; the amount is not '
+      + 'estimated.',
     'impact.co2eAvoided': 'CO2e avoided',
     'impact.collectors': 'Collector formalisation',
     'impact.collectorsNote':
@@ -689,6 +694,10 @@ export const STRINGS = {
     'impact.byMaterial': 'Malzemeye göre',
     'impact.share': 'Pay',
     'impact.contributionAtTariff': '2026 tarifesine göre katkı payı',
+    'impact.notPricedByWeight': 'ağırlıkla fiyatlanmaz',
+    'impact.notPricedByWeightNote':
+      'Ahşap ambalaj tarifesi kilogram başına değil adet başına belirlenir; bu nedenle '
+      + 'tonajdan katkı payı hesaplanamaz. Tonaj gösterilir, tutar tahmin edilmez.',
     'impact.co2eAvoided': 'Önlenen CO2e',
     'impact.collectors': 'Toplayıcıların kayıt altına alınması',
     'impact.collectorsNote':

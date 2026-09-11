@@ -8,7 +8,14 @@ from app.config import get_policy
 from app.database.database import get_db
 from app.models import Company, ScoreResult
 from app.models.audit_event import REVIEW_STATUSES
-from app.reference import COMPANY_SIZES, DATA_FIELDS, MATERIALS, MATERIAL_ORDER, SECTORS
+from app.reference import (
+    COMPANY_SIZES,
+    DATA_FIELDS,
+    MATERIALS,
+    MATERIAL_ORDER,
+    SECTORS,
+    SIZE_LABELS as SIZE_BAND_LABELS,
+)
 from app.routers.deps import resolve_period
 from app.schemas.common import Option, ReferenceData
 from app.services.inspection_service import STATUS_LABELS
@@ -16,7 +23,7 @@ from app.services.scoring_service import all_periods
 
 router = APIRouter(tags=["reference"])
 
-SIZE_LABELS = {"MICRO": "Micro", "SMALL": "Small", "MEDIUM": "Medium", "LARGE": "Large"}
+SIZE_LABELS = {key: item["en"] for key, item in SIZE_BAND_LABELS.items()}
 
 LEVEL_LABELS = {
     "LOW": "Low",

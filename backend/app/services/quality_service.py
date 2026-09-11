@@ -109,30 +109,66 @@ def field_states(
     )
 
 
+# Which platform field each missing-field marker on a filing refers to. The
+# source system names the column it did not receive; the interface groups
+# those into the six inputs it reports against.
+RECORDED_FIELD = {
+    "production_qty": "production",
+    "import_qty": "import",
+    "export_qty": "import",
+    "bom_expected_tonnage": "gtip",
+    "external_evidence_tonnage": "field",
+}
+
+
 def build_quality(
     company: Company,
     declarations: list[Declaration],
     observations: list[FieldObservation],
     has_gtip_for_period: bool,
 ) -> DataQuality:
+    """How much of the picture is actually held on this company.
+
+    Where the filing itself records what was missing and how complete it was,
+    that record is used: it is the source system's own statement about the
+    submission, and it knows things the platform cannot see from the outside.
+    Where it does not, the platform derives the same six verdicts from what it
+    holds. Either way the score is reported beside the priority and never used
+    to move it.
+    """
+    current = declarations[-1] if declarations else None
     states = field_states(company, declarations, observations, has_gtip_for_period)
 
-    raw = sum(item["weight"] * _FACTOR[states[item["key"]]] for item in DATA_FIELDS)
-    score = raw * 100
+    recorded_missing = [
+        token for token in (current.missing_fields or "").split(";") if token
+    ] if current else []
+    for token in recorded_missing:
+        key = RECORDED_FIELD.get(token)
+        if key:
+            states[key] = MISSING
 
     last_update = company.last_data_update
     if last_update.tzinfo is None:
         last_update = last_update.replace(tzinfo=timezone.utc)
-    freshness_days = max(0, (datetime.now(timezone.utc) - last_update).days)
 
-    # Stale inputs are still inputs, so the penalty is bounded and small.
-    if freshness_days > 180:
-        score -= min(8.0, (freshness_days - 180) / 45.0)
+    if current is not None and current.data_freshness_days is not None:
+        freshness_days = int(current.data_freshness_days)
+    else:
+        freshness_days = max(0, (datetime.now(timezone.utc) - last_update).days)
 
-    score = round(max(0.0, min(100.0, score)), 1)
+    if current is not None and current.data_quality_score is not None:
+        # Recorded on a 0-1 scale by the source system; reported on 0-100 here.
+        score = round(float(current.data_quality_score) * 100.0, 1)
+    else:
+        raw = sum(item["weight"] * _FACTOR[states[item["key"]]] for item in DATA_FIELDS)
+        score = raw * 100
+        # Stale inputs are still inputs, so the penalty is bounded and small.
+        if freshness_days > 180:
+            score -= min(8.0, (freshness_days - 180) / 45.0)
+        score = round(max(0.0, min(100.0, score)), 1)
 
     return DataQuality(
-        score=score,
+        score=max(0.0, min(100.0, score)),
         fields=states,
         missing_fields=[FIELD_NAMES[key] for key, state in states.items() if state == MISSING],
         freshness_days=freshness_days,

@@ -60,6 +60,17 @@ def _period_facts(declaration: Declaration) -> PeriodFacts:
         import_volume=declaration.import_volume,
         export_volume=declaration.export_volume,
         material_breakdown=declaration.material_breakdown,
+        return_volume=declaration.return_volume,
+        correction_volume=declaration.correction_volume,
+        exemption_flag=bool(declaration.exemption_flag),
+        exempt_share=declaration.exempt_share,
+        bom_expected_tonnage=declaration.bom_expected_tonnage,
+        bom_coverage_ratio=declaration.bom_coverage_ratio,
+        data_quality_score=declaration.data_quality_score,
+        data_freshness_days=declaration.data_freshness_days,
+        missing_fields=tuple(
+            token for token in (declaration.missing_fields or "").split(";") if token
+        ),
     )
 
 
@@ -223,6 +234,8 @@ def build_context(
             company_size=company.company_size,
             registry_status=company.registry_status,
             gtip_coverage=company.gtip_coverage,
+            operating_since=company.operating_since,
+            weight_matrix_vintage_year=company.weight_matrix_vintage_year,
         ),
         period=period,
         history=history,

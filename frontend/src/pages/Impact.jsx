@@ -162,13 +162,24 @@ export default function Impact() {
                             </div>
                           </td>
                           <td className="num">{tonnes(row.tonnes)}</td>
-                          <td className="num">{lira(row.gekap_value_try)}</td>
+                          <td className="num">
+                            {row.priced_by_weight ? (
+                              lira(row.gekap_value_try)
+                            ) : (
+                              <span title={t('impact.notPricedByWeightNote')}>
+                                {t('impact.notPricedByWeight')}
+                              </span>
+                            )}
+                          </td>
                           <td className="num">{num(row.co2e_avoided_tonnes)} t</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
+                {data.by_material.some((row) => !row.priced_by_weight) && (
+                  <p className="note">{t('impact.notPricedByWeightNote')}</p>
+                )}
               </Section>
 
               <Section icon={Users} title={t('impact.collectors')}>

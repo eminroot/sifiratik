@@ -15,7 +15,13 @@ from sqlalchemy.orm import Session
 from app import i18n
 from app.config import get_policy
 from app.database.database import get_db
-from app.reference import DATA_FIELDS, MATERIALS, MATERIAL_ORDER, SIGNAL_CATALOG
+from app.reference import (
+    DATA_FIELDS,
+    MATERIALS,
+    MATERIAL_ORDER,
+    SIGNAL_CATALOG,
+    TARIFF_YEAR,
+)
 from app.schemas.inspection import ChainStatus
 from app.schemas.scoring import BandOut, EngineOut, PolicyOut, WeightOut
 from app.schemas.signal import SignalCatalogItem
@@ -94,10 +100,15 @@ def transparency(
                 key=key,
                 name=MATERIALS[key]["name"],
                 tariff_try_per_kg=MATERIALS[key]["tariff_try_per_kg"],
+                tariff_basis=MATERIALS[key]["tariff_basis"],
+                tariff_source_id=MATERIALS[key]["tariff_source_id"],
                 co2e_tonnes_avoided_per_tonne=MATERIALS[key]["co2e_tonnes_avoided_per_tonne"],
+                co2e_conservative_per_tonne=MATERIALS[key]["co2e_conservative_per_tonne"],
+                co2e_factor_id=MATERIALS[key]["co2e_factor_id"],
+                co2e_geography=MATERIALS[key]["co2e_geography"],
             )
             for key in MATERIAL_ORDER
         ],
-        tariff_year=2026,
+        tariff_year=TARIFF_YEAR,
         audit_chain=ChainStatus(**verify_chain(db), verified_at=datetime.now(timezone.utc)),
     )

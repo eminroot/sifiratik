@@ -172,21 +172,35 @@ def test_shortfall_is_measured_against_the_lower_bound(db):
 
 
 def test_a_missing_declaration_is_not_treated_as_zero_risk(db):
-    period = latest_period(db)
-    rows = (
-        db.execute(
-            select(ScoreResult).where(
-                ScoreResult.period == period, ScoreResult.declared_tonnage.is_(None)
-            )
-        )
-        .scalars()
-        .all()
-    )
-    assert rows, "the seed is meant to include companies that never filed"
+    """A company with known output and no filing is the finding, not a gap.
 
-    for row in rows:
-        assert row.position == "BELOW"
-        assert row.priority_score >= 50
+    Every company in the panel has filed, so the case is built rather than
+    looked up: the period after the last one on record has output behind it
+    and no declaration against it.
+    """
+    company = db.execute(select(Company).limit(1)).scalar_one()
+    unfiled = "2026Q3"
+    assert (
+        db.execute(
+            select(Declaration).where(
+                Declaration.company_id == company.id, Declaration.period == unfiled
+            )
+        ).scalar_one_or_none()
+        is None
+    )
+
+    for name in ("mock", "ml"):
+        engine = build_engine(name)
+        if not engine.describe().ready:
+            continue
+        context = build_context(db, company, unfiled)
+        assert context.current.declared_tonnage is None
+
+        outcome = engine.score(context)
+        assert outcome.position == "BELOW"
+        assert outcome.priority_score >= 50, (
+            f"{name} engine scored an unfiled period at {outcome.priority_score}"
+        )
 
 
 def test_an_engine_without_artefacts_falls_back_to_the_rules(monkeypatch):

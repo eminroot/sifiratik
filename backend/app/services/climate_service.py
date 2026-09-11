@@ -47,14 +47,23 @@ def material_rows(tonnage_by_sector: dict[str, float]) -> list[MaterialTonnage]:
         if tonnes <= 0:
             continue
         material = MATERIALS[key]
+        rate = material["tariff_try_per_kg"]
         rows.append(
             MaterialTonnage(
                 key=key,
                 name=material["name"],
                 tonnes=round(tonnes, 1),
-                gekap_value_try=round(tonnes * 1000 * material["tariff_try_per_kg"], 2),
+                # Wood is charged per unit of packaging, not per kilogram, so a
+                # tonnage cannot be turned into a liability for it. The tonnage
+                # is still reported; the money is left unset rather than filled
+                # with a rate that does not exist.
+                gekap_value_try=round(tonnes * 1000 * rate, 2) if rate is not None else None,
+                priced_by_weight=rate is not None,
                 co2e_avoided_tonnes=round(
                     tonnes * RECOVERY_CAPTURE_RATE * material["co2e_tonnes_avoided_per_tonne"], 1
+                ),
+                co2e_conservative_tonnes=round(
+                    tonnes * RECOVERY_CAPTURE_RATE * material["co2e_conservative_per_tonne"], 1
                 ),
             )
         )
@@ -62,6 +71,19 @@ def material_rows(tonnage_by_sector: dict[str, float]) -> list[MaterialTonnage]:
 
 
 def social_impact(db: Session, funding_available: float, funding_potential: float) -> SocialImpact:
+    """What a collector formalisation programme would cost, against what one
+    has actually done.
+
+    The achieved side is read from the programme ledger, which is empty until
+    a municipality runs one. It stays empty rather than being filled in: no
+    collector has been supported by this platform, and reporting otherwise
+    would be the clearest possible overclaim.
+
+    The funded side is a costing, not a commitment. Additional GEKAP revenue
+    does not reach waste collectors by itself — that takes a budget line and a
+    legal instrument — so these figures say what a programme of a given size
+    would need, and the interface labels them that way.
+    """
     row = db.execute(
         select(
             func.coalesce(func.sum(CollectorProgram.collectors_supported), 0),
@@ -117,12 +139,27 @@ def climate_impact(db: Session, period: str, lang: str = "en") -> ClimateImpact:
         identified_by_sector[sector] = identified_by_sector.get(sector, 0.0) + shortfall
         identified_by_region[region] = identified_by_region.get(region, 0.0) + shortfall
 
+    # Closed inspections, each paired with the shortfall that was flagged on
+    # the very filing it examined. The two figures on this page cover
+    # different ground — one is the period being worked now, the other is
+    # every period already worked — so the funnel below is built on the
+    # inspected files, where a confirmed correction can be set against the
+    # shortfall that prompted the visit.
     latest = latest_review_subquery()
     confirmed_rows = db.execute(
-        select(Company.sector, AuditReview.confirmed_additional_tonnage)
+        select(
+            Company.sector,
+            AuditReview.confirmed_additional_tonnage,
+            ScoreResult.shortfall_tonnage,
+        )
         .select_from(Company)
         .join(latest, latest.c.company_id == Company.id)
         .join(AuditReview, AuditReview.id == latest.c.review_id)
+        .outerjoin(
+            ScoreResult,
+            (ScoreResult.company_id == AuditReview.company_id)
+            & (ScoreResult.period == AuditReview.period),
+        )
         .where(AuditReview.status == "INSPECTION_COMPLETED")
     ).all()
 
@@ -130,7 +167,9 @@ def climate_impact(db: Session, period: str, lang: str = "en") -> ClimateImpact:
     confirmed = 0.0
     confirmed_revenue = 0.0
     co2e = 0.0
-    for sector, tonnes in confirmed_rows:
+    flagged_on_inspected = 0.0
+    for sector, tonnes, flagged_shortfall in confirmed_rows:
+        flagged_on_inspected += flagged_shortfall or 0.0
         if not tonnes:
             continue
         confirmed += tonnes
@@ -139,7 +178,7 @@ def climate_impact(db: Session, period: str, lang: str = "en") -> ClimateImpact:
         co2e += co2e_avoided_tonnes(tonnes * RECOVERY_CAPTURE_RATE, sector)
 
     inspected = len(confirmed_rows)
-    records_updated = sum(1 for _, tonnes in confirmed_rows if tonnes)
+    records_updated = sum(1 for _, tonnes, _flagged in confirmed_rows if tonnes)
 
     analysed = db.execute(
         select(func.count()).select_from(ScoreResult).where(ScoreResult.period == period)
@@ -181,11 +220,18 @@ def climate_impact(db: Session, period: str, lang: str = "en") -> ClimateImpact:
             note=step("identified", "note"),
         ),
         ChainStep(
+            key="inspected",
+            label=step("inspected", "label"),
+            value=round(flagged_on_inspected, 1),
+            unit="tonnes",
+            note=step("inspected", "note", count=inspected),
+        ),
+        ChainStep(
             key="confirmed",
             label=step("confirmed", "label"),
             value=round(confirmed, 1),
             unit="tonnes",
-            note=step("confirmed", "note", count=inspected),
+            note=step("confirmed", "note"),
         ),
         ChainStep(
             key="recovery",

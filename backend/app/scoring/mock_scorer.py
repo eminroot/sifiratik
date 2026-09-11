@@ -570,6 +570,15 @@ class MockScoringEngine(ScoringEngine):
                 reason=f"A site visit exists for {latest.period} but no declaration was filed for "
                 "that period.",
             )
+        if latest.observed_packaging_tonnage <= 0:
+            # A visit that measured nothing cannot anchor a comparison: every
+            # declaration is infinitely above zero. It is not evidence that the
+            # declaration is wrong, and it is not evidence that it is right.
+            return SignalOutcome.unavailable(
+                *definition,
+                reason=f"The {latest.period} site visit recorded no packaging, so there is no "
+                "measured quantity to set the declaration against.",
+            )
 
         ratio = match.declared_tonnage / latest.observed_packaging_tonnage
         gap = 1 - ratio

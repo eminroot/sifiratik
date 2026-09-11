@@ -26,6 +26,10 @@ class AuditReview(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     company_id: Mapped[int] = mapped_column(ForeignKey("companies.id", ondelete="CASCADE"), index=True)
+    # The filing period this review is about. A review is always about a
+    # declaration, and without the period a confirmed correction cannot be set
+    # against the shortfall that prompted the inspection.
+    period: Mapped[str | None] = mapped_column(String(8), nullable=True, index=True)
     status: Mapped[str] = mapped_column(String(28), default="AWAITING_REVIEW", index=True)
     auditor_id: Mapped[str] = mapped_column(String(60))
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)

@@ -25,42 +25,9 @@ from typing import Iterable, Sequence
 
 from app.scoring.base import PeriodFacts, ScoringContext
 
-# The model's sectors are the eight the training panel was built from. The
-# service carries ten, of which two have no counterpart: `construction` and
-# whatever is added later. Those are passed through as an unknown level rather
-# than forced into the nearest label — the model handles an unseen category as
-# missing, which is the honest reading, and the conformal step falls back from
-# (sector, size) to size alone for the interval.
-SECTOR_TO_MODEL: dict[str, str] = {
-    "beverage": "gida_icecek",
-    "food": "gida_icecek",
-    "agriculture": "gida_icecek",
-    "cosmetics": "kozmetik",
-    "cleaning": "ev_temizlik",
-    "pharma": "ilac",
-    "electronics": "elektronik",
-    "textile": "tekstil",
-    "chemicals": "kimya_boya",
-}
-
-SIZE_TO_MODEL: dict[str, str] = {
-    "MICRO": "mikro",
-    "SMALL": "kucuk",
-    "MEDIUM": "orta",
-    "LARGE": "buyuk",
-}
-
-# The training panel names materials in Turkish; declarations name them in
-# English. Composition features are computed on the shared six.
-MATERIAL_TO_MODEL: dict[str, str] = {
-    "plastic": "plastik",
-    "paper": "kagit_karton",
-    "glass": "cam",
-    "metal": "metal",
-    "composite": "kompozit",
-    "wood": "ahsap",
-}
-
+# Sector, size band and material keys are the panel's own, because the
+# records loaded into this service are the panel. Nothing is translated, so
+# there is no mapping here to drift out of step with the model.
 MODEL_MATERIALS = ("plastik", "kagit_karton", "cam", "metal", "kompozit", "ahsap")
 
 MIN_PEER_MEMBERS = 5
@@ -120,6 +87,13 @@ def _quarter_of(period: str) -> int | None:
         return None
 
 
+def _year_of(period: str) -> int | None:
+    try:
+        return int(period[:4])
+    except (ValueError, IndexError):
+        return None
+
+
 def _at(history: Sequence[PeriodFacts], lag: int) -> PeriodFacts | None:
     """The period `lag` steps before the current one."""
     index = len(history) - 1 - lag
@@ -137,31 +111,31 @@ def _intensity(period: PeriodFacts) -> float | None:
 
 
 def _domestic_supply(period: PeriodFacts) -> float | None:
-    """Volume placed on the domestic market.
-
-    The training panel subtracts returns as well. Returned goods are not held
-    here, so this figure is that much higher for the same company. It shifts
-    the level, not the direction, and S5 compares the ratio against the same
-    company's own history, where the same omission applies on both sides.
-    """
+    """Volume placed on the domestic market: made, plus imported, less what
+    left again as exports or came back as returns."""
     if period.production_volume is None or period.import_volume is None:
         return None
-    return period.production_volume + period.import_volume - (period.export_volume or 0.0)
+    return (
+        period.production_volume
+        + period.import_volume
+        - (period.export_volume or 0.0)
+        - (period.return_volume or 0.0)
+    )
 
 
 def _mix(period: PeriodFacts) -> dict[str, float] | None:
     breakdown = period.material_breakdown
     if not breakdown:
         return None
-    converted = {
-        MATERIAL_TO_MODEL[key]: float(value)
+    present = {
+        key: float(value)
         for key, value in breakdown.items()
-        if key in MATERIAL_TO_MODEL and value is not None
+        if key in MODEL_MATERIALS and value is not None
     }
-    total = sum(converted.values())
+    total = sum(present.values())
     if total <= 0:
         return None
-    return {material: converted.get(material, 0.0) / total for material in MODEL_MATERIALS}
+    return {material: present.get(material, 0.0) / total for material in MODEL_MATERIALS}
 
 
 # --------------------------------------------------------------------------- #
@@ -180,8 +154,8 @@ def build_features(context: ScoringContext) -> dict[str, float | str | None]:
     row: dict[str, float | str | None] = {
         "declared_packaging_tonnage": declared,
         "production_qty": production,
-        "sector": SECTOR_TO_MODEL.get(context.company.sector),
-        "size_band": SIZE_TO_MODEL.get(context.company.company_size),
+        "sector": context.company.sector,
+        "size_band": context.company.company_size,
     }
 
     _add_history(row, history, prior, declared, production)
@@ -190,7 +164,7 @@ def build_features(context: ScoringContext) -> dict[str, float | str | None]:
     _add_activity(row, history, current)
     _add_trade(row, history, current, declared)
     _add_seasonality(row, history, current)
-    _add_composition(row, history, current)
+    _add_composition(row, history, current, context.company)
     _add_external(row, context, declared)
     _add_quality(row, context)
 
@@ -252,15 +226,20 @@ def _add_product_tree(row: dict, context: ScoringContext) -> None:
     expectation back up by it. A company with no lines has no product-tree
     expectation at all, which is different from one whose lines imply zero.
     """
-    lines = [
-        line for line in context.gtip_lines if line.period == context.period
-    ]
-    coverage = context.company.gtip_coverage
-    implied = (
-        sum(line.quantity_tonnes * line.packaging_coefficient for line in lines)
-        if lines
-        else None
-    )
+    current = context.current
+    lines = [line for line in context.gtip_lines if line.period == context.period]
+    coverage = current.bom_coverage_ratio
+    if coverage is None:
+        coverage = context.company.gtip_coverage
+
+    # The filing records the tonnage its registered product tree implies. Where
+    # it does, that figure is used rather than re-derived from the lines: the
+    # lines are the same figure broken out for display, and summing rounded
+    # parts would put a small error into every comparison.
+    implied = current.bom_expected_tonnage
+    if implied is None and lines:
+        implied = sum(line.quantity_tonnes * line.packaging_coefficient for line in lines)
+
     row["f_s3_bom_expected"] = implied
     row["f_s3_bom_coverage"] = coverage
     row["f_avail_s3"] = float(implied is not None)
@@ -293,13 +272,10 @@ def _add_trade(
     gross = (current.production_volume or 0.0) + (current.import_volume or 0.0)
     row["f_s5_export_share"] = _ratio(current.export_volume, gross)
     row["f_s5_import_share"] = _ratio(current.import_volume, gross)
-    # Returned goods are not held by this service.
-    row["f_s5_return_share"] = None
-    row["f_s5_correction_qty"] = None
-    row["f_s5_exempt_share"] = None
-    # No exemption register is wired in; the flag is a fact, not an estimate,
-    # so it is reported as "none recorded" rather than left unknown.
-    row["f_s5_exemption_flag"] = 0.0
+    row["f_s5_return_share"] = _ratio(current.return_volume, gross)
+    row["f_s5_correction_qty"] = current.correction_volume
+    row["f_s5_exempt_share"] = current.exempt_share
+    row["f_s5_exemption_flag"] = 1.0 if current.exemption_flag else 0.0
     row["f_s5_trade_data_missing"] = float(current.import_volume is None)
 
     domestic = _domestic_supply(current)
@@ -343,16 +319,19 @@ def _add_seasonality(
     quarter = _quarter_of(current.period)
     row["f_s6_quarter"] = float(quarter) if quarter else None
 
-    same_quarter = [
-        value
-        for value in (
-            _intensity(p)
-            for p in history[:-1]
-            if _quarter_of(p.period) == quarter
-        )
-        if value is not None
+    # The baseline is the level this company was running at *going into* this
+    # quarter, in each year it has filed one — that is, the preceding period's
+    # intensity, averaged over every occurrence of this quarter including the
+    # current one. Comparing against the run-up rather than against the same
+    # quarter last year is what separates a genuine break from a company whose
+    # whole level has moved.
+    run_ups = [
+        _intensity(history[index - 1])
+        for index, period in enumerate(history)
+        if index > 0 and _quarter_of(period.period) == quarter
     ]
-    mean = statistics.fmean(same_quarter) if same_quarter else None
+    usable = [value for value in run_ups if value is not None]
+    mean = statistics.fmean(usable) if usable else None
     row["f_s6_own_quarter_mean_prev"] = mean
     ratio = row.get("f_ratio_decl_per_prod")
     row["f_s6_seasonal_resid"] = (
@@ -362,17 +341,17 @@ def _add_seasonality(
 
 
 def _add_composition(
-    row: dict, history: Sequence[PeriodFacts], current: PeriodFacts
+    row: dict, history: Sequence[PeriodFacts], current: PeriodFacts, company
 ) -> None:
-    """Movement in the reported material mix.
-
-    The training panel also carries the age of the packaging weight matrix.
-    No such register is wired in here, so the age is unknown and the "stale
-    matrix" flag is off rather than guessed — a guess would change the signal
-    for every company at once.
-    """
-    row["f_s7_matrix_age_years"] = None
-    row["f_s7_matrix_stale_flag"] = 0.0
+    """Movement in the reported material mix, and the age of the matrix behind it."""
+    year = _year_of(current.period)
+    vintage = company.weight_matrix_vintage_year
+    age = year - vintage if year is not None and vintage is not None else None
+    row["f_s7_matrix_age_years"] = float(age) if age is not None else None
+    # A matrix three years old or older is treated as stale: the same shift in
+    # composition means more when the weights behind it were last revised
+    # before the products changed.
+    row["f_s7_matrix_stale_flag"] = 1.0 if age is not None and age >= 3 else 0.0
 
     now = _mix(current)
     previous_period = _at(history, 1)
@@ -407,14 +386,23 @@ def _add_quality(row: dict, context: ScoringContext) -> None:
     # The training panel holds the quality score on 0-1; this service holds the
     # same quantity on 0-100.
     score = quality.score / 100.0
-    missing = len(quality.missing_fields)
+    # The count that matters is the number of columns the source system says
+    # it did not receive, which is what the model was trained against. The
+    # platform's own six-field verdict is a presentation of the same thing and
+    # groups two of those columns together, so it counts differently.
+    recorded = context.current.missing_fields
+    missing = len(recorded) if recorded else len(quality.missing_fields)
 
     row["f_data_quality_score"] = score
     row["f_data_freshness_days"] = float(quality.freshness_days)
     row["f_missing_field_count"] = float(missing)
     row["f_data_confidence_level"] = confidence_level(score, missing)
-    # No incorporation date is held, so firm age is genuinely unknown.
-    row["f_firm_age_years"] = None
+
+    year = _year_of(context.period)
+    since = context.company.operating_since
+    row["f_firm_age_years"] = (
+        float(year - since) if year is not None and since is not None else None
+    )
 
 
 def confidence_level(score: float, missing_fields: int) -> str:
@@ -434,7 +422,5 @@ __all__ = [
     "build_features",
     "build_many",
     "confidence_level",
-    "SECTOR_TO_MODEL",
-    "SIZE_TO_MODEL",
-    "MATERIAL_TO_MODEL",
+    "MODEL_MATERIALS",
 ]

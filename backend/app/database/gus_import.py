@@ -384,6 +384,7 @@ def _import_closed_inspections(
         db.add(
             AuditReview(
                 company_id=company_id,
+                period=period,
                 status=status,
                 auditor_id=auditor_id,
                 notes=note,

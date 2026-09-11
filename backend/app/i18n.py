@@ -375,15 +375,24 @@ CHAIN_STEPS: dict[str, dict[str, dict[str, str]]] = {
     "identified": {
         "label": {"en": "Tonnage identified", "tr": "Tespit edilen tonaj"},
         "note": {
-            "en": "Below the expected range, before inspection",
-            "tr": "Beklenen aralığın altında, denetimden önce",
+            "en": "Below the expected range this period, before inspection",
+            "tr": "Bu dönemde beklenen aralığın altında, denetimden önce",
+        },
+    },
+    "inspected": {
+        "label": {"en": "Raised on inspected files", "tr": "Denetlenen dosyalarda tespit"},
+        "note": {
+            "en": "The shortfall flagged on the {count} filings already inspected, "
+            "which are earlier periods than the one being worked",
+            "tr": "Halihazırda denetlenmiş {count} beyanda işaretlenen açık; "
+            "bunlar üzerinde çalışılan dönemden önceki dönemlerdir",
         },
     },
     "confirmed": {
         "label": {"en": "Tonnage confirmed", "tr": "Doğrulanan tonaj"},
         "note": {
-            "en": "Established by {count} completed inspections",
-            "tr": "Tamamlanan {count} denetimle tespit edildi",
+            "en": "What those inspections actually established",
+            "tr": "Bu denetimlerin fiilen tespit ettiği miktar",
         },
     },
     "recovery": {
