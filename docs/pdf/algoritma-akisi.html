@@ -1,0 +1,838 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>GÜS-DEDEKTİV — Algoritma Akışı</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,100..900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300..600&display=swap" rel="stylesheet">
+<style>
+/* --- ?only=flow: README görseli için yalnız akış diyagramı ---------------- */
+html[data-only='flow'] body { background: var(--bg); }
+html[data-only='flow'] .page { width: auto; padding: 34px 38px 30px; }
+html[data-only='flow'] section:not(.flow-section) { display: none; }
+html[data-only='flow'] .flow-section > h2 { margin-top: 0; }
+html[data-only='flow'] .flow-section > p.lead { display: none; }
+
+/* ==========================================================================
+   GÜS-DEDEKTİV — Algoritma akışı.
+
+   Tek kaynak, iki çıktı: ekran için koyu PNG, baskı için açık PDF.
+   Tema `?theme=dark` ile koyuya döner; varsayılan baskıya uygun açık temadır.
+   ========================================================================== */
+
+:root {
+  --bg: #ffffff;
+  --paper: #fbfbfa;
+  --surface: #ffffff;
+  --surface-2: #f3f3f1;
+  --ink: #0d0d0e;
+  --ink-2: #4a4a50;
+  --ink-3: #6d6d75;
+  --ink-4: #9a9aa2;
+  --rule: #e3e3de;
+  --rule-hard: #cfcfc8;
+  --stop: #8e2323;   --stop-bg: #f8e7e7;  --stop-line: #e0c0c0;
+  --warn: #7a4d0a;   --warn-bg: #f8eeda;  --warn-line: #e2cfa6;
+  --ok:   #14603d;   --ok-bg:   #e7f1eb;  --ok-line:   #bfd7c9;
+  --cool: #1d4674;   --cool-bg: #e9eff6;  --cool-line: #c2d3e5;
+
+  --sans: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'Geist Mono', ui-monospace, Consolas, monospace;
+}
+
+html[data-theme='dark'] {
+  --bg: #0a0a0b;
+  --paper: #0a0a0b;
+  --surface: #111113;
+  --surface-2: #17171a;
+  --ink: #f5f5f6;
+  --ink-2: #b6b6bd;
+  --ink-3: #8d8d95;
+  --ink-4: #66666e;
+  --rule: #232326;
+  --rule-hard: #33333a;
+  --stop: #f08a8a;   --stop-bg: #2a1414;  --stop-line: #4a2323;
+  --warn: #e8b866;   --warn-bg: #271d0d;  --warn-line: #47341a;
+  --ok:   #6ddba1;   --ok-bg:   #10241a;  --ok-line:   #1e4030;
+  --cool: #8fbcf0;   --cool-bg: #101e2c;  --cool-line: #1e3550;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 10.5pt;
+  line-height: 1.62;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.page {
+  width: 190mm;
+  margin: 0 auto;
+  padding: 14mm 0 10mm;
+}
+@media print {
+  @page { size: A4; margin: 14mm 10mm; }
+  .page { width: auto; padding: 0; }
+  .break { break-before: page; }
+  .keep { break-inside: avoid; }
+}
+
+/* --- tipografi ---------------------------------------------------------- */
+h1 { font-size: 23pt; font-weight: 650; letter-spacing: -.02em; line-height: 1.14; }
+h2 {
+  font-size: 13pt; font-weight: 620; letter-spacing: -.01em;
+  margin: 26px 0 12px; padding-bottom: 7px; border-bottom: 1.5px solid var(--ink);
+  display: flex; align-items: baseline; gap: 11px;
+}
+h2 .n {
+  font-family: var(--mono); font-size: 9pt; font-weight: 500;
+  color: var(--ink-4); letter-spacing: .08em;
+}
+h3 {
+  font-size: 10.5pt; font-weight: 620; margin: 18px 0 8px;
+  letter-spacing: -.005em;
+}
+p { margin: 0 0 10px; color: var(--ink-2); }
+p.lead { color: var(--ink); font-size: 11.5pt; line-height: 1.55; }
+strong { color: var(--ink); font-weight: 620; }
+code, .mono { font-family: var(--mono); font-size: .88em; }
+code { background: var(--surface-2); padding: 1px 5px; border-radius: 4px; color: var(--ink); }
+ul, ol { margin: 0 0 10px; padding-left: 18px; color: var(--ink-2); }
+li { margin-bottom: 4px; }
+li::marker { color: var(--ink-4); }
+a { color: inherit; }
+
+.eyebrow {
+  font-family: var(--mono); font-size: 8pt; letter-spacing: .26em;
+  text-transform: uppercase; color: var(--ink-4);
+}
+
+/* --- kapak -------------------------------------------------------------- */
+.cover { padding: 4mm 0 0; }
+.cover .mark { display: flex; align-items: center; gap: 16px; margin-bottom: 34mm; }
+.cover .tile {
+  width: 54px; height: 54px; border-radius: 15px; background: #0a0a0b;
+  display: grid; place-items: center; color: #f5f5f6; flex: none;
+}
+.cover .wordmark {
+  font-family: var(--mono); font-size: 15pt; font-weight: 600; letter-spacing: .12em;
+}
+.cover .wordmark small {
+  display: block; font-size: 7.5pt; letter-spacing: .26em; color: var(--ink-4);
+  font-weight: 400; margin-top: 3px;
+}
+.cover h1 { margin: 10px 0 14px; }
+.cover .sub { font-size: 12pt; color: var(--ink-2); max-width: 130mm; line-height: 1.5; }
+.cover .facts {
+  margin-top: 30mm; border-top: 1.5px solid var(--ink); padding-top: 12px;
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 30px;
+}
+.cover .facts div { font-size: 9pt; }
+.cover .facts dt {
+  font-family: var(--mono); font-size: 7.5pt; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--ink-4); margin-bottom: 3px;
+}
+.cover .facts dd { color: var(--ink); font-weight: 500; }
+
+/* --- uyarı kutusu ------------------------------------------------------- */
+.notice {
+  border: 1px solid var(--stop-line); background: var(--stop-bg);
+  border-radius: 9px; padding: 13px 16px; margin: 14px 0;
+}
+.notice .t {
+  font-family: var(--mono); font-size: 7.5pt; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--stop); margin-bottom: 5px;
+}
+.notice p { margin: 0; color: var(--ink); font-size: 9.5pt; }
+
+.callout {
+  border-left: 2.5px solid var(--rule-hard); padding: 2px 0 2px 14px;
+  margin: 12px 0; color: var(--ink-2); font-size: 9.5pt;
+}
+
+/* --- akış diyagramı ----------------------------------------------------- */
+.flow { margin: 16px 0 6px; }
+.layer {
+  border: 1px solid var(--rule); border-radius: 11px;
+  background: var(--surface); padding: 13px 16px 14px;
+  position: relative; break-inside: avoid;
+}
+.layer + .arrow { margin: 0; }
+.layer .head {
+  display: flex; align-items: baseline; gap: 10px; margin-bottom: 9px;
+}
+.layer .badge {
+  font-family: var(--mono); font-size: 7.5pt; letter-spacing: .1em;
+  border: 1px solid var(--rule-hard); border-radius: 5px;
+  padding: 2px 7px; color: var(--ink-3); flex: none;
+}
+.layer .title { font-weight: 620; font-size: 10.5pt; letter-spacing: -.005em; }
+.layer .note { font-size: 8.5pt; color: var(--ink-4); margin-left: auto; font-family: var(--mono); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  font-size: 8.5pt; border: 1px solid var(--rule); border-radius: 999px;
+  padding: 3px 10px; color: var(--ink-2); background: var(--surface-2);
+}
+.chip.key { border-color: var(--cool-line); background: var(--cool-bg); color: var(--cool); font-weight: 500; }
+.chip.warnc { border-color: var(--warn-line); background: var(--warn-bg); color: var(--warn); font-weight: 500; }
+.layer .out {
+  margin-top: 10px; padding-top: 9px; border-top: 1px dashed var(--rule);
+  font-size: 8.5pt; color: var(--ink-3);
+}
+.layer .out b { color: var(--ink-2); font-weight: 550; }
+
+.arrow {
+  height: 26px; display: flex; align-items: center; justify-content: center;
+  gap: 9px; color: var(--ink-4); font-size: 8pt; font-family: var(--mono);
+  letter-spacing: .1em; break-inside: avoid;
+}
+.arrow::before, .arrow::after {
+  content: ''; width: 34px; height: 1px; background: var(--rule-hard);
+}
+
+/* iki paralel kutu (iki quantile başlığı) */
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.mini {
+  border: 1px solid var(--rule); border-radius: 9px; background: var(--surface-2);
+  padding: 10px 12px;
+}
+.mini .t { font-weight: 600; font-size: 9.5pt; margin-bottom: 4px; }
+.mini p { font-size: 8.5pt; margin: 0; line-height: 1.5; }
+
+/* --- adım listesi ------------------------------------------------------- */
+.steps { counter-reset: s; margin: 12px 0; }
+.step {
+  counter-increment: s; position: relative; padding-left: 34px;
+  margin-bottom: 15px; break-inside: avoid;
+}
+.step::before {
+  content: counter(s, decimal-leading-zero);
+  position: absolute; left: 0; top: 1px;
+  font-family: var(--mono); font-size: 8.5pt; color: var(--ink-4);
+  border: 1px solid var(--rule-hard); border-radius: 5px; padding: 1px 5px;
+}
+.step h4 { font-size: 10pt; font-weight: 620; margin-bottom: 4px; }
+.step p { font-size: 9.5pt; margin-bottom: 5px; }
+
+.formula {
+  font-family: var(--mono); font-size: 8.8pt; background: var(--surface-2);
+  border: 1px solid var(--rule); border-radius: 7px;
+  padding: 9px 12px; margin: 7px 0; color: var(--ink); line-height: 1.7;
+  white-space: pre-wrap; overflow-wrap: anywhere;
+}
+
+/* --- tablo -------------------------------------------------------------- */
+table { border-collapse: collapse; width: 100%; margin: 10px 0 14px; font-size: 9pt; }
+caption {
+  text-align: left; font-family: var(--mono); font-size: 7.5pt;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--ink-4);
+  padding-bottom: 6px;
+}
+th {
+  text-align: left; font-weight: 600; font-size: 8pt; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--ink-3);
+  border-bottom: 1.5px solid var(--ink); padding: 0 8px 6px 0;
+}
+td { padding: 7px 8px 7px 0; border-bottom: 1px solid var(--rule); color: var(--ink-2); vertical-align: top; }
+td:first-child, th:first-child { padding-left: 0; }
+td.code { font-family: var(--mono); font-size: 8.5pt; color: var(--ink); white-space: nowrap; }
+td.num { font-family: var(--mono); text-align: right; color: var(--ink); white-space: nowrap; }
+tr.keep { break-inside: avoid; }
+
+.state {
+  font-family: var(--mono); font-size: 7.5pt; letter-spacing: .08em;
+  text-transform: uppercase; border: 1px solid; border-radius: 5px;
+  padding: 1px 6px; white-space: nowrap;
+}
+.s-fire { color: var(--stop); border-color: var(--stop-line); background: var(--stop-bg); }
+.s-quiet { color: var(--ok); border-color: var(--ok-line); background: var(--ok-bg); }
+.s-warn { color: var(--warn); border-color: var(--warn-line); background: var(--warn-bg); }
+.s-na { color: var(--ink-3); border-color: var(--rule-hard); background: var(--surface-2); }
+
+footer {
+  margin-top: 26px; padding-top: 10px; border-top: 1px solid var(--rule);
+  font-size: 8pt; color: var(--ink-4); display: flex; justify-content: space-between;
+  font-family: var(--mono); letter-spacing: .05em;
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- ====================================================== KAPAK ========= -->
+<section class="cover">
+  <div class="mark">
+    <div class="tile">
+      <svg viewBox="0 0 64 64" width="32" height="32">
+        <circle cx="27" cy="27" r="19" fill="none" stroke="currentColor" stroke-width="4.5"/>
+        <rect x="18" y="20" width="18" height="4" rx="2" fill="#f08a8a"/>
+        <rect x="18" y="26" width="13" height="4" rx="2" fill="currentColor" opacity=".75"/>
+        <rect x="18" y="32" width="9"  height="4" rx="2" fill="currentColor" opacity=".45"/>
+        <path d="M41 41 L54 54" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="wordmark">GÜS-DEDEKTİV<small>DENETİM ÖNCELİKLENDİRME</small></div>
+  </div>
+
+  <div class="eyebrow">Teknik Doküman</div>
+  <h1>Algoritma Akışı</h1>
+  <p class="sub">
+    GEKAP ambalaj beyanlarında bir firma-çeyrek kaydının, ham veriden
+    denetçi kuyruğundaki sıraya kadar hangi adımlardan geçtiği; her adımda ne
+    hesaplandığı, neyin hesaplanamadığında ne olduğu ve sonucun nasıl
+    gerekçelendirildiği.
+  </p>
+
+  <dl class="facts">
+    <div><dt>Takım</dt><dd>KinetiX</dd></div>
+    <div><dt>Yarışma</dt><dd>TEKNOFEST 2026 · Sıfır Atık ve Döngüsel Ekonomi</dd></div>
+    <div><dt>Model sürümü</dt><dd class="mono">gus-ml-1.0.0</dd></div>
+    <div><dt>Veri sürümü</dt><dd class="mono">1.0.0</dd></div>
+    <div><dt>Politika sürümü</dt><dd class="mono">policy-2026.1</dd></div>
+    <div><dt>Analiz birimi</dt><dd>firma-çeyrek</dd></div>
+  </dl>
+
+  <div class="notice" style="margin-top: 26mm">
+    <div class="t">Önce bu okunmalıdır</div>
+    <p>
+      <strong>0–100 puan operasyonel bir inceleme önceliğidir. İhlal, suç veya
+      usulsüzlük olasılığı değildir.</strong> Sistem otomatik ceza kararı üretmez;
+      nihai karar yetkili insan denetçiye aittir. Bu dokümandaki bütün ölçümler
+      <strong>sentetik</strong> bir panel üzerinde alınmıştır ve gerçek beyanlar
+      üzerindeki performansın kanıtı değildir.
+    </p>
+  </div>
+</section>
+
+<!-- ============================================ 1 · UÇTAN UCA AKIŞ ====== -->
+<section class="break flow-section">
+<h2><span class="n">01</span> Uçtan uca akış</h2>
+
+<p class="lead">
+  Yedi katman. Her katman bir üstündekine yalnızca <strong>tanımlı bir çıktı</strong>
+  verir; aşağıdaki bir katman yukarıdakinin iç durumunu görmez. Bu ayrım
+  değerlendirmeyi dürüst tutan şeydir: özellik üretimi, anomali üretimini
+  <em>ithal edemez</em> ve bu kural veri doğrulayıcıda AST analiziyle otomatik
+  denetlenir.
+</p>
+
+<div class="flow">
+
+  <div class="layer keep">
+    <div class="head">
+      <span class="badge">K0</span>
+      <span class="title">Veri kaynakları</span>
+      <span class="note">kurum içinde kalır</span>
+    </div>
+    <div class="chips">
+      <span class="chip">GİB GEKAP beyannamesi</span>
+      <span class="chip">Ambalaj Bilgi Sistemi</span>
+      <span class="chip">TÜİK üretim ve sanayi serileri</span>
+      <span class="chip">Ticaret Bakanlığı GTİP satırları</span>
+      <span class="chip">Sıfır Atık Bilgi Sistemi</span>
+      <span class="chip">Önceki denetim kayıtları</span>
+      <span class="chip warnc">MVP: sentetik panel</span>
+    </div>
+    <div class="out">
+      Sistem <b>veri toplamaz</b>. Kurumun kendi verisini kendi ortamında
+      değerlendirir; dışarıya kayıt göndermez.
+    </div>
+  </div>
+
+  <div class="arrow">TOPLU YÜKLEME · KURUM İÇİ API</div>
+
+  <div class="layer keep">
+    <div class="head">
+      <span class="badge">K1</span>
+      <span class="title">Alım ve doğrulama</span>
+      <span class="note">ingestion</span>
+    </div>
+    <div class="chips">
+      <span class="chip">şema doğrulama</span>
+      <span class="chip">VKN → <span class="mono">firm_token</span></span>
+      <span class="chip">birim normalizasyonu</span>
+      <span class="chip key">veri kalite puanı</span>
+      <span class="chip">eksik alan tespiti</span>
+      <span class="chip">veri sürümü damgası</span>
+    </div>
+    <div class="out">
+      Çıktı: <b>sürümlenmiş panel</b> — her satırda <span class="mono">data_source_type</span>,
+      <span class="mono">generation_method</span>, <span class="mono">source_ids</span>.
+    </div>
+  </div>
+
+  <div class="arrow">FİRMA-ÇEYREK PANELİ</div>
+
+  <div class="layer keep">
+    <div class="head">
+      <span class="badge">K2</span>
+      <span class="title">Özellik üretimi</span>
+      <span class="note">feature store</span>
+    </div>
+    <div class="chips">
+      <span class="chip">gecikmeli beyan değerleri</span>
+      <span class="chip">emsal istatistikleri (t−1)</span>
+      <span class="chip">ürün ağacından beklenti</span>
+      <span class="chip">dış ticaret dengesi</span>
+      <span class="chip">mevsimsellik</span>
+      <span class="chip key">kullanılabilirlik bayrakları <span class="mono">f_avail_sN</span></span>
+    </div>
+    <div class="out">
+      <b>İleriye bakış yasağı burada zorunlu kılınır:</b> t anındaki bir özellik
+      yalnızca t’ye kadar bilinen veriden hesaplanır.
+    </div>
+  </div>
+
+  <div class="arrow">ÖZELLİK MATRİSİ</div>
+
+  <div class="layer keep">
+    <div class="head">
+      <span class="badge">K3</span>
+      <span class="title">Beklenti modeli</span>
+      <span class="note">LightGBM quantile + konformal</span>
+    </div>
+    <div class="pair" style="margin-bottom:10px">
+      <div class="mini">
+        <div class="t">Tarihsel başlık</div>
+        <p>Firmanın kendi beyan geçmişinden <span class="mono">q05 / q50 / q95</span>.
+           Hedef <span class="mono">log1p(beyan)</span>.</p>
+      </div>
+      <div class="mini">
+        <div class="t">Emsal başlık</div>
+        <p>Benzer firmalar ve üretim hacminden. Firmanın <strong>kendi geçmişi
+           bu başlığa girmez</strong>.</p>
+      </div>
+    </div>
+    <div class="chips">
+      <span class="chip">harman: log uzayında ağırlıklı ortalama, <span class="mono">w = 0,95</span></span>
+      <span class="chip key">Mondrian CQR: (sektör, ölçek, veri güveni)</span>
+      <span class="chip">grup incelirse → global gruba geri çekilme</span>
+    </div>
+    <div class="out">
+      Çıktı: <b>kalibre edilmiş beklenen aralık</b> <span class="mono">[q05, q95]</span> ve
+      gözlenen kapsama oranı. <b>Aralık, zayıf kalibrasyonlu gruplarda genişler.</b>
+    </div>
+  </div>
+
+  <div class="arrow">BEKLENEN ARALIK + BEYAN</div>
+
+  <div class="layer keep">
+    <div class="head">
+      <span class="badge">K4</span>
+      <span class="title">Sekiz kanıt sinyali ve birleştirme</span>
+      <span class="note">E1 … E8</span>
+    </div>
+    <div class="chips" style="margin-bottom:9px">
+      <span class="chip">E1 geçmişe göre</span>
+      <span class="chip">E2 yapısal</span>
+      <span class="chip">E3 emsal</span>
+      <span class="chip">E4 üretim–beyan</span>
+      <span class="chip">E5 dönemsel</span>
+      <span class="chip">E6 beyan örüntüsü</span>
+      <span class="chip">E7 saha</span>
+      <span class="chip">E8 gümrük</span>
+    </div>
+    <div class="chips">
+      <span class="chip">ham istatistik → eğitim penceresi yüzdelik rampası → 0–100</span>
+      <span class="chip">LightGBM tohum topluluğu (5 üye), log-odds ortalaması</span>
+      <span class="chip">izotonik kalibrasyon → referans yüzdelik → 0–100</span>
+      <span class="chip warnc">çalıştırılamayan sinyalin ağırlığı paydadan düşer</span>
+    </div>
+    <div class="out">
+      Çıktı: <b>öncelik puanı</b>, <b>dayanak kapsamı</b> ve her sinyalin durumu —
+      <span class="state s-fire">tetiklendi</span>
+      <span class="state s-quiet">sessiz</span>
+      <span class="state s-na">çalıştırılamadı</span>
+    </div>
+  </div>
+
+  <div class="arrow">PUAN + SİNYAL DURUMLARI</div>
+
+  <div class="layer keep">
+    <div class="head">
+      <span class="badge">K5</span>
+      <span class="title">Açıklama ve karar kaydı</span>
+      <span class="note">TreeSHAP + hash-chain</span>
+    </div>
+    <div class="chips">
+      <span class="chip key">TreeSHAP katkısı → sinyal düzeyi</span>
+      <span class="chip">şablonlu gerekçe cümlesi</span>
+      <span class="chip mono">decision_id · model_version · data_version</span>
+      <span class="chip key">SHA-256 hash-chain denetim kaydı</span>
+      <span class="chip">itiraz ve yeniden inceleme izi</span>
+    </div>
+    <div class="out">
+      Gerekçe metni <b>şablonludur</b>; serbest üretimli dil modeli kullanılmaz.
+      Aynı girdi aynı cümleyi üretir ve her cümle arkasındaki sayıyı taşır.
+    </div>
+  </div>
+
+  <div class="arrow">REST / JSON</div>
+
+  <div class="layer keep">
+    <div class="head">
+      <span class="badge">K6</span>
+      <span class="title">API ve denetçi arayüzü</span>
+      <span class="note">FastAPI · React</span>
+    </div>
+    <div class="chips">
+      <span class="chip">kuyruk</span>
+      <span class="chip">dosya detayı</span>
+      <span class="chip">gerekçe paneli</span>
+      <span class="chip">veri güven ekranı</span>
+      <span class="chip">denetçi kararı</span>
+      <span class="chip">denetim izi</span>
+      <span class="chip">COP31 etki paneli</span>
+      <span class="chip">şeffaflık</span>
+    </div>
+    <div class="out">
+      Motor değişse bile sözleşme değişmez: kural motoru ve model motoru
+      <b>aynı <span class="mono">ScoreOutcome</span></b> şeklini döndürür, yanıt hangi
+      motorun ürettiğini söyler.
+    </div>
+  </div>
+
+</div>
+</section>
+
+<!-- ===================================== 2 · PUANLAMA ADIM ADIM ========= -->
+<section class="break">
+<h2><span class="n">02</span> Bir firma-çeyrek kaydı nasıl puanlanır</h2>
+
+<p class="lead">
+  Aşağıdaki yedi adım, tek bir <span class="mono">(firma, dönem)</span> kaydı için
+  çalışır ve sonuçta puanı, aralığı, gerekçeyi ve karar kimliğini birlikte üretir.
+</p>
+
+<div class="steps">
+
+  <div class="step">
+    <h4>Bağlam toplanır</h4>
+    <p>
+      Motor veritabanını hiç görmez. Kendisine <span class="mono">ScoringContext</span>
+      verilir: firma, beyan geçmişi, emsal kohortu, saha gözlemleri, GTİP satırları
+      ve veri kalitesi — düz veri sınıfları olarak.
+    </p>
+    <div class="formula">ScoringContext(company, declarations[], peers[], observations[], gtip[], quality)</div>
+  </div>
+
+  <div class="step">
+    <h4>Özellik satırı kurulur</h4>
+    <p>
+      <span class="mono">manifest.json</span> içindeki <span class="mono">feature_order</span> ve
+      <span class="mono">categories</span> <strong>bağlayıcıdır</strong>: çalışma zamanı matrisi
+      onlardan yeniden kurar. Uyuşmazlık olsaydı LightGBM yanlış sütunu okur ve
+      saçmadan kendinden emin bir tahmin üretirdi; bu yüzden çalışma zamanı,
+      manifest olmadan <strong>yüklenmeyi reddeder</strong>.
+    </p>
+    <p>
+      Hesaplanamayan bir özellik <strong>eksik bırakılır</strong>. Nötr bir değere
+      doldurulup gözlenmiş gibi puanlanmaz.
+    </p>
+  </div>
+
+  <div class="step">
+    <h4>Beklenen aralık üretilir</h4>
+    <p>
+      İki quantile başlığı ayrı ayrı tahmin verir, log uzayında harmanlanır,
+      ardından Mondrian CQR ile kalibre edilir. Grup önce
+      <span class="mono">(sektör, ölçek, veri güveni)</span> üçlüsüyle aranır; o grupta
+      yeterli kalibrasyon verisi yoksa sırayla daha geniş gruba, en sonunda
+      global gruba düşülür.
+    </p>
+    <div class="formula">ŷ      = exp( w · log1p(ŷ_hist) + (1−w) · log1p(ŷ_peer) ) − 1 ,  w = 0,95
+[a, b] = ŷ ± konformal_genişlik( sektör, ölçek, veri_güveni )</div>
+    <div class="callout">
+      Eksiği <strong>aralığın ortasına</strong> değil <strong>alt sınırına</strong> göre
+      ölçüyoruz. Ortaya göre ölçmek, aralığın içinde kalan her beyanı da bir miktar
+      “eksik” göstermek olurdu.
+    </div>
+  </div>
+
+  <div class="step">
+    <h4>Sekiz kontrol çalıştırılır</h4>
+    <p>
+      Her kontrol üç durumdan birini bildirir. <strong>Çalıştırılamadı, sessizden
+      farklı bir sonuçtur</strong> ve öyle raporlanır.
+    </p>
+    <table>
+      <tr class="keep">
+        <td style="width:118px"><span class="state s-fire">tetiklendi</span></td>
+        <td>Kontrol çalıştı ve eşiği aştı. Puana kendi ağırlığıyla girer.</td>
+      </tr>
+      <tr class="keep">
+        <td><span class="state s-quiet">sessiz</span></td>
+        <td>Kontrol çalıştı, eşiği aşmadı. Puana sıfır katkıyla girer.</td>
+      </tr>
+      <tr class="keep">
+        <td><span class="state s-na">çalıştırılamadı</span></td>
+        <td>
+          Gereken girdi yok. <strong>Ağırlığı paydadan düşürülür</strong> — sıfır
+          sayılmaz. Bunun yerine <strong>dayanak kapsamı</strong> düşer ve bu, puanın
+          yanında yazılır.
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="step">
+    <h4>Puan birleştirilir</h4>
+    <p>
+      Çalışabilen kontrollerin ağırlıklı ortalaması alınır ve <strong>en güçlü tek
+      bulguyla</strong> sabit bir oranda harmanlanır.
+    </p>
+    <div class="formula">ağırlıklı_ortalama = Σ( aᵢ · wᵢ · sᵢ ) / Σ( aᵢ · wᵢ )
+en_güçlü          = max( sᵢ )   ( aᵢ = 1 olanlar arasında )
+puan              = (1 − p) · ağırlıklı_ortalama + p · en_güçlü ,  p = 0,35
+
+aᵢ = 1 kontrol çalıştıysa, 0 çalıştırılamadıysa
+wᵢ = politikadaki ağırlık     sᵢ = kontrolün 0–100 puanı</div>
+    <div class="callout">
+      Harman olmasaydı, <strong>tek bir konuda sürekli hatalı</strong> olan bir firma,
+      dört konuda az hatalı olan bir firmanın altında sıralanırdı. Bir denetim
+      ekibi böyle triyaj yapmaz.
+    </div>
+  </div>
+
+  <div class="step">
+    <h4>Gerekçe yazılır</h4>
+    <p>
+      Katkılar, <strong>gerçekten çalışan model üzerinde</strong> TreeSHAP ile hesaplanır,
+      sinyal düzeyine toplanır ve şablonlu cümlelere dökülür. Her cümle arkasındaki
+      sayıyı taşır: “gümrük satırları 2.125 t ambalaj ima ediyor, beyan 1.328 t,
+      aralığın %38 altında”.
+    </p>
+  </div>
+
+  <div class="step">
+    <h4>Karar kaydı zincire eklenir</h4>
+    <p>
+      Denetçinin kararı eklenir, hiçbir zaman düzenlenmez. Her olay, kendisinden
+      önceki olayın SHA-256 özetini taşır; firma, denetçi, işlem, iki yandaki durum,
+      not ve zaman damgası özetin içindedir.
+    </p>
+    <div class="formula">digestₙ = SHA256( digestₙ₋₁ ‖ firma ‖ denetçi ‖ işlem ‖ önceki_durum ‖ yeni_durum ‖ not ‖ zaman )</div>
+    <p>
+      Geçmiş bir kaydı değiştirmek veya silmek, o kaydın ve <strong>ondan sonraki
+      her bağın</strong> özetini değiştirir. <span class="mono">GET /api/audit/verify</span>
+      zincirin kendisiyle uyuşmayı bıraktığı <strong>ilk sıra numarasını</strong> bildirir.
+    </p>
+  </div>
+
+</div>
+</section>
+
+<!-- ============================================ 3 · SEKİZ SİNYAL ======== -->
+<section class="break">
+<h2><span class="n">03</span> Sekiz kanıt sinyali</h2>
+
+<p>
+  “Sekiz <strong>bağımsız</strong> sinyal” denmez — sinyaller korelasyonludur.
+  “Sekiz <strong>ayrı kanıt sinyali</strong>” denir. Aralarındaki ilişki korelasyon
+  matrisi, ablation testi, SHAP katkı analizi, alt grup performansı ve duyarlılık
+  analiziyle ölçülür.
+</p>
+
+<table>
+  <caption>Arayüzdeki kod · modeldeki karşılığı · politika ağırlığı</caption>
+  <thead>
+    <tr>
+      <th style="width:34px">Kod</th>
+      <th style="width:150px">Kontrol</th>
+      <th>Neyle karşılaştırır</th>
+      <th style="width:52px">Model</th>
+      <th style="width:58px">Ağırlık</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="keep"><td class="code">E1</td><td>Geçmişe göre eksik beyan</td><td>Beyanı, firmanın kendi geçmiş beyan örüntüsüyle</td><td class="code">S1</td><td class="num">0,20</td></tr>
+    <tr class="keep"><td class="code">E2</td><td>Yapısal eksik beyan</td><td>Beyanı, üretiminin ima ettiği hacimle</td><td class="code">S5</td><td class="num">0,18</td></tr>
+    <tr class="keep"><td class="code">E3</td><td>Emsalden sapma</td><td>Ambalaj yoğunluğunu, aynı sektör ve ölçek sınıfıyla</td><td class="code">S2</td><td class="num">0,15</td></tr>
+    <tr class="keep"><td class="code">E4</td><td>Üretim ile beyan uyumsuzluğu</td><td>Üretimdeki hareketi, beyandaki hareketle</td><td class="code">S4</td><td class="num">0,14</td></tr>
+    <tr class="keep"><td class="code">E5</td><td>Dönemler arası tutarsızlık</td><td>Yoğunluğun dönemler boyunca kararlılığını</td><td class="code">S6</td><td class="num">0,09</td></tr>
+    <tr class="keep"><td class="code">E7</td><td>Saha çelişkisi</td><td>Saha gözlemlerini, beyan edilenle</td><td class="code">S8</td><td class="num">0,09</td></tr>
+    <tr class="keep"><td class="code">E8</td><td>Gümrük tarife kanıtı</td><td>GTİP satırlarının ima ettiği ambalajı, beyanla</td><td class="code">S3</td><td class="num">0,08</td></tr>
+    <tr class="keep"><td class="code">E6</td><td>Beyan örüntüsü</td><td>Yuvarlama, tekrar ve eşik davranışını (kural motoru) / malzeme bileşiminin dönemler arası hareketini (model)</td><td class="code">S7</td><td class="num">0,07</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  E6, sekizi içinde en gevşek eşleşmedir: kural motoru beyandaki yuvarlama ve
+  tekrarı okur, model ise malzeme bileşiminin dönemler arasında nasıl hareket
+  ettiğini. İkisi de “bildirilen rakamlar kendi içinde tutarlı mı” sorusunu
+  sorduğu için E6 <strong>yönteme değil soruya göre</strong> adlandırılmıştır ve
+  panel hangisinin çalıştığını yazar.
+</div>
+
+<h3>Eşikler ve ağırlıklar koddan ayrıdır</h3>
+<p>
+  Yukarıdaki ağırlıklar, bantlar ve harman oranı <strong>politikadır</strong>.
+  Yetkili kurum bunları kaynak koda dokunmadan
+  <span class="mono">GET/PUT /api/scoring/policy</span> üzerinden değiştirebilir.
+  Politikada kapatılan bir sinyal <strong>modelde de kapanır</strong>: girdileri
+  birleştirme çalışmadan önce maskelenir, böylece puan, operatörün geri çektiği
+  kanıtı sessizce kullanmaya devam etmez.
+</p>
+
+<table>
+  <caption>Öncelik bantları · policy-2026.1</caption>
+  <thead><tr><th style="width:120px">Bant</th><th style="width:110px">Aralık</th><th>Anlamı</th></tr></thead>
+  <tbody>
+    <tr class="keep"><td><span class="state s-fire">Kritik</span></td><td class="num">75 – 100</td><td>Kuyruğun başı; dayanak güçlü ve tutar yüksek</td></tr>
+    <tr class="keep"><td><span class="state s-warn">Yüksek</span></td><td class="num">50 – 74</td><td>İncelenmeli, sırası kapasiteye göre</td></tr>
+    <tr class="keep"><td><span class="state s-na">Orta</span></td><td class="num">25 – 49</td><td>İzlenir</td></tr>
+    <tr class="keep"><td><span class="state s-quiet">Düşük</span></td><td class="num">0 – 24</td><td>Bu dönem için işlem gerekmiyor</td></tr>
+  </tbody>
+</table>
+</section>
+
+<!-- ============================================ 4 · DEĞİŞMEZLER ========= -->
+<section class="break">
+<h2><span class="n">04</span> Uygulamanın koruduğu dört kural</h2>
+
+<div class="steps">
+  <div class="step">
+    <h4>Hesaplanamayan özellik, hesaplanmış gibi davranmaz</h4>
+    <p>
+      Bir özellik üretilemiyorsa ona dayanan kontroller
+      <span class="state s-na">çalıştırılamadı</span> olur ve nedeni yazılır.
+      Nötr değere doldurulup gözlenmiş gibi puanlanmaz.
+    </p>
+  </div>
+
+  <div class="step">
+    <h4>Aralık, kalibrasyon verisi inceldikçe genişler</h4>
+    <p>
+      Kaydın kendi <strong>veri güveni</strong>, konformal gruplama boyutlarından
+      biridir. Kötü kanıtlanmış bir firmaya dar bir aralık vermek, denetçiyi
+      yanlış kapıya gönderen hata biçimidir.
+    </p>
+  </div>
+
+  <div class="step">
+    <h4>Eksik veri aklanma değildir</h4>
+    <p>
+      Çalıştırılamayan bir kontrol puan taşımaz, ama <strong>katkı taşıyabilir</strong>:
+      model, kontrol edilemeyen dosyaların daha sık eksik beyan taşıdığını veriden
+      öğrenir. Denetçi panelinde bu durum kelimelerle yazılır — sessizce “temiz”
+      sayılmaz.
+    </p>
+  </div>
+
+  <div class="step">
+    <h4>Kimlik özellikleri risk puanına girmez</h4>
+    <p>
+      <strong>İl hiçbir yerde kullanılmaz.</strong> Sektör ve ölçek bandı yalnızca
+      <strong>beklenti</strong> başlıklarında ve konformal gruplamada kullanılır; oradaki
+      işleri karşılaştırmayı adil yapmaktır — firma kendi sektörünün ve ölçeğinin
+      beklentisiyle ölçülür. Risk puanına doğrudan girselerdi yapacakları şey
+      “senin gibi firmalar daha çok denetleniyor” demek olurdu.
+    </p>
+    <p>
+      Bedeli ölçüldü ve yoktur: eğitim penceresi çapraz doğrulamasında PR-AUC
+      0,2141 → 0,2169; test Precision@100 0,350 → 0,350.
+    </p>
+  </div>
+</div>
+
+<h2><span class="n">05</span> Çalışma zamanı: bir isteğin izlediği yol</h2>
+
+<div class="formula">POST /api/scoring/run { "period": "2026Q2" }
+  │
+  ├─ resolve_engine()          → SCORING_ENGINE=ml, artefaktlar ve lightgbm var mı?
+  │                              yoksa kural motoruna düşülür, yanıt bunu söyler
+  ├─ her firma için
+  │    ├─ ScoringContext kurulur      (ORM burada kalır, motor görmez)
+  │    ├─ engine.score(context)       → ScoreOutcome
+  │    └─ sonuç + decision_id yazılır
+  └─ özet: kaç kayıt, hangi motor, kaç ms
+
+GET /api/inspection-queue   → sıralanmış kuyruk, filtreli ve sayfalı
+GET /api/companies/{id}     → puan, aralık, sekiz kontrol, kanıt
+POST /api/companies/{id}/review → karar; hash-chain'e eklenir
+GET /api/audit/verify       → her bağ yeniden hesaplanır</div>
+
+<div class="callout">
+  Motor bir <strong>arayüzdür</strong>, iki uygulaması da depodadır:
+  <span class="mono">mock_scorer</span> (deterministik kurallar — referans ve yedek) ve
+  <span class="mono">ml_scorer</span> (eğitilmiş model). İkisi de aynı
+  <span class="mono">ScoreOutcome</span> döndürdüğü için <strong>motoru değiştirmek arayüzde
+  hiçbir değişiklik gerektirmez</strong>.
+</div>
+</section>
+
+<!-- ============================================ 6 · ÖLÇÜMLER =========== -->
+<section class="break">
+<h2><span class="n">06</span> Ölçülen sonuçlar</h2>
+
+<div class="notice">
+  <div class="t">Sentetik veri</div>
+  <p>
+    Aşağıdaki bütün sayılar <strong>sentetik</strong> bir panel üzerinde, zamansal
+    bir holdout ile ölçülmüştür: 2025Q2’ye kadar eğitim, 2025Q3–Q4 kalibrasyon,
+    2026Q1–Q2 üzerinde <strong>bir kez</strong> ölçüm. Gerçek beyanlar üzerindeki
+    performansın kanıtı değildir.
+  </p>
+</div>
+
+<table>
+  <caption>Test bölümü · n = 1.200 · taban oran %8,08</caption>
+  <thead><tr><th>Ölçüt</th><th style="width:90px">GÜS-DEDEKTİV</th><th style="width:110px">En iyi basit taban</th><th style="width:70px">Kat</th></tr></thead>
+  <tbody>
+    <tr class="keep"><td>Precision@100</td><td class="num">0,360</td><td class="num">0,190</td><td class="num">4,5×</td></tr>
+    <tr class="keep"><td>Precision@50</td><td class="num">0,500</td><td class="num">—</td><td class="num">6,2×</td></tr>
+    <tr class="keep"><td>PR-AUC</td><td class="num">0,328</td><td class="num">0,159</td><td class="num">2,1×</td></tr>
+    <tr class="keep"><td>ROC-AUC</td><td class="num">0,674</td><td class="num">—</td><td class="num">—</td></tr>
+    <tr class="keep"><td>Recall@100</td><td class="num">0,371</td><td class="num">—</td><td class="num">—</td></tr>
+  </tbody>
+</table>
+
+<table>
+  <caption>Belirsizlik ve kalibrasyon</caption>
+  <thead><tr><th>Ölçüt</th><th style="width:110px">Hedef</th><th style="width:110px">Gözlenen</th></tr></thead>
+  <tbody>
+    <tr class="keep"><td>Konformal kapsama (valid)</td><td class="num">0,900</td><td class="num">0,917</td></tr>
+    <tr class="keep"><td>Konformal kapsama (test)</td><td class="num">0,900</td><td class="num">0,883</td></tr>
+    <tr class="keep"><td>Ortanca bağıl aralık genişliği</td><td class="num">—</td><td class="num">0,873</td></tr>
+    <tr class="keep"><td>Brier skoru</td><td class="num">—</td><td class="num">0,066</td></tr>
+    <tr class="keep"><td>Beklenen kalibrasyon hatası (ECE)</td><td class="num">—</td><td class="num">0,022</td></tr>
+  </tbody>
+</table>
+
+<h3>Kavramsal kayma testi</h3>
+<p>
+  <span class="mono">A08_dis_kanit_uyumsuz</span> mekanizması eğitimde nadir, testte
+  sıktır; bu <strong>kasıtlı</strong> bir kayma testidir. Modelin bu mekanizmadaki 17
+  doğrulanmış vakanın <strong>10’unu ilk 50’de</strong>, 12’sini ilk 100’de yakalaması,
+  eğitimde görmediği bir davranışa karşı tamamen kör olmadığını gösterir.
+</p>
+
+<h3>Precision@100 dar örneklemde ölçülmüştür</h3>
+<p>
+  Eğitim penceresinde yalnızca 246 pozitif örnek vardır. Precision@100 için
+  bootstrap güven aralığı <span class="mono">[0,26 – 0,45]</span>’tir ve metrik her yerde
+  bu aralıkla birlikte raporlanır.
+</p>
+
+<footer>
+  <span>GÜS-DEDEKTİV · Takım KinetiX</span>
+  <span>gus-ml-1.0.0 · policy-2026.1</span>
+</footer>
+</section>
+
+</div>
+
+<script>
+  // Koyu tema, README görseli için; PDF varsayılan açık temada basılır.
+  var params = new URLSearchParams(location.search);
+  if (params.get('theme') === 'dark') document.documentElement.dataset.theme = 'dark';
+  if (params.get('only')) document.documentElement.dataset.only = params.get('only');
+</script>
+</body>
+</html>
