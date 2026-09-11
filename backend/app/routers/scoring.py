@@ -6,8 +6,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app import i18n
-from app.config import ScoringPolicy, get_policy, set_policy
+from app.config import ScoringPolicy, get_policy
 from app.database.database import get_db
+from app.security import Principal, require_writer
+from app.services import policy_service
 from app.routers.deps import resolve_period
 from app.routers.transparency import engines_out, policy_out
 from app.schemas.scoring import EngineOut, PolicyOut, PolicyUpdate, ScoringRunOut, ScoringRunRequest
@@ -22,6 +24,7 @@ def scoring_run(
     request: ScoringRunRequest,
     period: str = Depends(resolve_period),
     db: Session = Depends(get_db),
+    principal: Principal = Depends(require_writer),
 ) -> ScoringRunOut:
     """Re-evaluate the population.
 
@@ -63,7 +66,11 @@ def read_policy() -> PolicyOut:
 
 
 @router.put("/scoring/policy", response_model=PolicyOut)
-def update_policy(payload: PolicyUpdate) -> PolicyOut:
+def update_policy(
+    payload: PolicyUpdate,
+    db: Session = Depends(get_db),
+    principal: Principal = Depends(require_writer),
+) -> PolicyOut:
     """Change thresholds or signal weights without a deployment.
 
     Scores already stored keep the policy version they were produced under.
@@ -83,7 +90,7 @@ def update_policy(payload: PolicyUpdate) -> PolicyOut:
     if payload.strongest_signal_share is not None:
         data["strongest_signal_share"] = payload.strongest_signal_share
 
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M")
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
     data["version"] = f"policy-{stamp}"
-    set_policy(ScoringPolicy(**data))
+    policy_service.apply_policy(db, ScoringPolicy(**data), changed_by=principal.user_id)
     return policy_out()

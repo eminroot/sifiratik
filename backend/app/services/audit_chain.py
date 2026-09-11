@@ -21,7 +21,7 @@ from datetime import datetime, timezone
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.models import AuditEvent
+from app.models import AuditEvent, ChainAnchor
 
 GENESIS_HASH = "0" * 64
 CHAIN_FORMAT = "gus-chain-v1"
@@ -100,43 +100,94 @@ def append_event(
     event.current_hash = compute_hash(previous_hash, event_payload(event))
     db.add(event)
     db.flush()
+    _move_anchor(db, event.sequence, event.current_hash)
     return event
 
 
-def verify_chain(db: Session) -> dict:
-    """Walk the log and report the first place it stops verifying."""
-    events = db.execute(select(AuditEvent).order_by(AuditEvent.sequence.asc())).scalars().all()
+def _move_anchor(db: Session, sequence: int, head_hash: str) -> None:
+    """Record where the log is now supposed to end."""
+    anchor = db.get(ChainAnchor, 1)
+    now = naive_utc(datetime.now(timezone.utc))
+    if anchor is None:
+        db.add(ChainAnchor(id=1, last_sequence=sequence, head_hash=head_hash, updated_at=now))
+    else:
+        anchor.last_sequence = sequence
+        anchor.head_hash = head_hash
+        anchor.updated_at = now
+    db.flush()
 
+
+def read_anchor(db: Session) -> ChainAnchor | None:
+    return db.get(ChainAnchor, 1)
+
+
+def verify_chain(db: Session) -> dict:
+    """Walk the log and report the first place it stops verifying.
+
+    Two different failures are checked. A link that does not match its
+    predecessor, or a digest that does not match its own content, means an
+    event was edited or removed from the middle. A log that verifies cleanly
+    but ends before the anchor means it was cut at the end — which the links
+    alone cannot see, because a truncated chain still agrees with itself.
+    """
     previous_hash = GENESIS_HASH
+    checked = 0
+    last_sequence = 0
+
+    def broken(sequence: int, reason: str, total: int) -> dict:
+        return {
+            "intact": False,
+            "events_checked": sequence,
+            "total_events": total,
+            "broken_at": sequence,
+            "reason": reason,
+            "head_hash": None,
+            "anchored": read_anchor(db) is not None,
+        }
+
+    # Streamed: verification must not need the whole log in memory.
+    events = db.execute(
+        select(AuditEvent).order_by(AuditEvent.sequence.asc()).execution_options(yield_per=500)
+    ).scalars()
+
     for event in events:
         if event.previous_hash != previous_hash:
-            return {
-                "intact": False,
-                "events_checked": event.sequence,
-                "total_events": len(events),
-                "broken_at": event.sequence,
-                "reason": "The link to the previous decision does not match.",
-                "head_hash": None,
-            }
-        expected = compute_hash(previous_hash, event_payload(event))
-        if expected != event.current_hash:
-            return {
-                "intact": False,
-                "events_checked": event.sequence,
-                "total_events": len(events),
-                "broken_at": event.sequence,
-                "reason": "The stored digest does not match the content of the decision.",
-                "head_hash": None,
-            }
+            total = chain_length(db)
+            return broken(event.sequence, "The link to the previous decision does not match.", total)
+        if compute_hash(previous_hash, event_payload(event)) != event.current_hash:
+            total = chain_length(db)
+            return broken(
+                event.sequence, "The stored digest does not match the content of the decision.", total
+            )
         previous_hash = event.current_hash
+        last_sequence = event.sequence
+        checked += 1
+
+    anchor = read_anchor(db)
+    head = previous_hash if checked else GENESIS_HASH
+
+    if anchor is not None and (anchor.last_sequence != last_sequence or anchor.head_hash != head):
+        return {
+            "intact": False,
+            "events_checked": checked,
+            "total_events": checked,
+            "broken_at": last_sequence + 1,
+            "reason": (
+                f"The log ends at decision {last_sequence}, but the anchor expects "
+                f"{anchor.last_sequence}. Decisions were removed from the end."
+            ),
+            "head_hash": None,
+            "anchored": True,
+        }
 
     return {
         "intact": True,
-        "events_checked": len(events),
-        "total_events": len(events),
+        "events_checked": checked,
+        "total_events": checked,
         "broken_at": None,
         "reason": None,
-        "head_hash": previous_hash if events else GENESIS_HASH,
+        "head_hash": head,
+        "anchored": anchor is not None,
     }
 
 

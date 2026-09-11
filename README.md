@@ -589,6 +589,20 @@ curl http://localhost:8000/api/health
 # {"status":"ok","engine":"ml","model_version":"gus-ml-1.0.0"}
 ```
 
+### Yazan uç noktaları kapatmak
+
+Depo klonlandığında her uç nokta **açıktır**; prototip kurulumsuz çalışsın diye.
+Bir anahtar ayarlandığında karar kaydetme, yeniden puanlama, politika değiştirme,
+pilot çalıştırma ve asistan `X-API-Key` ister — okuma her durumda açık kalır.
+
+```bash
+# backend/.env
+API_KEYS=uzun-rastgele-bir-anahtar:aydin.m,baska-bir-anahtar:kaya.s
+```
+
+`key:user` biçimi aynı zamanda **atfı düzeltir**: karara yazılan denetçi
+anahtarın sahibidir, istek gövdesinin istediği ad değil.
+
 ### Uygulama içi asistan
 
 Ekrandaki dönem hakkındaki soruları yanıtlar. Gemini anahtarı yokken **kapalıdır
@@ -766,7 +780,7 @@ Tam model kartı ve 12 değerlendirme tablosu:
 | [`ml/README.md`](ml/README.md) | Veri altyapısı: üretim, doğrulama, kaynak kütüğü |
 | [`ml/reports/MODEL_KARTI.md`](ml/reports/MODEL_KARTI.md) | Model kartı: sınırlılıklar, bölümleme, metrikler |
 | [`backend/models/README.md`](backend/models/README.md) | Artefakt listesi ve yeniden üretme |
-| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Katkı rehberi ve değiştirilemeyecek dört kural |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Katkı rehberi ve değiştirilemeyecek altı kural |
 | [`SECURITY.md`](SECURITY.md) | Açık bildirimi ve prototipin bilinen sınırları |
 
 ---

@@ -41,7 +41,7 @@ cd backend && python -m app.database.gus_import --reset
 
 ---
 
-## Değiştirilemeyecek dört kural
+## Değiştirilemeyecek altı kural
 
 Bir PR bunlardan birini bozuyorsa, önce bir konu (issue) açıp gerekçesini
 tartışın.
@@ -60,6 +60,15 @@ tartışın.
 4. **Kimlik özellikleri risk puanına girmez.** İl hiçbir yerde kullanılmaz;
    sektör ve ölçek bandı yalnızca beklenti başlıklarında ve konformal
    gruplamada kullanılır.
+
+5. **Yazan her yeni uç nokta `require_writer` bağımlılığını alır.** Anahtar
+   yapılandırılmamışken hiçbir şeyi reddetmez; yapılandırıldığında kapı
+   çalışır. Karara ad yazan kod `acting_user(principal, ...)` kullanır —
+   istek gövdesindeki adı doğrudan kaydetmez.
+
+6. **Puanı etkileyen her değişiklik zincire yazılır.** Politika değişikliği
+   `policy_service.apply_policy` üzerinden geçer; oradan geçmeyen bir yol
+   eklenirse skorlar açıklanamaz hale gelir.
 
 Gerekçe metni **şablonludur**. Serbest üretimli bir dil modeli gerekçe
 üretmez — aynı girdi aynı cümleyi üretmelidir.

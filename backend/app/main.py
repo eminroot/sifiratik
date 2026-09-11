@@ -35,6 +35,18 @@ async def lifespan(app: FastAPI):
         from app.database.gus_import import bootstrap
 
         bootstrap(verbose=False)
+
+    # The stored policy outranks the defaults compiled into the process, or a
+    # restart would quietly put the old thresholds back into service.
+    from app.database.database import SessionLocal
+    from app.services import policy_service
+
+    db = SessionLocal()
+    try:
+        policy_service.load_into_process(db)
+    finally:
+        db.close()
+
     yield
 
 

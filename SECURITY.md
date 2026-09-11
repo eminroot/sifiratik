@@ -25,13 +25,28 @@ adımları, gözlenen ve beklenen davranış, etkisine dair değerlendirmeniz.
 
 Prototipin bilerek yapmadığı ve kurum kurulumunda karşılanması gerekenler:
 
-- **Kimlik doğrulama ve yetkilendirme yoktur.** API açıktır; denetçi kimliği
-  istek gövdesinden gelir. Kurum kurulumunda kurumsal SSO ve rol tabanlı erişim
-  arkasına alınmalıdır.
+- **Kimlik doğrulama varsayılan olarak kapalıdır.** Depo klonlandığında her uç
+  nokta açıktır — prototipin kurulumsuz çalışması için. `API_KEYS` (veya
+  `API_KEY`) ayarlandığında **yazan uç noktalar** `X-API-Key` ister; okuma her
+  durumda açık kalır.
+
+  ```bash
+  API_KEYS=uzun-rastgele-bir-anahtar:aydin.m,baska-bir-anahtar:kaya.s
+  ```
+
+  Anahtar `key:user` biçiminde verildiğinde karara yazılan denetçi **anahtarın
+  sahibidir**, istek gövdesinin istediği ad değil. Anahtar yokken gövdedeki ad
+  kaydedilir ve iz, atfedilmemiş olduğu konusunda dürüst kalır.
+
+  Bu bir kapıdır, kimlik sistemi değildir. Kurum kurulumunda kurumsal SSO ve
+  rol tabanlı erişim arkasına alınmalıdır.
 - **CORS geliştirme için gevşektir** (`CORS_ORIGINS` ile daraltılır).
 - **SQLite yalnızca MVP içindir.** Üretimde PostgreSQL ve şifreli depolama.
-- **Denetim zinciri kurcalamayı görünür kılar, engellemez.** Üretimde WORM
-  depolama veya kurumun log altyapısıyla desteklenmelidir.
+- **Denetim zinciri kurcalamayı görünür kılar, engellemez.** Ortadan silme
+  bağları koparır; sondan kesme ise `audit_chain_anchor` satırıyla yakalanır.
+  Çıpa aynı veritabanında durduğu için kurcalamanın maliyetini artırır,
+  imkânsız kılmaz. Üretimde çıpa veritabanının dışında tutulmalıdır — WORM
+  depolama veya kurumun log altyapısı.
 - **Gemini asistanı dışarıya istek atar.** Anahtar yokken kapalıdır. Kamu
   verisiyle çalışırken kurum içi (on-premise) bir modelle değiştirilmelidir;
   asistan skor üretmez, karar vermez.

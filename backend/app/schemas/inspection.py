@@ -54,6 +54,10 @@ class ChainStatus(BaseModel):
     reason: str | None
     head_hash: str | None
     verified_at: datetime
+    # False on a log written before anchoring existed: the links still verify,
+    # but a cut at the end would not be visible. Said out loud rather than
+    # reported as a clean chain.
+    anchored: bool = True
 
 
 class QueueStats(BaseModel):

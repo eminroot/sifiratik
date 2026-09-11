@@ -37,12 +37,24 @@ class Settings(BaseSettings):
     seed_random_state: int = 20260101
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173"
 
+    # Writing endpoints are open until a key is configured, so the prototype
+    # runs with no setup. Set one of these and POST/PUT start demanding
+    # X-API-Key; reading stays open either way. See app/security.py.
+    api_key: str = ""
+    api_key_user: str = "api"
+    # key:user pairs, comma separated — 8f2c...:aydin.m,4b91...:kaya.s
+    api_keys: str = ""
+
     # The in-app assistant. Without a key the endpoint reports itself as
     # unconfigured and the interface hides the panel rather than failing.
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.5-flash"
     gemini_api_base: str = "https://generativelanguage.googleapis.com/v1beta"
     gemini_timeout_seconds: float = 45.0
+
+    @property
+    def auth_enabled(self) -> bool:
+        return bool(self.api_key.strip() or self.api_keys.strip())
 
     @property
     def assistant_enabled(self) -> bool:

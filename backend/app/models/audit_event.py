@@ -71,3 +71,27 @@ class AuditEvent(Base):
     current_hash: Mapped[str] = mapped_column(String(64), index=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, index=True)
+
+
+class ChainAnchor(Base):
+    """Where the chain is supposed to end.
+
+    Linking each event to the one before it catches an edit or a deletion in
+    the middle of the log: the next link stops matching. It cannot catch a cut
+    at the end, because what is left is a shorter chain that still agrees with
+    itself. This row holds the sequence number and digest the log should end
+    on, so a truncation shows up as a mismatch rather than as a clean bill.
+
+    It lives in the same database as the log it guards, so it raises the cost
+    of tampering rather than removing it. Production keeps the anchor outside
+    the database — WORM storage or the institution's own log infrastructure.
+    """
+
+    __tablename__ = "audit_chain_anchor"
+
+    # One row, always. The fixed id makes that an invariant the database
+    # enforces rather than something the code has to remember.
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
+    last_sequence: Mapped[int] = mapped_column(Integer, default=0)
+    head_hash: Mapped[str] = mapped_column(String(64))
+    updated_at: Mapped[datetime] = mapped_column(DateTime)

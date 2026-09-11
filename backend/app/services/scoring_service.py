@@ -8,10 +8,11 @@ from __future__ import annotations
 
 import statistics
 import time
+from collections import defaultdict
 from dataclasses import dataclass
 
 from sqlalchemy import delete, select
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm import Session
 
 from app.config import get_policy
 from app.models import (
@@ -161,39 +162,99 @@ def previous_period(period: str) -> str | None:
     return f"{year}Q{quarter - 1}"
 
 
+@dataclass
+class PopulationBundle:
+    """Everything the whole population needs, fetched once.
+
+    Scoring used to run three queries per company inside the loop — around
+    1.800 round trips for 600 companies. The rows are the same; only the
+    number of trips to get them changes.
+    """
+
+    declarations: dict[int, list[Declaration]]
+    observations: dict[int, list[FieldObservation]]
+    gtip_lines: dict[int, list[GtipLine]]
+
+    @classmethod
+    def empty(cls) -> "PopulationBundle":
+        return cls(declarations={}, observations={}, gtip_lines={})
+
+
+def load_population(db: Session, period: str, company_ids: list[int] | None = None) -> PopulationBundle:
+    """Three queries for the whole population instead of three per company."""
+
+    def grouped(statement, key="company_id") -> dict[int, list]:
+        out: dict[int, list] = defaultdict(list)
+        for row in db.execute(statement).scalars():
+            out[getattr(row, key)].append(row)
+        return out
+
+    declarations = select(Declaration).where(Declaration.period <= period)
+    observations = select(FieldObservation).where(FieldObservation.period <= period)
+    gtip = select(GtipLine).where(GtipLine.period == period)
+
+    if company_ids:
+        declarations = declarations.where(Declaration.company_id.in_(company_ids))
+        observations = observations.where(FieldObservation.company_id.in_(company_ids))
+        gtip = gtip.where(GtipLine.company_id.in_(company_ids))
+
+    # Ordering is part of the contract: history is read in period order and
+    # the engine's own-history baseline depends on it.
+    return PopulationBundle(
+        declarations=grouped(declarations.order_by(Declaration.company_id, Declaration.period.asc())),
+        observations=grouped(
+            observations.order_by(FieldObservation.company_id, FieldObservation.period.asc())
+        ),
+        gtip_lines=grouped(gtip.order_by(GtipLine.company_id)),
+    )
+
+
 def build_context(
     db: Session,
     company: Company,
     period: str,
     peer_index: dict[tuple[str, str], PeerCohort] | None = None,
     prior_peer_index: dict[tuple[str, str], PeerCohort] | None = None,
+    bundle: PopulationBundle | None = None,
 ) -> ScoringContext | None:
-    """Assemble everything the engine needs for one company and period."""
-    declarations = (
-        db.execute(
-            select(Declaration)
-            .where(Declaration.company_id == company.id, Declaration.period <= period)
-            .order_by(Declaration.period.asc())
-        )
-        .scalars()
-        .all()
-    )
+    """Assemble everything the engine needs for one company and period.
 
-    observations = (
-        db.execute(
-            select(FieldObservation)
-            .where(FieldObservation.company_id == company.id, FieldObservation.period <= period)
-            .order_by(FieldObservation.period.asc())
+    `bundle` carries rows already fetched for the whole population. Without
+    it the rows are fetched for this company alone, which is what scoring a
+    single record does.
+    """
+    if bundle is not None:
+        declarations = bundle.declarations.get(company.id, [])
+        observations = bundle.observations.get(company.id, [])
+        gtip_lines = bundle.gtip_lines.get(company.id, [])
+    else:
+        declarations = (
+            db.execute(
+                select(Declaration)
+                .where(Declaration.company_id == company.id, Declaration.period <= period)
+                .order_by(Declaration.period.asc())
+            )
+            .scalars()
+            .all()
         )
-        .scalars()
-        .all()
-    )
 
-    gtip_lines = (
-        db.execute(select(GtipLine).where(GtipLine.company_id == company.id, GtipLine.period == period))
-        .scalars()
-        .all()
-    )
+        observations = (
+            db.execute(
+                select(FieldObservation)
+                .where(FieldObservation.company_id == company.id, FieldObservation.period <= period)
+                .order_by(FieldObservation.period.asc())
+            )
+            .scalars()
+            .all()
+        )
+
+        gtip_lines = (
+            db.execute(
+                select(GtipLine).where(GtipLine.company_id == company.id, GtipLine.period == period)
+            )
+            .scalars()
+            .all()
+        )
 
     history = [_period_facts(d) for d in declarations]
 
@@ -356,10 +417,12 @@ def run_scoring(
     earlier = previous_period(period)
     prior_peer_index = build_peer_index(db, earlier) if earlier else {}
 
-    query = select(Company).options(selectinload(Company.declarations))
+    query = select(Company)
     if company_ids:
         query = query.where(Company.id.in_(company_ids))
     companies = db.execute(query).scalars().all()
+
+    bundle = load_population(db, period, company_ids)
 
     # Assemble every context first, then hand the engine the whole batch. The
     # rule engine is indifferent, but a model engine loads its boosters once
@@ -367,7 +430,7 @@ def run_scoring(
     contexts = [
         context
         for context in (
-            build_context(db, company, period, peer_index, prior_peer_index)
+            build_context(db, company, period, peer_index, prior_peer_index, bundle)
             for company in companies
         )
         if context is not None

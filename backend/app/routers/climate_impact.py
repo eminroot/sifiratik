@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app import i18n
 from app.database.database import get_db
+from app.security import Principal, require_writer
 from app.routers.deps import resolve_period
 from app.schemas.climate import ClimateImpact, PilotResult, PilotRunRequest
 from app.services import climate_service, pilot_service
@@ -44,6 +45,7 @@ def run_pilot(
     period: str = Depends(resolve_period),
     lang: str = Depends(i18n.resolve_lang),
     db: Session = Depends(get_db),
+    principal: Principal = Depends(require_writer),
 ) -> PilotResult:
     """Execute the pilot and record the run."""
     return pilot_service.run_pilot(

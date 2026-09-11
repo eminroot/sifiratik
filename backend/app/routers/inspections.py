@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.database.database import get_db
+from app.security import Principal, acting_user, require_writer
 from app.models import Company
 from app.models.audit_event import REVIEW_STATUSES
 from app.routers.deps import get_company, resolve_period
@@ -23,6 +24,7 @@ def record_review(
     company: Company = Depends(get_company),
     period: str = Depends(resolve_period),
     db: Session = Depends(get_db),
+    principal: Principal = Depends(require_writer),
 ) -> ReviewOut:
     """Record a decision. Appends to the review list and to the audit chain."""
     if payload.status not in REVIEW_STATUSES:
@@ -34,7 +36,7 @@ def record_review(
         db,
         company,
         status=payload.status,
-        auditor_id=payload.auditor_id,
+        auditor_id=acting_user(principal, payload.auditor_id),
         notes=payload.notes,
         confirmed_additional_tonnage=payload.confirmed_additional_tonnage,
         period=period,
