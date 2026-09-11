@@ -1,0 +1,70 @@
+name: Hata bildirimi
+description: Beklenmeyen bir davranış
+labels: ["hata"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Güvenlik açıkları için bu şablonu kullanmayın — `SECURITY.md` dosyasına bakın.
+
+  - type: textarea
+    id: ne-oldu
+    attributes:
+      label: Ne oldu
+      description: Gözlediğiniz davranış.
+    validations:
+      required: true
+
+  - type: textarea
+    id: ne-beklendi
+    attributes:
+      label: Ne bekleniyordu
+    validations:
+      required: true
+
+  - type: textarea
+    id: adimlar
+    attributes:
+      label: Yeniden üretme adımları
+      placeholder: |
+        1. `start.bat`
+        2. Kuyrukta 43 numaralı firmayı aç
+        3. ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: katman
+    attributes:
+      label: Nerede
+      options:
+        - Arayüz (frontend)
+        - API (backend)
+        - Puanlama motoru (scoring)
+        - Veri üretimi / model eğitimi (ml)
+        - Kurulum / başlatma
+        - Bilmiyorum
+    validations:
+      required: true
+
+  - type: input
+    id: motor
+    attributes:
+      label: Hangi motor devredeydi
+      description: "`curl http://localhost:8000/api/health` çıktısı"
+      placeholder: '{"status":"ok","engine":"ml","model_version":"gus-ml-1.0.0"}'
+
+  - type: textarea
+    id: ortam
+    attributes:
+      label: Ortam
+      placeholder: |
+        İşletim sistemi: Windows 11
+        Python: 3.12.3
+        Node: 20.11.0
+
+  - type: textarea
+    id: log
+    attributes:
+      label: Log veya hata çıktısı
+      render: text

@@ -67,11 +67,20 @@ Takım **KinetiX** · TEKNOFEST 2026 Sıfır Atık ve Döngüsel Ekonomi
 
 ---
 
+Bu proje, GEKAP beyanlarındaki olası uyumsuzlukları **farklı kamu verileriyle
+karşılaştırarak** denetlenmesi gereken firmaları önceliklendiren, **açıklanabilir**
+bir karar-destek sistemidir. Nihai karar her zaman **denetçi tarafında kalır**;
+skorlar **TreeSHAP** ile açıklanır ve eksik veri doldurulmaz — *çalıştırılamadı*
+olarak işaretlenip nedeniyle birlikte denetçiye bildirilir.
+
+---
+
 ## İçindekiler
 
 - [Problem](#problem)
 - [Ne yapar, ne yapmaz](#ne-yapar-ne-yapmaz)
-- [Prototip](#prototip)
+- [Prototip akışı](#prototip-akışı)
+- [Açıklanabilirlik](#açıklanabilirlik-her-puan-neden-o-puan)
 - [Algoritma akışı](#algoritma-akışı)
 - [Sekiz kanıt sinyali](#sekiz-kanıt-sinyali)
 - [Kurulum ve çalıştırma](#kurulum-ve-çalıştırma)
@@ -111,48 +120,167 @@ kadar katkı verdiği** ve **hangi kontrolün neden çalıştırılamadığı** 
 
 ---
 
-## Prototip
+## Prototip akışı
 
-Dokuz ekran, tek bir denetçi iş akışı: **kuyruk → dosya → gerekçe → veri güveni →
-karar → kayıt.** Arayüz Türkçe ve İngilizce çalışır; aşağıdaki görüntüler çalışan
-prototipten alınmıştır.
+Bir denetçinin ekranda izlediği yol, baştan sona. Dokuz ekranın tamamı çalışan
+prototipten alınmıştır; arayüz **açık ve koyu temada**, **Türkçe ve İngilizce**
+çalışır.
 
 <div align="center">
 
-**Genel görünüm** — dönemin nerede durduğu, öncelik dağılımı ve risk tutarı
+<h3>1 · Genel görünüm</h3>
 
-<img src="assets/ekran-goruntuleri/01-genel-gorunum.png" alt="Genel görünüm ekranı" width="90%">
+Dönem nerede duruyor: kaç firma puanlandı, öncelik nasıl dağıldı, risk altındaki
+tonaj ve katkı payı ne kadar. Denetçi güne buradan başlar.
 
-<br><br>
+<img src="assets/ekran-goruntuleri/acik/01-genel-gorunum.png" alt="Genel görünüm ekranı" width="88%">
 
-**Firma dosyası** — puan, beklenen aralık, beyan ve sonucun künyesi
+<h2>↓</h2>
 
-<img src="assets/ekran-goruntuleri/03-firma-dosyasi.png" alt="Firma dosyası ekranı" width="90%">
+<h3>2 · Denetim kuyruğu</h3>
 
-<br><br>
+600 firma, öncelik puanına göre sıralı. Her satır başlıca gerekçesini, veri
+kalitesini ve iş akışı durumunu taşır; sektör, il, dönem ve bant üzerinden
+filtrelenir.
 
-**Gerekçe paneli** — sekiz kontrolün tamamı, katkısı ve *çalıştırılamayanın nedeni*
+<img src="assets/ekran-goruntuleri/acik/02-kuyruk.png" alt="Denetim kuyruğu ekranı" width="88%">
 
-<img src="assets/ekran-goruntuleri/10-gerekce-paneli.png" alt="Gerekçe paneli" width="90%">
+<h2>↓</h2>
+
+<h3>3 · Firma dosyası</h3>
+
+Tek bir firma-çeyrek kaydı: 0–100 öncelik puanı, **beklenen aralık** ile beyanın
+karşılaştırması, açıklanamayan tonaj ve sonucun künyesi — hangi motor, hangi
+model sürümü, hangi politika.
+
+<img src="assets/ekran-goruntuleri/acik/03-firma-dosyasi.png" alt="Firma dosyası ekranı" width="88%">
+
+<h2>↓</h2>
+
+<h3>4 · Gerekçe paneli</h3>
+
+Puanın **neden o puan** olduğu. Sekiz kontrolün tamamı, her birinin TreeSHAP
+katkısı, ağırlığı ve durumu. `E7`'ye dikkat: **çalıştırılamadı** — ve sessizce
+temiz sayılmadığı kutunun içinde yazıyor.
+
+<img src="assets/ekran-goruntuleri/acik/10-gerekce-paneli.png" alt="Gerekçe paneli" width="88%">
+
+<h2>↓</h2>
+
+<h3>5 · Veri kalitesi</h3>
+
+Platformun ne görüp ne göremediği. Hangi alanlar eksik, hangi kontroller bu
+yüzden çalışamıyor, dayanak kapsamı ne durumda. Denetçi, puana ne kadar
+güvenebileceğini buradan tartar.
+
+<img src="assets/ekran-goruntuleri/acik/05-veri-kalitesi.png" alt="Veri kalitesi ekranı" width="88%">
+
+<h2>↓</h2>
+
+<h3>6 · Karar ve denetim izi</h3>
+
+Denetçi kararını yazar — incele, açıklandı-uygun, veri talep et, ertele.
+Karar **eklenir, hiçbir zaman düzenlenmez**: her olay bir öncekinin SHA-256
+özetini taşır ve `/api/audit/verify` zincirin tamamını yeniden hesaplar.
+
+<img src="assets/ekran-goruntuleri/acik/08-denetim-izi.png" alt="Denetim izi ekranı" width="88%">
 
 </div>
 
 <details>
-<summary><b>Diğer altı ekran</b></summary>
+<summary><b>Diğer üç ekran</b></summary>
 
 <br>
 
-| Ekran | Görüntü |
-| --- | --- |
-| **Denetim kuyruğu** — filtreli, sayfalı, sıralı | <img src="assets/ekran-goruntuleri/02-kuyruk.png" width="420"> |
-| **Firma geçmişi** — her dönem, o gün beklenen aralıkla | <img src="assets/ekran-goruntuleri/04-firma-gecmisi.png" width="420"> |
-| **Veri kalitesi** — platformun ne görüp ne göremediği | <img src="assets/ekran-goruntuleri/05-veri-kalitesi.png" width="420"> |
-| **COP31 etki paneli** — tonaj, katkı payı, emisyon | <img src="assets/ekran-goruntuleri/06-etki-paneli.png" width="420"> |
-| **Pilot** — yapılandırılmış pilot senaryosunun çalıştırılması | <img src="assets/ekran-goruntuleri/07-pilot.png" width="420"> |
-| **Denetim izi** — hash-chain karar kaydı ve doğrulama | <img src="assets/ekran-goruntuleri/08-denetim-izi.png" width="420"> |
-| **Şeffaflık** — kapsam, ilkeler, politika, motorlar | <img src="assets/ekran-goruntuleri/09-seffaflik.png" width="420"> |
+<div align="center">
+
+**Firma geçmişi** — her dönem, o gün beklenen aralığın içinde
+
+<img src="assets/ekran-goruntuleri/acik/04-firma-gecmisi.png" width="88%">
+
+<br><br>
+
+**COP31 etki paneli** — doğrulanabilir tonaj, katkı payı, emisyon ve senaryolar
+
+<img src="assets/ekran-goruntuleri/acik/06-etki-paneli.png" width="88%">
+
+<br><br>
+
+**Şeffaflık** — kapsam, ilkeler, aktif politika ve devredeki motor
+
+<img src="assets/ekran-goruntuleri/acik/09-seffaflik.png" width="88%">
+
+</div>
 
 </details>
+
+<details>
+<summary><b>Koyu tema</b></summary>
+
+<br>
+
+<div align="center">
+
+<img src="assets/ekran-goruntuleri/koyu/01-genel-gorunum.png" width="88%">
+
+<br><br>
+
+<img src="assets/ekran-goruntuleri/koyu/10-gerekce-paneli.png" width="88%">
+
+<br><br>
+
+<img src="assets/ekran-goruntuleri/koyu/02-kuyruk.png" width="88%">
+
+</div>
+
+</details>
+
+---
+
+## Açıklanabilirlik: her puan neden o puan
+
+Bir denetçiyi yanlış kapıya gönderen şey yanlış puan değildir; **gerekçesi
+okunamayan** puandır. Bu yüzden platformun iki kuralı var.
+
+### Her skor TreeSHAP ile açıklanır
+
+Katkılar, **gerçekten çalışan model üzerinde** TreeSHAP ile hesaplanır, sinyal
+düzeyine toplanır ve şablonlu cümlelere dökülür. Panel her kontrolün puana kaç
+puan kattığını yüzdesiyle gösterir.
+
+Gerekçe metni **şablonludur; serbest üretimli dil modeli kullanılmaz.** Aynı
+girdi aynı cümleyi üretir ve her cümle arkasındaki sayıyı taşır:
+
+> *"Gümrük satırları 2.125 t ambalaj ima ediyor (aralığın %67'si kapsandı),
+> beyan 1.328 t — aralığın %38 altında."*
+
+Bu, bir denetçinin dosyayı açtığında **doğrulayabileceği** bir cümledir.
+Halüsinasyon riski yoktur, çünkü üreten bir dil modeli yoktur.
+
+### Eksik veri doldurulmaz — işaretlenir ve denetçiye bildirilir
+
+Hesaplanamayan bir özellik **eksik bırakılır**. Nötr bir değere doldurulup
+gözlenmiş gibi puanlanmaz. Ona dayanan kontroller üç durumdan üçüncüsünü alır:
+
+| Durum | Puana etkisi | Denetçiye ne denir |
+| --- | --- | --- |
+| 🔴 **Tetiklendi** | Kendi ağırlığıyla girer | Eşik neden aşıldı, hangi sayılarla |
+| 🟢 **Sessiz** | Sıfır katkıyla girer | Kontrol çalıştı, eşik aşılmadı |
+| ⚪ **Çalıştırılamadı** | **Ağırlığı paydadan düşer — sıfır sayılmaz** | Hangi girdi eksik, bu yüzden ne bilinemiyor |
+
+Bunun yerine **dayanak kapsamı** düşer ve bu oran puanın hemen yanında yazılır.
+Panel, çalıştırılamayan kontrolü kelimelerle anlatır — örneğin:
+
+> *"Bu dönemi kapsayan bir saha kaydı yok. Bu kontrolün çalıştırılamadığı
+> dosyalar daha sık doğrulanmış eksik beyan taşıdığı için, kontrolün yokluğu
+> önceliği düşürmedi — yükseltti."*
+>
+> ⚪ **Değerlendirilmedi ve temiz sayılmadı.**
+
+**Eksik veri aklanma değildir.** Çalıştırılamayan bir kontrol puan taşımaz, ama
+katkı taşıyabilir: model, kontrol edilemeyen dosyaların daha sık eksik beyan
+taşıdığını veriden öğrenir. Denetçi bunu sessiz bir boşluk olarak değil, yazılı
+bir uyarı olarak görür.
 
 ---
 
@@ -355,8 +483,13 @@ zerowaste/
 │   └── reports/                model kartı, metrikler, 12 değerlendirme tablosu
 │
 ├── docs/                     ALGORITMA-AKISI (md + pdf) · MIMARI · RAPOR-ANALIZI
-├── assets/                   logo, ikon, banner, akış diyagramı, ekran görüntüleri
-│   └── src/                    banner ve ikonun HTML kaynağı (yeniden üretmek için)
+│   └── pdf/                    PDF'in HTML kaynağı (tek kaynak, iki çıktı)
+│
+├── assets/                   logo, ikon, banner, akış diyagramı
+│   ├── ekran-goruntuleri/      acik/ ve koyu/ — dokuz ekran, iki tema
+│   └── src/                    banner ve ikonun HTML kaynağı
+│
+├── .github/                  CI iş akışı, konu ve PR şablonları, dependabot
 └── scripts/                  Windows başlatıcı
 ```
 
@@ -463,12 +596,18 @@ Tam model kartı ve 12 değerlendirme tablosu:
 | [`ml/README.md`](ml/README.md) | Veri altyapısı: üretim, doğrulama, kaynak kütüğü |
 | [`ml/reports/MODEL_KARTI.md`](ml/reports/MODEL_KARTI.md) | Model kartı: sınırlılıklar, bölümleme, metrikler |
 | [`backend/models/README.md`](backend/models/README.md) | Artefakt listesi ve yeniden üretme |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Katkı rehberi ve değiştirilemeyecek dört kural |
+| [`SECURITY.md`](SECURITY.md) | Açık bildirimi ve prototipin bilinen sınırları |
 
 ---
 
 ## Takım ve lisans
 
 **Takım KinetiX** — TEKNOFEST 2026, Sıfır Atık ve Döngüsel Ekonomi kategorisi.
+
+Katkı vermek isteyenler için [`CONTRIBUTING.md`](CONTRIBUTING.md); güvenlik
+açığı bildirimi için [`SECURITY.md`](SECURITY.md). Atıf bilgisi
+[`CITATION.cff`](CITATION.cff) içindedir.
 
 Bu depo [MIT Lisansı](LICENSE) ile dağıtılmaktadır. `ml/data/reference/` altındaki
 açık veriler kendi kaynaklarının koşullarına tabidir; her satırın kaynağı ve

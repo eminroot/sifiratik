@@ -1,0 +1,33 @@
+name: Öneri
+description: Yeni bir yetenek veya iyileştirme
+labels: ["öneri"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Hangi problemi çözüyor
+      description: Denetçinin bugün yapamadığı ne var?
+    validations:
+      required: true
+
+  - type: textarea
+    id: oneri
+    attributes:
+      label: Önerilen çözüm
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatif
+    attributes:
+      label: Değerlendirilen alternatifler
+
+  - type: checkboxes
+    id: degismezler
+    attributes:
+      label: Değişmezler
+      description: |
+        Öneri, `CONTRIBUTING.md` içindeki dört kuraldan birini bozuyor mu?
+      options:
+        - label: Bu öneri dört değişmezin hiçbirini bozmuyor
+        - label: Bozuyor — gerekçesini yukarıda açıkladım

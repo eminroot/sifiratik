@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+title: "GÜS-DEDEKTİV — GEKAP beyanları için açıklanabilir denetim önceliklendirme"
+message: "Bu yazılımı kullanırsanız lütfen aşağıdaki gibi atıf yapın."
+type: software
+authors:
+  - name: "Takım KinetiX"
+repository-code: "https://github.com/eminroot/zerowaste"
+abstract: >-
+  GEKAP beyanlarındaki olası uyumsuzlukları farklı kamu verileriyle
+  karşılaştırarak denetlenmesi gereken firmaları önceliklendiren, açıklanabilir
+  bir karar-destek sistemi. İki LightGBM quantile başlığı beklenen beyan
+  aralığını üretir, Mondrian konformal kalibrasyonla belirsizlik verilir, sekiz
+  ayrı kanıt sinyali 0-100 inceleme önceliğine çevrilir ve her sonuç TreeSHAP
+  katkısıyla açıklanır. Nihai karar her zaman yetkili insan denetçiye aittir.
+keywords:
+  - GEKAP
+  - sıfır atık
+  - döngüsel ekonomi
+  - denetim önceliklendirme
+  - açıklanabilir yapay zeka
+  - konformal tahmin
+  - TEKNOFEST
+license: MIT
+version: "1.0.0"
+date-released: "2026-09-11"
