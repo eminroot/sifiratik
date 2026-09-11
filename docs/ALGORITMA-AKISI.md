@@ -61,20 +61,23 @@ aralığı, gerekçeyi ve karar kimliğini birlikte üretir.
 flowchart TD
     A["<b>1 · Bağlam</b><br/>ScoringContext — firma · beyan geçmişi<br/>emsal · saha · GTİP · veri kalitesi"]
     B["<b>2 · Özellik satırı</b><br/>manifest.feature_order bağlayıcı<br/>hesaplanamayan özellik eksik bırakılır"]
-    C["<b>3 · Beklenen aralık</b><br/>iki quantile başlığı → harman (w = 0,95)<br/>Mondrian CQR ile kalibrasyon"]
+    C["<b>3 · Beklenen aralık</b><br/>iki quantile başlığı → harman, w = 0,95<br/>Mondrian CQR ile kalibrasyon"]
     D{"<b>4 · Sekiz kontrol</b><br/>E1 … E8"}
-    E["<b>tetiklendi / sessiz</b><br/>0–100 sinyal puanı"]
-    F["<b>çalıştırılamadı</b><br/>ağırlık paydadan düşer<br/>sıfır sayılmaz"]
+    E["<b>girdi var → tetiklendi / sessiz</b><br/>0–100 sinyal puanı<br/>kendi ağırlığıyla puana girer"]
+    F["<b>girdi yok → çalıştırılamadı</b><br/>ağırlık paydadan düşer, sıfır sayılmaz<br/>dayanak kapsamı düşer, denetçiye yazılır"]
     G["<b>5 · Birleştirme</b><br/>ağırlıklı ortalama ⊕ en güçlü bulgu<br/>puan = 0,65 · ortalama + 0,35 · en güçlü"]
     H["<b>6 · Gerekçe</b><br/>TreeSHAP katkısı → şablonlu cümle"]
     I["<b>7 · Karar kaydı</b><br/>decision_id + SHA-256 hash-chain"]
 
-    A --> B --> C --> D
-    D -->|"girdi var"| E
-    D -->|"girdi yok"| F
+    A --> B
+    B --> C
+    C --> D
+    D --> E
+    D --> F
     E --> G
-    F -->|"dayanak kapsamı düşer"| G
-    G --> H --> I
+    F --> G
+    G --> H
+    H --> I
 ```
 
 ### 2.1 · Bağlam toplanır
