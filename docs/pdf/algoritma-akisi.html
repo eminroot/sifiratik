@@ -8,13 +8,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,100..900&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300..600&display=swap" rel="stylesheet">
 <style>
-/* --- ?only=flow: README görseli için yalnız akış diyagramı ---------------- */
-html[data-only='flow'] body { background: var(--bg); }
-html[data-only='flow'] .page { width: auto; padding: 34px 38px 30px; }
-html[data-only='flow'] section:not(.flow-section) { display: none; }
-html[data-only='flow'] .flow-section > h2 { margin-top: 0; }
-html[data-only='flow'] .flow-section > p.lead { display: none; }
-
 /* ==========================================================================
    GÜS-DEDEKTİV — Algoritma akışı.
 
@@ -840,7 +833,6 @@ GET /api/audit/verify       → her bağ yeniden hesaplanır</div>
   // Koyu tema, README görseli için; PDF varsayılan açık temada basılır.
   var params = new URLSearchParams(location.search);
   if (params.get('theme') === 'dark') document.documentElement.dataset.theme = 'dark';
-  if (params.get('only')) document.documentElement.dataset.only = params.get('only');
 </script>
 </body>
 </html>

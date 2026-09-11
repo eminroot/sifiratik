@@ -22,40 +22,97 @@ aşağıdaki bir katman yukarıdakinin iç durumunu görmez. Bu ayrım değerlen
 dürüst tutan şeydir: özellik üretimi, anomali üretimini *ithal edemez* ve bu
 kural veri doğrulayıcıda AST analiziyle otomatik denetlenir.
 
-<div align="center">
-<img src="../assets/algoritma-akisi.png" alt="GÜS-DEDEKTİV uçtan uca algoritma akışı" width="86%">
-</div>
-
-<details>
-<summary>Diyagramın Mermaid kaynağı</summary>
-
-```mermaid
-flowchart TD
-    K0["<b>K0 · Veri kaynakları</b><br/>GİB GEKAP beyannamesi · Ambalaj Bilgi Sistemi · TÜİK<br/>Ticaret Bakanlığı GTİP · Sıfır Atık Bilgi Sistemi<br/>önceki denetim kayıtları · <i>MVP'de: sentetik panel</i>"]
-    K1["<b>K1 · Alım ve doğrulama</b><br/>şema doğrulama · VKN→firm_token · birim normalizasyonu<br/>veri kalite puanı · eksik alan tespiti · veri sürümü damgası"]
-    K2["<b>K2 · Özellik üretimi</b><br/>gecikmeli değerler · emsal istatistikleri (t−1)<br/>ürün ağacı beklentisi · dış ticaret dengesi · mevsimsellik<br/><i>ileriye bakış yasağı burada zorunlu kılınır</i>"]
-
-    HIST["<b>Tarihsel başlık</b><br/>LightGBM quantile q05/q50/q95<br/>firmanın kendi geçmişinden"]
-    PEER["<b>Emsal başlık</b><br/>LightGBM quantile q05/q50/q95<br/><i>kendi geçmişi girmez</i>"]
-    BLEND["<b>Harman + Mondrian CQR</b><br/>log uzayında ağırlıklı ortalama, w = 0,95<br/>kalibrasyon: (sektör, ölçek, veri güveni)"]
-
-    K4["<b>K4 · Sekiz kanıt sinyali</b><br/>E1…E8 → tetiklendi / sessiz / çalıştırılamadı<br/>LightGBM tohum topluluğu → izotonik kalibrasyon<br/><b>0–100 öncelik puanı</b> + dayanak kapsamı"]
-    K5["<b>K5 · Açıklama ve karar kaydı</b><br/>TreeSHAP katkısı → şablonlu gerekçe<br/>decision_id · SHA-256 hash-chain"]
-    K6["<b>K6 · API ve denetçi arayüzü</b><br/>kuyruk · dosya · gerekçe · veri güveni<br/>karar · denetim izi · COP31 etki paneli"]
-
-    K0 -->|toplu yükleme| K1
-    K1 -->|sürümlenmiş panel| K2
-    K2 --> HIST
-    K2 --> PEER
-    HIST --> BLEND
-    PEER --> BLEND
-    BLEND -->|"kalibre beklenen aralık [q05, q95]"| K4
-    K2 -->|sinyal özellikleri| K4
-    K4 -->|puan + sinyal durumları| K5
-    K5 -->|REST / JSON| K6
 ```
-
-</details>
+┌────────────────────────────────────────────────────────────────────────┐
+│ K0 · VERİ KAYNAKLARI                                kurum içinde kalır │
+├────────────────────────────────────────────────────────────────────────┤
+│ GİB GEKAP beyannamesi · Ambalaj Bilgi Sistemi · TÜİK serileri          │
+│ Ticaret Bakanlığı GTİP · Sıfır Atık Bilgi Sistemi                      │
+│ önceki denetim kayıtları · MVP'de: sentetik panel                      │
+│                                                                        │
+│ Sistem veri TOPLAMAZ. Kurumun kendi verisini kendi                     │
+│ ortamında değerlendirir; dışarıya kayıt göndermez.                     │
+└────────────────────────────────────┬───────────────────────────────────┘
+                                     │  toplu yükleme · kurum içi API
+                                     ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ K1 · ALIM ve DOĞRULAMA                                       ingestion │
+├────────────────────────────────────────────────────────────────────────┤
+│ şema doğrulama · VKN → firm_token · birim normalizasyonu               │
+│ veri kalite puanı · eksik alan tespiti · veri sürümü damgası           │
+│                                                                        │
+│ Çıktı: sürümlenmiş panel. Her satırda data_source_type,                │
+│ generation_method ve source_ids zorunlu.                               │
+└────────────────────────────────────┬───────────────────────────────────┘
+                                     │  firma-çeyrek paneli
+                                     ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ K2 · ÖZELLİK ÜRETİMİ                                     feature store │
+├────────────────────────────────────────────────────────────────────────┤
+│ gecikmeli beyan değerleri · emsal istatistikleri (t−1)                 │
+│ ürün ağacından beklenti · dış ticaret dengesi · mevsimsellik           │
+│ kullanılabilirlik bayrakları f_avail_sN                                │
+│                                                                        │
+│ İLERİYE BAKIŞ YASAĞI burada zorunlu kılınır: t anındaki bir            │
+│ özellik yalnızca t'ye kadar bilinen veriden hesaplanır.                │
+└────────────────────────────────────┬───────────────────────────────────┘
+                                     │  özellik matrisi
+                                     ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ K3 · BEKLENTİ MODELİ                                 LightGBM quantile │
+├────────────────────────────────────────────────────────────────────────┤
+│ ┌─────────────────────────┐   ┌─────────────────────────┐              │
+│ │ Tarihsel başlık         │   │ Emsal başlık            │              │
+│ │ q05 / q50 / q95         │   │ q05 / q50 / q95         │              │
+│ │ firmanın kendi geçmişi  │   │ KENDİ GEÇMİŞİ GİRMEZ    │              │
+│ └────────────┬────────────┘   └────────────┬────────────┘              │
+│              └───────────────┬──────────────┘                          │
+│                              ▼                                         │
+│         harman: log uzayında ağırlıklı ortalama, w = 0,95              │
+│         Mondrian CQR: (sektör, ölçek, veri güveni)                     │
+│         grup incelirse → sırayla daha genişine, sonunda global         │
+│                                                                        │
+│ Çıktı: kalibre edilmiş aralık [q05, q95]. Aralık, zayıf                │
+│ kalibrasyonlu gruplarda GENİŞLER.                                      │
+└────────────────────────────────────┬───────────────────────────────────┘
+                                     │  beklenen aralık + beyan
+                                     ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ K4 · SEKİZ KANIT SİNYALİ ve BİRLEŞTİRME                        E1 … E8 │
+├────────────────────────────────────────────────────────────────────────┤
+│ ham istatistik → eğitim penceresi yüzdelik rampası → 0–100             │
+│ LightGBM tohum topluluğu (5 üye), log-odds ortalaması                  │
+│ izotonik kalibrasyon → referans yüzdelik → 0–100                       │
+│ çalıştırılamayan sinyalin ağırlığı PAYDADAN DÜŞER                      │
+│                                                                        │
+│ Çıktı: öncelik puanı, dayanak kapsamı ve her sinyalin durumu:          │
+│ tetiklendi · sessiz · çalıştırılamadı                                  │
+└────────────────────────────────────┬───────────────────────────────────┘
+                                     │  puan + sinyal durumları
+                                     ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ K5 · AÇIKLAMA ve KARAR KAYDI                     TreeSHAP + hash-chain │
+├────────────────────────────────────────────────────────────────────────┤
+│ TreeSHAP katkısı → sinyal düzeyi → şablonlu gerekçe cümlesi            │
+│ decision_id · model_version · data_version                             │
+│ SHA-256 hash-chain denetim kaydı · itiraz izi                          │
+│                                                                        │
+│ Gerekçe metni ŞABLONLUDUR; serbest üretimli dil modeli                 │
+│ kullanılmaz. Aynı girdi aynı cümleyi üretir.                           │
+└────────────────────────────────────┬───────────────────────────────────┘
+                                     │  REST / JSON
+                                     ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ K6 · API ve DENETÇİ ARAYÜZÜ                            FastAPI · React │
+├────────────────────────────────────────────────────────────────────────┤
+│ kuyruk · dosya detayı · gerekçe paneli · veri güven ekranı             │
+│ denetçi kararı · denetim izi · COP31 etki paneli · şeffaflık           │
+│                                                                        │
+│ Motor değişse bile sözleşme değişmez: kural motoru ve model            │
+│ motoru aynı ScoreOutcome şeklini döndürür; yanıt hangisinin            │
+│ ürettiğini söyler.                                                     │
+└────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -64,37 +121,94 @@ flowchart TD
 Aşağıdaki yedi adım tek bir `(firma, dönem)` kaydı için çalışır ve sonuçta puanı,
 aralığı, gerekçeyi ve karar kimliğini birlikte üretir.
 
-<div align="center">
-<img src="../assets/puanlama-akisi.png" alt="Bir firma-çeyrek kaydının puanlanma akışı" width="86%">
-</div>
-
-<details>
-<summary>Diyagramın Mermaid kaynağı</summary>
-
-```mermaid
-flowchart TD
-    A["<b>1 · Bağlam</b><br/>ScoringContext — firma · beyan geçmişi<br/>emsal · saha · GTİP · veri kalitesi"]
-    B["<b>2 · Özellik satırı</b><br/>manifest.feature_order bağlayıcı<br/>hesaplanamayan özellik eksik bırakılır"]
-    C["<b>3 · Beklenen aralık</b><br/>iki quantile başlığı → harman, w = 0,95<br/>Mondrian CQR ile kalibrasyon"]
-    D{"<b>4 · Sekiz kontrol</b><br/>E1 … E8"}
-    E["<b>girdi var → tetiklendi / sessiz</b><br/>0–100 sinyal puanı<br/>kendi ağırlığıyla puana girer"]
-    F["<b>girdi yok → çalıştırılamadı</b><br/>ağırlık paydadan düşer, sıfır sayılmaz<br/>dayanak kapsamı düşer, denetçiye yazılır"]
-    G["<b>5 · Birleştirme</b><br/>ağırlıklı ortalama ⊕ en güçlü bulgu<br/>puan = 0,65 · ortalama + 0,35 · en güçlü"]
-    H["<b>6 · Gerekçe</b><br/>TreeSHAP katkısı → şablonlu cümle"]
-    I["<b>7 · Karar kaydı</b><br/>decision_id + SHA-256 hash-chain"]
-
-    A --> B
-    B --> C
-    C --> D
-    D --> E
-    D --> F
-    E --> G
-    F --> G
-    G --> H
-    H --> I
 ```
-
-</details>
+┌────────────────────────────────────────────────────────────────────────┐
+│ 1 · BAĞLAM TOPLANIR                                                    │
+├────────────────────────────────────────────────────────────────────────┤
+│ Motor veritabanını hiç görmez. Kendisine ScoringContext verilir:       │
+│ firma · beyan geçmişi · emsal kohortu · saha gözlemleri                │
+│ GTİP satırları · veri kalitesi — düz veri sınıfları olarak.            │
+└────────────────────────────────────┬───────────────────────────────────┘
+                                     │
+                                     ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ 2 · ÖZELLİK SATIRI KURULUR                                             │
+├────────────────────────────────────────────────────────────────────────┤
+│ manifest.feature_order BAĞLAYICIDIR; çalışma zamanı matrisi            │
+│ ondan yeniden kurar, uyuşmazsa yüklenmeyi reddeder.                    │
+│                                                                        │
+│ Hesaplanamayan bir özellik EKSİK BIRAKILIR — nötr bir değere           │
+│ doldurulup gözlenmiş gibi puanlanmaz.                                  │
+└────────────────────────────────────┬───────────────────────────────────┘
+                                     │
+                                     ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ 3 · BEKLENEN ARALIK ÜRETİLİR                                           │
+├────────────────────────────────────────────────────────────────────────┤
+│ İki LightGBM quantile başlığı: biri firmanın kendi geçmişinden,        │
+│ biri emsalinden ve üretiminden (kendi geçmişi bu başlığa girmez).      │
+│                                                                        │
+│ ŷ      = exp( w·log1p(ŷ_hist) + (1−w)·log1p(ŷ_peer) ) − 1              │
+│ [a, b] = ŷ ± konformal_genişlik( sektör, ölçek, veri_güveni )          │
+│ w = 0,95                                                               │
+└────────────────────────────────────┬───────────────────────────────────┘
+                                     │
+                                     ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ 4 · SEKİZ KONTROL ÇALIŞTIRILIR                                 E1 … E8 │
+├────────────────────────────────────────────────────────────────────────┤
+│ Her kontrol için sorulan tek soru: gereken girdi var mı?               │
+└─────────────────┬───────────────────────────────────┬──────────────────┘
+                  │ girdi var                         │ girdi yok
+                  ▼                                   ▼
+  ┌────────────────────────────────┐  ┌────────────────────────────────┐
+  │ TETİKLENDİ / SESSİZ            │  │ ÇALIŞTIRILAMADI                │
+  ├────────────────────────────────┤  ├────────────────────────────────┤
+  │ 0–100 sinyal puanı üretilir.   │  │ Ağırlığı PAYDADAN DÜŞER —      │
+  │ Kontrol, puana KENDİ           │  │ sıfır sayılmaz. Dayanak        │
+  │ AĞIRLIĞIYLA girer. Sessiz bir  │  │ kapsamı düşer ve durum,        │
+  │ kontrol sıfır katkıyla girer.  │  │ nedeniyle birlikte DENETÇİYE   │
+  │                                │  │ YAZIYLA bildirilir.            │
+  └────────────────┬───────────────┘  └────────────────┬───────────────┘
+                   │                                   │
+                   └─────────────────┬─────────────────┘
+                                     ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ 5 · PUAN BİRLEŞTİRİLİR                                                 │
+├────────────────────────────────────────────────────────────────────────┤
+│ Çalışabilen kontrollerin ağırlıklı ortalaması, EN GÜÇLÜ TEK            │
+│ BULGUYLA sabit bir oranda harmanlanır.                                 │
+│                                                                        │
+│ ağırlıklı_ortalama = Σ( aᵢ·wᵢ·sᵢ ) / Σ( aᵢ·wᵢ )                        │
+│ puan = (1 − p) · ağırlıklı_ortalama + p · en_güçlü ,  p = 0,35         │
+│                                                                        │
+│ aᵢ = 1 kontrol çalıştıysa, 0 çalıştırılamadıysa                        │
+└────────────────────────────────────┬───────────────────────────────────┘
+                                     │
+                                     ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ 6 · GEREKÇE YAZILIR                                                    │
+├────────────────────────────────────────────────────────────────────────┤
+│ TreeSHAP katkısı, GERÇEKTEN ÇALIŞAN MODEL üzerinde hesaplanır,         │
+│ sinyal düzeyine toplanır ve şablonlu cümlelere dökülür.                │
+│                                                                        │
+│ Serbest üretimli dil modeli kullanılmaz: aynı girdi aynı               │
+│ cümleyi üretir ve her cümle arkasındaki sayıyı taşır.                  │
+└────────────────────────────────────┬───────────────────────────────────┘
+                                     │
+                                     ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ 7 · KARAR KAYDI ZİNCİRE EKLENİR                                        │
+├────────────────────────────────────────────────────────────────────────┤
+│ Denetçinin kararı eklenir, hiçbir zaman düzenlenmez.                   │
+│                                                                        │
+│ digestₙ = SHA256( digestₙ₋₁ ‖ firma ‖ denetçi ‖ işlem ‖                │
+│                   önceki_durum ‖ yeni_durum ‖ not ‖ zaman )            │
+│                                                                        │
+│ /api/audit/verify zincirin uyuşmayı bıraktığı İLK SIRA                 │
+│ NUMARASINI bildirir.                                                   │
+└────────────────────────────────────────────────────────────────────────┘
+```
 
 ### 2.1 · Bağlam toplanır
 
@@ -324,8 +438,7 @@ Tam model kartı: [`ml/reports/MODEL_KARTI.md`](../ml/reports/MODEL_KARTI.md)
 
 ## PDF'i yeniden üretmek
 
-PDF, `docs/pdf/algoritma-akisi.html` dosyasından basılır. Tek kaynak, iki çıktı:
-baskı için açık tema, README görseli için `?theme=dark&only=flow`.
+PDF, `docs/pdf/algoritma-akisi.html` dosyasından basılır.
 
 ```bash
 chrome --headless=new --no-pdf-header-footer --virtual-time-budget=20000 \
