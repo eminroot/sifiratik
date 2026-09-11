@@ -397,7 +397,9 @@ kendisiyle uyuşmayı bıraktığı **ilk sıra numarasını** bildirir.
 ## Testler
 
 ```bash
-cd backend && python -m pytest
+cd backend
+pip install -r requirements-dev.txt
+python -m pytest
 ```
 
 Kapsam: motorun değişmezleri (eksik girdi → *çalıştırılamadı*, aralığın veri

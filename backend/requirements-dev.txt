@@ -1,0 +1,4 @@
+# Geliştirme ve test bağımlılıkları. Servisi çalıştırmak için gerekmez.
+-r requirements.txt
+
+pytest>=8.0
