@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app import i18n
 from app.database.database import get_db
-from app.security import Principal, require_writer
+from app.security import Principal, limit_assistant
 from app.routers.deps import resolve_period
 from app.schemas.assistant import AssistantStatus, ChatReply, ChatRequest
 from app.services import assistant_service
@@ -37,7 +37,7 @@ async def assistant_chat(
     period: str = Depends(resolve_period),
     lang: str = Depends(i18n.resolve_lang),
     db: Session = Depends(get_db),
-    principal: Principal = Depends(require_writer),
+    principal: Principal = Depends(limit_assistant),
 ) -> ChatReply:
     """One turn against Gemini, grounded in the current period's figures."""
     reply = await assistant_service.ask(

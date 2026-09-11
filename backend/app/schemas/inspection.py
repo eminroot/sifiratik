@@ -8,12 +8,16 @@ from app.schemas.common import ApiModel
 
 
 class ReviewRequest(BaseModel):
-    status: str = Field(description="One of the workflow statuses")
+    status: str = Field(description="One of the workflow statuses", max_length=28)
+    # Recorded as given only while no API key is configured. With keys, the
+    # decision is signed by the key's owner and this field is ignored.
     auditor_id: str = Field(default="aydin.m", max_length=60)
     notes: str | None = Field(default=None, max_length=2000)
     confirmed_additional_tonnage: float | None = Field(
         default=None,
         ge=0,
+        le=1_000_000,
+        allow_inf_nan=False,
         description="Recorded when an inspection closes with a corrected amount",
     )
 
@@ -58,9 +62,3 @@ class ChainStatus(BaseModel):
     # but a cut at the end would not be visible. Said out loud rather than
     # reported as a clean chain.
     anchored: bool = True
-
-
-class QueueStats(BaseModel):
-    total: int
-    by_level: dict[str, int]
-    by_status: dict[str, int]

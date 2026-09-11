@@ -32,6 +32,16 @@ def record_review(
             status_code=422,
             detail=f"Unknown status. Expected one of {', '.join(REVIEW_STATUSES)}",
         )
+    # A corrected tonnage is what a completed inspection established. On any
+    # other decision it would enter the confirmed figures without a visit.
+    if (
+        payload.confirmed_additional_tonnage is not None
+        and payload.status != "INSPECTION_COMPLETED"
+    ):
+        raise HTTPException(
+            status_code=422,
+            detail="A confirmed tonnage can only be recorded with INSPECTION_COMPLETED.",
+        )
     return inspection_service.record_review(
         db,
         company,

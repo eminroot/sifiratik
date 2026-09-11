@@ -379,11 +379,15 @@ class MLScoringEngine(ScoringEngine):
         total = sum(s.weight for s in signals) or 1.0
         coverage = round(covered / total, 4)
 
+        # Banded on the figure that is stored and shown, not on the raw one, so
+        # a stored 25.00 can never carry the band of a raw 24.998.
+        priority = round(prediction.priority_score, 2)
+
         return ScoreOutcome(
             company_id=context.company.id,
             period=context.period,
-            priority_score=round(prediction.priority_score, 2),
-            priority_level=self.policy.band_for(prediction.priority_score),
+            priority_score=priority,
+            priority_level=self.policy.band_for(priority),
             declared_tonnage=declared,
             expected_lower_bound=round(lower, 1),
             expected_median=round(median, 1),

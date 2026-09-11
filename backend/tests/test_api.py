@@ -153,6 +153,15 @@ def test_an_engine_that_cannot_serve_falls_back_to_the_rules(client, monkeypatch
     assert body["companies_scored"] > 0
 
 
+def test_two_rescoring_runs_at_once_both_succeed(client):
+    """Two people pressing "rescore" together both get their answer."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        responses = list(pool.map(lambda _: client.post("/api/scoring/run", json={}), range(2)))
+    assert [r.status_code for r in responses] == [200, 200]
+
+
 def test_unknown_engine_is_rejected(client):
     response = client.post("/api/scoring/run", json={"engine": "guesswork"})
     assert response.status_code == 422
@@ -217,3 +226,126 @@ def test_transparency_states_the_limits(client):
 
 def test_unknown_period_is_a_404(client):
     assert client.get("/api/dashboard?period=1999Q9").status_code == 404
+
+
+# --------------------------------------------------------------------------
+# A decision is about one filing
+# --------------------------------------------------------------------------
+def test_a_decision_on_an_earlier_filing_does_not_close_this_one(client, db):
+    """120 of 131 high-priority files once showed as closed on the strength
+    of an inspection of a different quarter. This quarter's filing has not been
+    looked at until someone looks at it."""
+    from app.models import AuditReview
+    from app.services.scoring_service import latest_period
+
+    current = latest_period(db)
+    # A company other tests have not already decided on for this period.
+    decided_now = select(AuditReview.company_id).where(AuditReview.period == current)
+    closed_before = (
+        db.execute(
+            select(AuditReview)
+            .where(
+                AuditReview.period < current,
+                AuditReview.status.in_(("NO_ACTION_REQUIRED", "INSPECTION_COMPLETED")),
+                AuditReview.company_id.not_in(decided_now),
+            )
+            .order_by(AuditReview.id.desc())
+        )
+        .scalars()
+        .first()
+    )
+    assert closed_before is not None, "the seed is meant to include closed inspections"
+    company_id = closed_before.company_id
+
+    now = client.get(f"/api/companies/{company_id}?period={current}").json()
+    then = client.get(f"/api/companies/{company_id}?period={closed_before.period}").json()
+    assert now["review_status"] == "AWAITING_REVIEW"
+    assert then["review_status"] == closed_before.status
+
+
+def test_every_standing_in_the_queue_was_decided_for_that_period(client, db):
+    from app.models import AuditReview
+    from app.services.scoring_service import latest_period
+
+    current = latest_period(db)
+    decided = {
+        company_id
+        for (company_id,) in db.execute(
+            select(AuditReview.company_id).where(AuditReview.period == current)
+        )
+    }
+    items = client.get(f"/api/inspection-queue?period={current}&limit=200").json()["items"]
+    for item in items:
+        if item["review_status"] != "AWAITING_REVIEW":
+            assert item["company_id"] in decided
+
+
+def test_a_recorded_decision_carries_its_period(client, db):
+    from app.models import AuditReview
+    from app.services.scoring_service import all_periods
+
+    earlier = all_periods(db)[-3]
+    response = client.post(
+        f"/api/companies/11/review?period={earlier}",
+        json={"status": "INFORMATION_REQUESTED", "auditor_id": "demir.e"},
+    )
+    assert response.status_code == 201
+    row = db.execute(
+        select(AuditReview).where(AuditReview.decision_id == response.json()["decision_id"])
+    ).scalar_one()
+    assert row.period == earlier
+    assert client.get(f"/api/companies/11?period={earlier}").json()["review_status"] == "INFORMATION_REQUESTED"
+    assert verify_chain(db)["intact"] is True
+
+
+def test_a_confirmed_tonnage_needs_a_completed_inspection(client):
+    response = client.post(
+        "/api/companies/12/review",
+        json={"status": "UNDER_REVIEW", "confirmed_additional_tonnage": 40.0},
+    )
+    assert response.status_code == 422
+
+
+# --------------------------------------------------------------------------
+# Periods and sizes named in a request body
+# --------------------------------------------------------------------------
+def test_a_period_in_the_body_is_checked_like_one_in_the_query(client):
+    assert client.post("/api/scoring/run", json={"period": "2099Q1"}).status_code == 404
+    assert client.post("/api/scoring/run", json={"period": "anything"}).status_code == 422
+    assert client.post("/api/cop31/pilot/run", json={"period": "2099Q1"}).status_code == 404
+
+
+def test_an_unknown_sector_is_refused_not_a_server_error(client):
+    assert client.get("/api/cop31/pilot?sector=nonexistent").status_code == 422
+    assert client.post("/api/cop31/pilot/run", json={"sector": "nonexistent"}).status_code == 422
+    assert client.get("/api/cop31/pilot?sector=tekstil").status_code == 200
+
+
+def test_input_that_cannot_be_echoed_is_still_refused_cleanly(client):
+    """NaN, 1e309 and a lone surrogate used to turn a 422 into a 500, because
+    the default error response repeats the input and cannot encode it."""
+    headers = {"Content-Type": "application/json"}
+    for path, method, body in (
+        ("/api/scoring/policy", "PUT", '{"strongest_signal_share": NaN}'),
+        ("/api/companies/9/review", "POST", '{"status": "INSPECTION_COMPLETED", "confirmed_additional_tonnage": 1e309}'),
+        ("/api/companies/9/review", "POST", '{"notes": "\\ud800"}'),
+    ):
+        response = client.request(method, path, content=body, headers=headers)
+        assert response.status_code == 422, (path, body)
+        assert "input" not in response.json()["detail"][0]
+
+
+def test_a_policy_change_that_changes_nothing_is_not_recorded(client, db):
+    from app.models import AuditEvent
+
+    before = db.query(AuditEvent).count()
+    version = client.get("/api/scoring/policy").json()["version"]
+    assert client.put("/api/scoring/policy", json={}).json()["version"] == version
+    db.expire_all()
+    assert db.query(AuditEvent).count() == before
+
+
+def test_the_pilot_shortlist_is_bounded(client):
+    assert client.get("/api/cop31/pilot?shortlist_size=0").status_code == 422
+    assert client.get("/api/cop31/pilot?shortlist_size=1000000").status_code == 422
+    assert client.post("/api/cop31/pilot/run", json={"shortlist_size": -1}).status_code == 422

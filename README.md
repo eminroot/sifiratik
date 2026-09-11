@@ -63,7 +63,7 @@ Takım **KinetiX** · TEKNOFEST 2026 Sıfır Atık ve Döngüsel Ekonomi
 > **tamamen sentetiktir** — hiçbir gerçek firmayı temsil etmez. Buna karşılık
 > GEKAP tarifeleri, ambalaj atığı istatistikleri, geri kazanım oranları ve iklim
 > faktörleri **gerçek, kaynağı belirtilmiş açık verilerdir**
-> (bkz. [`ml/data/reference/source_registry.csv`](ml/data/reference/source_registry.csv)).
+> (bkz. [`backend/app/reference_data/source_registry.csv`](backend/app/reference_data/source_registry.csv)).
 
 ---
 
@@ -586,7 +586,7 @@ hangi motorun ürettiğini söyler**. Seçim `SCORING_ENGINE=ml|mock` ile yapıl
 
 ```bash
 curl http://localhost:8000/api/health
-# {"status":"ok","engine":"ml","model_version":"gus-ml-1.0.0"}
+# {"status":"ok","engine":"ml","model_version":"gus-ml-1.0.0","writes":"open"}
 ```
 
 ### Yazan uç noktaları kapatmak
@@ -601,7 +601,11 @@ API_KEYS=uzun-rastgele-bir-anahtar:aydin.m,baska-bir-anahtar:kaya.s
 ```
 
 `key:user` biçimi aynı zamanda **atfı düzeltir**: karara yazılan denetçi
-anahtarın sahibidir, istek gövdesinin istediği ad değil.
+anahtarın sahibidir, istek gövdesinin istediği ad değil. Biçimi bozuk bir girdi
+atlanmaz; API açılışta durur ve nedenini yazar — kapı açık kalıp kapalı
+görünmez. Anahtar ayarlandığında arayüzün sağ üstünde **API anahtarı** alanı
+belirir; anahtar yalnızca o sekmede tutulur. `/api/health` yanıtındaki
+`writes` alanı kapının durumunu söyler: `open` veya `api-key`.
 
 ### Uygulama içi asistan
 
@@ -618,10 +622,17 @@ tutarı, alan kapsamı, sekiz kontrol, kuyruğun başı ve varsa görüntülenen
 böylece cevap, sayfanın gösterdiği rakamların aynısını alıntılar. Brifing
 **referans veri** olarak geçirilir, talimat olarak değil.
 
+Asistan açıkken bu brifing **Google'a gönderilir**; vergi numaraları brifinge
+girmez. Her çağrı kurumun Gemini kotasından harcandığı için istemci başına
+dakikada 12 soru sınırı vardır (`ASSISTANT_REQUESTS_PER_MINUTE`). Kurum
+kurulumunda asistan kurum içi bir modelle değiştirilmelidir.
+
 ### PostgreSQL
 
 `DATABASE_URL` ayarlanır ve migrasyonlar uygulanır. Başka hiçbir şey değişmez;
-modellerdeki her sütun tipi iki arka uçta da vardır.
+modellerdeki her sütun tipi iki arka uçta da vardır. `test_migrations.py`,
+migrasyonların modellerle birebir aynı şemayı kurduğunu her CI koşusunda
+doğrular — modele eklenip migrasyonu yazılmayan bir sütun testi kırar.
 
 ```bash
 export DATABASE_URL=postgresql+psycopg://gus:gus@localhost:5432/gus_dedektiv
@@ -716,7 +727,9 @@ Kararlar eklenir, hiçbir zaman düzenlenmez. Her olay kendisinden önceki olay�
 SHA-256 özetini taşır — firma, denetçi, işlem, iki yandaki durum, not ve zaman
 damgası özetin içindedir. Geçmiş bir kararı değiştirmek veya silmek, o kaydın ve
 **ondan sonraki her bağın** özetini değiştirir; `GET /api/audit/verify` zincirin
-kendisiyle uyuşmayı bıraktığı **ilk sıra numarasını** bildirir.
+kendisiyle uyuşmayı bıraktığı **ilk sıra numarasını** bildirir. Kuyruğun durumu
+okuduğu karar tablosu da zincirle karşılaştırılır: elle değiştirilmiş, silinmiş
+veya zincirde karşılığı olmayan bir karar da kırık olarak raporlanır.
 
 ---
 

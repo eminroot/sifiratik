@@ -350,8 +350,10 @@ export default function Company() {
                         </tr>
                       </thead>
                       <tbody>
-                        {data.gtip_lines.map((line) => (
-                          <tr key={line.gtip_code}>
+                        {/* One row per product line; several lines can share a
+                            customs code, so the code alone is not a key. */}
+                        {data.gtip_lines.map((line, index) => (
+                          <tr key={`${line.gtip_code}-${index}`}>
                             <td className="lead mono">{line.gtip_code}</td>
                             <td>{line.description}</td>
                             <td className="num">{tonnes(line.quantity_tonnes)}</td>

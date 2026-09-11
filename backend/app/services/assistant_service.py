@@ -5,16 +5,23 @@ current period is assembled here as a plain-text briefing and pinned to the
 system instruction, so an answer about the data is grounded in the same
 figures the interface is showing rather than in the model's recollection.
 
-The briefing is data, not instruction. Company names and auditor notes come
-out of the database and are quoted into the prompt as reference material; the
-system instruction says so explicitly, so a note that happens to read like a
-command is not treated as one.
+The briefing is data, not instruction. Company names come out of the database
+and are quoted into the prompt as reference material; the system instruction
+says so explicitly, so a name that happens to read like a command is not
+treated as one.
+
+The briefing leaves the institution: it is sent to Google. Tax identifiers are
+therefore never put in it. The officer already sees the identifier on screen,
+and the model needs the company name, not the registration number, to answer.
 """
 
 from __future__ import annotations
 
+import logging
+
 import httpx
 from fastapi import HTTPException
+from starlette.concurrency import run_in_threadpool
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -24,6 +31,8 @@ from app.reference import MATERIALS, MATERIAL_ORDER, SIGNAL_CATALOG
 from app.schemas.assistant import ChatMessage
 from app.services import company_service, dashboard_service
 from app.services.inspection_service import STATUS_LABELS
+
+log = logging.getLogger("gus")
 
 SYSTEM_INSTRUCTION = """\
 You are the assistant built into GÜS-DEDEKTİV, an inspection prioritisation \
@@ -189,7 +198,7 @@ def build_briefing(db: Session, period: str, company_id: int | None = None) -> s
     for item in data.priority_queue[:10]:
         reason = item.main_reason.name if item.main_reason else "no check raised a concern"
         add(
-            f"  {item.rank}. {item.company_name} ({item.tax_identifier}), {item.sector_label}, "
+            f"  {item.rank}. {item.company_name}, {item.sector_label}, "
             f"{item.region}, {item.company_size.lower()}. Score {item.priority_score:.0f} "
             f"{item.priority_level}. Leading reason: {reason}. "
             f"Declared {_t(item.declared_tonnage)} against an expected median of "
@@ -229,7 +238,7 @@ def _company_briefing(db: Session, company_id: int, period: str) -> str | None:
 
     lines = [
         "The officer is currently looking at this company:",
-        f"  {profile.company_name} ({profile.tax_identifier}), {profile.sector_label}, "
+        f"  {profile.company_name}, {profile.sector_label}, "
         f"{profile.region}, {profile.company_size.lower()}.",
         f"  Standing: {STATUS_LABELS.get(detail.review_status, detail.review_status)}.",
     ]
@@ -349,7 +358,10 @@ async def ask(
     if not enabled:
         raise HTTPException(status_code=503, detail=detail)
 
-    briefing = build_briefing(db, period, company_id)
+    # The briefing is a few dozen synchronous queries. Run on the event loop
+    # they would stall every other request the server is handling while they
+    # ran; in the thread pool only this one waits.
+    briefing = await run_in_threadpool(build_briefing, db, period, company_id)
     url = f"{settings.gemini_api_base.rstrip('/')}/models/{settings.gemini_model}:generateContent"
 
     try:
@@ -365,7 +377,10 @@ async def ask(
     except httpx.TimeoutException as error:
         raise HTTPException(status_code=504, detail="Gemini did not answer in time.") from error
     except httpx.HTTPError as error:
-        raise HTTPException(status_code=502, detail=f"Could not reach Gemini: {error}") from error
+        # The detail stays in the server log; the browser does not need the
+        # network internals of the host the API runs on.
+        log.warning("Gemini request failed: %r", error)
+        raise HTTPException(status_code=502, detail="Could not reach Gemini.") from error
 
     if response.status_code == 401 or response.status_code == 403:
         raise HTTPException(

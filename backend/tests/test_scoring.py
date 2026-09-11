@@ -247,6 +247,46 @@ def test_both_engines_agree_on_the_shape_of_a_result(db):
                 assert signal.missing_data_reason
 
 
+def test_every_stored_result_sits_in_the_band_its_score_reaches(db):
+    """No score is labelled with a band it does not reach, in any period."""
+    policy = get_policy()
+    rows = db.execute(select(ScoreResult.priority_score, ScoreResult.priority_level)).all()
+    assert rows
+    wrong = [(score, level) for score, level in rows if policy.band_for(score) != level]
+    assert not wrong, f"{len(wrong)} results carry the wrong band, e.g. {wrong[:3]}"
+
+
+def test_the_database_is_built_the_same_on_every_machine():
+    """The import used Python's hash(), which is salted per process.
+
+    Two interpreters with different hash seeds must pick the same closed
+    inspections and the same inspectors, or no two installs show the same
+    queue, trail or pilot figures.
+    """
+    import os
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    script = (
+        "from app.database.gus_import import _stable_bucket;"
+        "print([_stable_bucket(f'OBS-{i}', 100) for i in range(200)])"
+    )
+    backend = Path(__file__).resolve().parents[1]
+    outputs = {
+        subprocess.run(
+            [sys.executable, "-c", script],
+            cwd=backend,
+            env={**os.environ, "PYTHONHASHSEED": seed},
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout
+        for seed in ("1", "2")
+    }
+    assert len(outputs) == 1
+
+
 def test_the_model_reports_its_measured_performance():
     """The engine description carries the figures it was accepted on."""
     engine = build_engine("ml")

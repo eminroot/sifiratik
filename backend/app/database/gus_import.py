@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import math
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
@@ -35,7 +36,7 @@ from typing import Iterable, Iterator
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.config import get_settings
+from app.config import CURRENT_PERIOD, get_settings
 from app.database.database import Base, SessionLocal, create_all, engine
 from app.models import (
     AuditReview,
@@ -47,9 +48,9 @@ from app.models import (
 from app.reference import MATERIAL_ORDER, region_label
 from app.services.audit_chain import append_event, new_decision_id
 
-# The period the queue is worked on. Everything after it is unseen; closed
+# The period the queue is worked on is `GUS_CURRENT_PERIOD` (app.config), the
+# same setting the service reads. Everything after it is unseen; closed
 # inspections are only loaded for periods strictly before it.
-CURRENT_PERIOD = "2026Q2"
 
 # Inspectors who signed the closed inspections. Names are labels on a
 # synthetic record, not people.
@@ -137,6 +138,19 @@ def _period_end(period: str) -> datetime:
 
 def _before(period: str, limit: str) -> bool:
     return period < limit
+
+
+def _stable_bucket(key: str, buckets: int) -> int:
+    """A fixed pick in [0, buckets) for `key`, the same on every machine.
+
+    Python's built-in `hash()` of a string is salted afresh in every process,
+    so picking with it built a different database on every install: a
+    different set of closed inspections, a different trail, different pilot
+    figures. This is seeded from `SEED_RANDOM_STATE` instead.
+    """
+    seed = get_settings().seed_random_state
+    digest = hashlib.sha256(f"{seed}:{key}".encode("utf-8")).digest()
+    return int.from_bytes(digest[:8], "big") % buckets
 
 
 # --------------------------------------------------------------------------- #
@@ -278,7 +292,7 @@ def _field_observation(company_id: int, row: dict, observed: float) -> FieldObse
         period=row["period"],
         observed_packaging_tonnage=round(observed, 3),
         observation=source,
-        inspector=AUDITORS[hash(row["firm_id"]) % len(AUDITORS)][1],
+        inspector=AUDITORS[_stable_bucket(row["firm_id"], len(AUDITORS))][1],
         observed_at=_period_end(row["period"]),
     )
 
@@ -362,7 +376,7 @@ def _import_closed_inspections(
         # those by recording an outcome other than "nothing found" or by the
         # record having been queued for missing data.
         if label["audit_outcome"] == "bulgu_yok" and label["truth_anomaly_flag"] != "1":
-            if hash(row["observation_id"]) % 100 >= 12:
+            if _stable_bucket(row["observation_id"], 100) >= 12:
                 continue
         current = latest.get(company_id)
         if current is None or row["period"] > current[0]:

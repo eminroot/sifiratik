@@ -2,9 +2,14 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.schemas.company import QueueItem
+from app.schemas.scoring import PERIOD_PATTERN
+
+# The largest shortlist a pilot may ask for. Well above any province's
+# population, and small enough that the query stays a bounded one.
+MAX_SHORTLIST = 1000
 
 
 class MaterialTonnage(BaseModel):
@@ -105,8 +110,8 @@ class PilotResult(BaseModel):
 
 
 class PilotRunRequest(BaseModel):
-    region: str = "Antalya"
-    sector: str | None = None
-    shortlist_size: int = 100
+    region: str = Field(default="Antalya", max_length=60)
+    sector: str | None = Field(default=None, max_length=40)
+    shortlist_size: int = Field(default=100, ge=1, le=MAX_SHORTLIST)
     simulate_outcomes: bool = True
-    period: str | None = None
+    period: str | None = Field(default=None, pattern=PERIOD_PATTERN)

@@ -63,19 +63,17 @@
 }
 
 .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .grid-side { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 12px; }
 .grid-wide { grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr); gap: 12px; }
 
 .stack { display: flex; flex-direction: column; gap: 12px; }
 
 @media (max-width: 1080px) {
-  .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .grid-side, .grid-wide { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 760px) {
-  .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  .grid-3 { grid-template-columns: 1fr; }
 }
 
 /* ------------------------------------------------------------ definitions -- */
@@ -799,7 +797,6 @@
 .right { text-align: right; }
 .nowrap { white-space: nowrap; }
 .tnum { font-variant-numeric: tabular-nums; }
-.mt-0 { margin-top: 0; }
 .gap-sm { gap: 7px; }
 
 .back-link {
@@ -814,27 +811,6 @@
 }
 
 .back-link:hover { color: var(--ink); }
-
-.tab-row {
-  display: flex;
-  gap: 2px;
-  border-bottom: 1px solid var(--rule);
-  margin-bottom: 22px;
-}
-
-.tab {
-  padding: 9px 14px;
-  font-size: 13.5px;
-  font-weight: 500;
-  color: var(--ink-3);
-  text-decoration: none;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
-  transition: color 140ms var(--ease), border-color 140ms var(--ease);
-}
-
-.tab:hover { color: var(--ink); }
-.tab.on { color: var(--ink); font-weight: 600; border-bottom-color: var(--ink); }
 
 
 /* A table wider than the measure scrolls inside its own frame. Without this it

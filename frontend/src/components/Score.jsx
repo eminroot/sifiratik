@@ -36,7 +36,7 @@ export function ScoreBlock({ score, level, bands, confidence, coverage, quality 
           {segments.map((band) => (
             <i
               key={band.level}
-              className={score >= band.lower && score <= band.upper ? 'on' : undefined}
+              className={band.level === level ? 'on' : undefined}
               style={{ width: `${band.upper - band.lower + 1}%` }}
             />
           ))}

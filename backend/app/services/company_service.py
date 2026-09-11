@@ -68,13 +68,22 @@ SORT_COLUMNS = {
 }
 
 
-def latest_review_subquery():
-    """The id of the most recent decision per company."""
-    return (
-        select(AuditReview.company_id, func.max(AuditReview.id).label("review_id"))
-        .group_by(AuditReview.company_id)
-        .subquery()
+def latest_review_subquery(period: str | None = None):
+    """The id of the most recent decision on each filing.
+
+    A decision is about one company's declaration for one period. Given a
+    period, this is one row per company for that period's filing, so an
+    inspection closed last quarter does not stand as the answer to this
+    quarter's filing. Without one it is one row per filing ever decided.
+    """
+    query = select(
+        AuditReview.company_id,
+        AuditReview.period,
+        func.max(AuditReview.id).label("review_id"),
     )
+    if period is not None:
+        query = query.where(AuditReview.period == period)
+    return query.group_by(AuditReview.company_id, AuditReview.period).subquery()
 
 
 def rank_subquery(period: str):
@@ -98,7 +107,7 @@ def rank_subquery(period: str):
 
 
 def base_queue_query(period: str) -> Select:
-    latest = latest_review_subquery()
+    latest = latest_review_subquery(period)
     ranks = rank_subquery(period)
     return (
         select(
@@ -269,10 +278,11 @@ def score_out(score: ScoreResult) -> ScoreOut:
     )
 
 
-def current_status(db: Session, company_id: int) -> str:
+def current_status(db: Session, company_id: int, period: str) -> str:
+    """Where this company's filing for `period` stands in the workflow."""
     review = db.execute(
         select(AuditReview)
-        .where(AuditReview.company_id == company_id)
+        .where(AuditReview.company_id == company_id, AuditReview.period == period)
         .order_by(AuditReview.id.desc())
         .limit(1)
     ).scalar_one_or_none()
@@ -354,7 +364,7 @@ def detail(db: Session, company: Company, period: str) -> CompanyDetail:
                 else None
             ),
         ),
-        review_status=current_status(db, company.id),
+        review_status=current_status(db, company.id, period),
         current_period=PeriodRow(
             period=current.period,
             declared_tonnage=current.declared_packaging_tonnage,

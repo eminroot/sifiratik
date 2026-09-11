@@ -2,6 +2,29 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 const BASE = '/api';
 
+// The key lives for this tab only. A credential that outlives the tab is one
+// the next person at the desk inherits.
+const KEY_STORAGE = 'gus.apiKey';
+let memoryKey = '';
+
+export function getApiKey() {
+  try {
+    return sessionStorage.getItem(KEY_STORAGE) ?? memoryKey;
+  } catch {
+    return memoryKey;
+  }
+}
+
+export function setApiKey(value) {
+  memoryKey = value || '';
+  try {
+    if (memoryKey) sessionStorage.setItem(KEY_STORAGE, memoryKey);
+    else sessionStorage.removeItem(KEY_STORAGE);
+  } catch {
+    // No storage: the key is held in memory until the page is closed.
+  }
+}
+
 class ApiError extends Error {
   constructor(status, detail) {
     super(detail);
@@ -11,7 +34,12 @@ class ApiError extends Error {
 
 async function parse(response) {
   const text = await response.text();
-  const body = text ? JSON.parse(text) : null;
+  let body = null;
+  try {
+    body = text ? JSON.parse(text) : null;
+  } catch {
+    // A proxy error page is HTML, not JSON; report the status, not a parse failure.
+  }
   if (!response.ok) {
     const detail = body?.detail;
     throw new ApiError(
@@ -20,6 +48,14 @@ async function parse(response) {
     );
   }
   return body;
+}
+
+/** Writing requests carry the key when one has been entered; reading ones never do. */
+function writeHeaders() {
+  const key = getApiKey();
+  return key
+    ? { 'Content-Type': 'application/json', 'X-API-Key': key }
+    : { 'Content-Type': 'application/json' };
 }
 
 export function query(params = {}) {
@@ -44,15 +80,7 @@ export function get(path, signal) {
 export function post(path, body) {
   return fetch(`${BASE}${path}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body ?? {}),
-  }).then(parse);
-}
-
-export function put(path, body) {
-  return fetch(`${BASE}${path}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: writeHeaders(),
     body: JSON.stringify(body ?? {}),
   }).then(parse);
 }

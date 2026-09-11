@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app import i18n
@@ -10,7 +12,7 @@ from app.config import ScoringPolicy, get_policy
 from app.database.database import get_db
 from app.security import Principal, require_writer
 from app.services import policy_service
-from app.routers.deps import resolve_period
+from app.routers.deps import known_period, resolve_period
 from app.routers.transparency import engines_out, policy_out
 from app.schemas.scoring import EngineOut, PolicyOut, PolicyUpdate, ScoringRunOut, ScoringRunRequest
 from app.scoring.registry import ENGINE_TYPES
@@ -40,7 +42,7 @@ def scoring_run(
 
     summary = run_scoring(
         db,
-        period=request.period or period,
+        period=known_period(db, request.period) if request.period else period,
         engine_name=request.engine,
         company_ids=request.company_ids,
     )
@@ -82,15 +84,38 @@ def update_policy(
     if payload.bands:
         data["bands"] = [band.model_dump() for band in payload.bands]
     if payload.weights:
-        data["weights"] = [
-            {"code": w.code, "weight": w.weight, "enabled": w.enabled} for w in payload.weights
-        ]
+        # Merged by code: a change to one signal leaves the others as they
+        # were. Replacing the list used to drop every signal not named, and a
+        # signal with no weight is a signal switched off.
+        changes = {w.code: {"code": w.code, "weight": w.weight, "enabled": w.enabled} for w in payload.weights}
+        data["weights"] = [changes.pop(item["code"], item) for item in data["weights"]]
+        data["weights"] += list(changes.values())
     if payload.min_coverage_for_confidence is not None:
         data["min_coverage_for_confidence"] = payload.min_coverage_for_confidence
     if payload.strongest_signal_share is not None:
         data["strongest_signal_share"] = payload.strongest_signal_share
 
+    # A change that changes nothing is not stored, so the trail records
+    # decisions about the policy rather than every request that touched it.
+    unchanged = {**current.model_dump(), "version": None} == {**data, "version": None}
+    if unchanged:
+        return policy_out()
+
+    # The version is unique, and a timestamp alone is not: two changes inside
+    # one clock tick got the same one and the second failed with a server
+    # error. The random suffix makes it unique whatever the clock resolves.
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
-    data["version"] = f"policy-{stamp}"
-    policy_service.apply_policy(db, ScoringPolicy(**data), changed_by=principal.user_id)
+    data["version"] = f"policy-{stamp}-{uuid.uuid4().hex[:6]}"
+    try:
+        policy = ScoringPolicy(**data)
+    except ValidationError as error:
+        raise HTTPException(
+            status_code=422,
+            detail=[
+                {"loc": list(item["loc"]), "msg": item["msg"], "type": item["type"]}
+                for item in error.errors(include_url=False, include_context=False)
+            ],
+        ) from error
+
+    policy_service.apply_policy(db, policy, changed_by=principal.user_id)
     return policy_out()

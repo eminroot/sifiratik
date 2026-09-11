@@ -14,7 +14,9 @@ Nothing else changes: no key, no gate, same prototype.
 
 With that in place the auditor who signs a decision is the one the key belongs
 to, not the name the request body asked for. Attribution stops being a claim
-the caller makes about itself.
+the caller makes about itself. A malformed entry stops the service at startup
+(see `config.parse_api_keys`) rather than being skipped, which used to leave
+the gate open while it looked shut.
 
 This is a gate, not an identity system. A production deployment belongs behind
 the institution's own SSO with role-based access; the point here is that the
@@ -24,9 +26,12 @@ service can tell an authenticated caller from an anonymous one at all.
 from __future__ import annotations
 
 import hmac
+import threading
+import time
+from collections import deque
 from dataclasses import dataclass
 
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, Header, HTTPException, Request, status
 
 from app.config import get_settings
 
@@ -48,26 +53,11 @@ ANONYMOUS = Principal(user_id="anonymous", authenticated=False)
 
 def _key_table() -> dict[str, str]:
     """Configured keys, mapped to the user each one stands for."""
-    settings = get_settings()
-    table: dict[str, str] = {}
-
-    for entry in settings.api_keys.split(","):
-        entry = entry.strip()
-        if not entry or ":" not in entry:
-            continue
-        key, _, user = entry.partition(":")
-        if key.strip() and user.strip():
-            table[key.strip()] = user.strip()
-
-    single = settings.api_key.strip()
-    if single:
-        table.setdefault(single, settings.api_key_user.strip() or "api")
-
-    return table
+    return get_settings().api_key_table
 
 
 def auth_required() -> bool:
-    return bool(_key_table())
+    return get_settings().auth_enabled
 
 
 def resolve_principal(x_api_key: str | None = Header(default=None)) -> Principal:
@@ -88,11 +78,18 @@ def resolve_principal(x_api_key: str | None = Header(default=None)) -> Principal
             headers={"WWW-Authenticate": "ApiKey"},
         )
 
-    # Compared without short-circuiting so a wrong key takes the same time as
-    # a right one.
+    # Every configured key is compared, as bytes, whatever matched first: the
+    # time taken does not depend on which key it was, and a header carrying
+    # characters outside ASCII is refused like any other wrong key instead of
+    # raising inside compare_digest.
+    presented = x_api_key.encode("utf-8", "surrogateescape")
+    matched: str | None = None
     for candidate, user in table.items():
-        if hmac.compare_digest(candidate, x_api_key):
-            return Principal(user_id=user, authenticated=True)
+        if hmac.compare_digest(candidate.encode("utf-8"), presented):
+            matched = user
+
+    if matched is not None:
+        return Principal(user_id=matched, authenticated=True)
 
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
@@ -118,3 +115,71 @@ def acting_user(principal: Principal, requested: str | None) -> str:
     if principal.authenticated:
         return principal.user_id
     return (requested or ANONYMOUS.user_id).strip() or ANONYMOUS.user_id
+
+
+class SlidingWindowLimiter:
+    """At most `limit` calls per caller in any `window` seconds, in process.
+
+    Enough to stop one browser tab or one script from spending the
+    institution's Gemini quota. A deployment with several workers puts the
+    same rule in its gateway, where every worker's traffic is visible.
+
+    Callers are told apart by key owner, or else by address. Behind a reverse
+    proxy every request arrives from the proxy, so run uvicorn with
+    `--forwarded-allow-ips` set to the proxy's address; otherwise all anonymous
+    viewers share one allowance.
+    """
+
+    # Past this many tracked callers, the ones idle for a whole window are
+    # dropped, so a stream of new addresses cannot grow the table forever.
+    PRUNE_ABOVE = 1024
+
+    def __init__(self, window: float = 60.0) -> None:
+        self.window = window
+        self._calls: dict[str, deque[float]] = {}
+        self._lock = threading.Lock()
+
+    def check(self, caller: str, limit: int) -> float | None:
+        """Record a call; return the seconds to wait if it is over the limit."""
+        now = time.monotonic()
+        with self._lock:
+            if len(self._calls) > self.PRUNE_ABOVE:
+                self._prune(now)
+            calls = self._calls.setdefault(caller, deque())
+            while calls and now - calls[0] >= self.window:
+                calls.popleft()
+            if len(calls) >= limit:
+                return self.window - (now - calls[0])
+            calls.append(now)
+            return None
+
+    def _prune(self, now: float) -> None:
+        idle = [
+            caller
+            for caller, calls in self._calls.items()
+            if not calls or now - calls[-1] >= self.window
+        ]
+        for caller in idle:
+            del self._calls[caller]
+
+
+assistant_limiter = SlidingWindowLimiter()
+
+
+def limit_assistant(
+    request: Request, principal: Principal = Depends(require_writer)
+) -> Principal:
+    """The writer guard, plus a per-caller ceiling on paid assistant calls."""
+    caller = (
+        principal.user_id
+        if principal.authenticated
+        else (request.client.host if request.client else "unknown")
+    )
+    wait = assistant_limiter.check(caller, get_settings().assistant_requests_per_minute)
+    if wait is not None:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many assistant questions in the last minute. Try again shortly.",
+            headers={"Retry-After": str(max(1, int(wait) + 1))},
+        )
+    return principal

@@ -16,8 +16,6 @@ REVIEW_STATUSES = [
     "NO_ACTION_REQUIRED",
 ]
 
-CLOSED_STATUSES = {"INSPECTION_COMPLETED", "NO_ACTION_REQUIRED"}
-
 
 class AuditReview(Base):
     """The current standing of a company in the inspection workflow."""

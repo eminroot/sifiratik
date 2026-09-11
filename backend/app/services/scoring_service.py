@@ -7,6 +7,7 @@ both, which is what lets the model team develop against `ScoringContext` alone.
 from __future__ import annotations
 
 import statistics
+import threading
 import time
 from collections import defaultdict
 from dataclasses import dataclass
@@ -14,7 +15,6 @@ from dataclasses import dataclass
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
-from app.config import get_policy
 from app.models import (
     Company,
     Declaration,
@@ -32,7 +32,6 @@ from app.scoring.base import (
     PeriodFacts,
     ScoreOutcome,
     ScoringContext,
-    ScoringEngine,
 )
 from app.scoring.registry import resolve_engine
 from app.services.quality_service import build_quality
@@ -390,19 +389,13 @@ def persist_outcome(db: Session, outcome: ScoreOutcome) -> ScoreResult:
     return result
 
 
-def score_company(
-    db: Session,
-    company: Company,
-    period: str,
-    engine: ScoringEngine | None = None,
-    peer_index: dict[tuple[str, str], PeerCohort] | None = None,
-    prior_peer_index: dict[tuple[str, str], PeerCohort] | None = None,
-) -> ScoreOutcome | None:
-    engine = engine or resolve_engine()
-    context = build_context(db, company, period, peer_index, prior_peer_index)
-    if context is None:
-        return None
-    return engine.score(context)
+# One scoring run at a time in this process. Two runs for the same period each
+# delete a company's result and insert a new one, and they only stay out of
+# each other's way because SQLite happens to serialise the writes; under
+# PostgreSQL's read-committed isolation the second can insert a row the first
+# has just written and trip the unique constraint. Runs are an operator action
+# lasting a second or two, so queuing them costs nothing.
+_RUN_LOCK = threading.Lock()
 
 
 def run_scoring(
@@ -410,6 +403,16 @@ def run_scoring(
     period: str,
     engine_name: str | None = None,
     company_ids: list[int] | None = None,
+) -> RunSummary:
+    with _RUN_LOCK:
+        return _run_scoring(db, period, engine_name, company_ids)
+
+
+def _run_scoring(
+    db: Session,
+    period: str,
+    engine_name: str | None,
+    company_ids: list[int] | None,
 ) -> RunSummary:
     started = time.perf_counter()
     engine = resolve_engine(engine_name)
@@ -470,7 +473,3 @@ def all_periods(db: Session) -> list[str]:
         .scalars()
         .all()
     )
-
-
-def active_policy_version() -> str:
-    return get_policy().version

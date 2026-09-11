@@ -46,16 +46,23 @@ def _confirmation_ratio(db: Session, period: str) -> float:
     """How much of what was identified, inspections have actually confirmed.
 
     Taken from the closed inspections in the system rather than assumed, so the
-    projection moves as real outcomes come in.
+    projection moves as real outcomes come in. Each confirmed correction is set
+    against the shortfall flagged on the filing that inspection examined, and
+    only filings up to the period being piloted count, so a pilot of a past
+    quarter is not projected from outcomes that came after it.
     """
     latest = latest_review_subquery()
     rows = db.execute(
         select(AuditReview.confirmed_additional_tonnage, ScoreResult.shortfall_tonnage)
         .select_from(AuditReview)
         .join(latest, latest.c.review_id == AuditReview.id)
-        .join(ScoreResult, ScoreResult.company_id == AuditReview.company_id)
+        .join(
+            ScoreResult,
+            (ScoreResult.company_id == AuditReview.company_id)
+            & (ScoreResult.period == AuditReview.period),
+        )
         .where(
-            ScoreResult.period == period,
+            AuditReview.period <= period,
             AuditReview.status == "INSPECTION_COMPLETED",
             AuditReview.confirmed_additional_tonnage.isnot(None),
         )
@@ -281,7 +288,3 @@ def run_pilot(
         db.commit()
 
     return result
-
-
-def last_run(db: Session) -> PilotRun | None:
-    return db.execute(select(PilotRun).order_by(PilotRun.id.desc()).limit(1)).scalar_one_or_none()

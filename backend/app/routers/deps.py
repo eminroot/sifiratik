@@ -9,15 +9,25 @@ from app.models import Company
 from app.services.scoring_service import all_periods, latest_period
 
 
+def known_period(db: Session, period: str) -> str:
+    """`period` if the database holds filings for it, else a 404.
+
+    Shared by the query parameter and by request bodies that name a period, so
+    a period in a body cannot reach the scoring run unchecked and leave rows
+    behind for a quarter that does not exist.
+    """
+    if period not in all_periods(db):
+        raise HTTPException(status_code=404, detail=f"No records for period {period}")
+    return period
+
+
 def resolve_period(
     period: str | None = Query(default=None, description="Reporting period, defaults to the newest"),
     db: Session = Depends(get_db),
 ) -> str:
     if period is None:
         return latest_period(db)
-    if period not in all_periods(db):
-        raise HTTPException(status_code=404, detail=f"No records for period {period}")
-    return period
+    return known_period(db, period)
 
 
 def get_company(company_id: int, db: Session = Depends(get_db)) -> Company:

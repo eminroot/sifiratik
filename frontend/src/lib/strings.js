@@ -19,6 +19,17 @@ export const STRINGS = {
 
     'brand.sub': 'Inspection prioritisation',
 
+    'key.button': 'API key',
+    'key.set': 'Key in use',
+    'key.title': 'Decisions need an API key',
+    'key.note':
+      'Decisions, rescoring and pilot runs are signed with this key. It stays in this tab only and is cleared when the tab closes.',
+    'key.placeholder': 'Paste your X-API-Key',
+    'key.save': 'Use key',
+    'key.clear': 'Forget key',
+    'key.saved': 'Key saved for this tab.',
+    'key.cleared': 'Key removed.',
+
     'nav.overview': 'Overview',
     'nav.queue': 'Inspection queue',
     'nav.quality': 'Data quality',
@@ -438,6 +449,17 @@ export const STRINGS = {
     'lang.tr': 'Türkçe',
 
     'brand.sub': 'Denetim önceliklendirme',
+
+    'key.button': 'API anahtarı',
+    'key.set': 'Anahtar kullanılıyor',
+    'key.title': 'Kararlar API anahtarı istiyor',
+    'key.note':
+      'Kararlar, yeniden puanlama ve pilot çalıştırma bu anahtarla imzalanır. Anahtar yalnızca bu sekmede tutulur, sekme kapanınca silinir.',
+    'key.placeholder': 'X-API-Key değerini yapıştırın',
+    'key.save': 'Anahtarı kullan',
+    'key.clear': 'Anahtarı unut',
+    'key.saved': 'Anahtar bu sekme için kaydedildi.',
+    'key.cleared': 'Anahtar silindi.',
 
     'nav.overview': 'Genel görünüm',
     'nav.queue': 'Denetim kuyruğu',

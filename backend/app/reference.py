@@ -426,8 +426,6 @@ SOCIAL_FUND_SHARE = 0.12
 COLLECTOR_ANNUAL_COST_TRY = 342_000.0
 """Annual cost of formalising one collector. Policy input, unsourced."""
 
-INSURED_DAYS_PER_COLLECTOR = 248
-
 
 def material_mix_for(sector_key: str) -> dict[str, float]:
     return SECTORS[sector_key]["material_mix"]
@@ -471,9 +469,3 @@ def co2e_avoided_tonnes(tonnes: float, sector_key: str, conservative: bool = Fal
 def material_split(tonnes: float, sector_key: str) -> dict[str, float]:
     mix = material_mix_for(sector_key)
     return {material: tonnes * share for material, share in mix.items()}
-
-
-@lru_cache(maxsize=1)
-def reference_manifest() -> dict:
-    path = DATA_DIR / "MANIFEST.json"
-    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}

@@ -98,8 +98,15 @@ function Stop-Previous {
         $recorded = 0
         if ([int]::TryParse((Get-Content $file.FullName -Raw).Trim(), [ref]$recorded)) {
             $process = Get-Process -Id $recorded -ErrorAction SilentlyContinue
-            # Only ever ours: every service is started through a cmd wrapper.
+            # Only ever ours: every service is started through a cmd wrapper,
+            # and the pid file is written the moment it starts. Windows reuses
+            # pids, so a cmd that started after the file was written is someone
+            # else's - an open terminal, say - and must not be killed with /T.
+            $ours = $false
             if ($null -ne $process -and $process.ProcessName -eq 'cmd') {
+                try { $ours = $process.StartTime -le $file.LastWriteTime.AddSeconds(5) } catch { $ours = $false }
+            }
+            if ($ours) {
                 Write-Step "Clearing a process left behind by an earlier run (pid $recorded)"
                 Stop-Tree $recorded
             }

@@ -9,6 +9,10 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Testler depoyu yalnızca okur; iş akışı jetonuna yazma yetkisi verilmez.
+permissions:
+  contents: read
+
 jobs:
   backend:
     name: Backend testleri

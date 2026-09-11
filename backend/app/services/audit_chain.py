@@ -1,11 +1,18 @@
 """Tamper-evident audit trail.
 
-Every decision is appended with the hash of the decision before it, so the log
-can be checked without trusting the database it sits in. Editing or deleting a
-past event changes its hash and every link after it, and verification names the
-first sequence number where the chain stops agreeing with itself.
+Every decision is appended with the hash of the decision before it. Editing or
+deleting a past event through the application, or by hand-editing a row,
+changes its hash and every link after it, and verification names the first
+sequence number where the chain stops agreeing with itself.
 
     event n-1  ->  sha256(payload)  ->  previous_hash of event n
+
+What this does not do is protect the log from someone who can write to the
+database and is willing to recompute every digest after the one they change:
+the hash is unkeyed and the anchor lives in the same database. Pinning the
+head digest somewhere they cannot write (WORM storage, the institution's own
+log) is what closes that, and `head_hash` in the verification report is the
+value to pin. SECURITY.md says the same.
 
 The digest covers the fields a decision is actually made of. Adding a field to
 the payload is a format change, so GENESIS_HASH carries a version marker.
@@ -16,15 +23,24 @@ from __future__ import annotations
 import hashlib
 import json
 import uuid
+from collections.abc import Callable
 from datetime import datetime, timezone
+from typing import TypeVar
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.models import AuditEvent, ChainAnchor
+from app.models import AuditEvent, AuditReview, ChainAnchor
 
 GENESIS_HASH = "0" * 64
 CHAIN_FORMAT = "gus-chain-v1"
+
+# Actions that carry a workflow decision, each mirrored by a row in
+# audit_reviews under the same decision_id.
+DECISION_ACTIONS = frozenset({"STATUS_CHANGE", "REVIEW_CLOSED"})
+
+T = TypeVar("T")
 
 
 def naive_utc(moment: datetime) -> datetime:
@@ -79,6 +95,11 @@ def append_event(
     event_data: dict | None = None,
     created_at: datetime | None = None,
 ) -> AuditEvent:
+    # Under PostgreSQL this holds every other appender at the anchor row until
+    # this transaction ends, so they take sequence numbers one after another
+    # instead of colliding. SQLite has no row locks and drops the clause;
+    # there, commit_with_retry absorbs the collision.
+    db.execute(select(ChainAnchor).where(ChainAnchor.id == 1).with_for_update())
     last = db.execute(select(AuditEvent).order_by(AuditEvent.sequence.desc()).limit(1)).scalar_one_or_none()
     sequence = (last.sequence + 1) if last else 1
     previous_hash = last.current_hash if last else GENESIS_HASH
@@ -102,6 +123,28 @@ def append_event(
     db.flush()
     _move_anchor(db, event.sequence, event.current_hash)
     return event
+
+
+def commit_with_retry(db: Session, write: Callable[[], T], attempts: int = 3) -> T:
+    """Run `write` and commit it, starting over if another writer got there first.
+
+    `append_event` reads the newest sequence number and takes the next one.
+    Two decisions saved at the same moment can both read the same number; the
+    unique constraint on `sequence` refuses the second, and rather than handing
+    that to the caller as a server error the whole write is rolled back and
+    run again against the chain as it now stands. `write` must build its rows
+    from scratch each time it is called.
+    """
+    for attempt in range(1, attempts + 1):
+        try:
+            result = write()
+            db.commit()
+            return result
+        except IntegrityError:
+            db.rollback()
+            if attempt == attempts:
+                raise
+    raise RuntimeError("unreachable")  # pragma: no cover
 
 
 def _move_anchor(db: Session, sequence: int, head_hash: str) -> None:
@@ -180,6 +223,19 @@ def verify_chain(db: Session) -> dict:
             "anchored": True,
         }
 
+    mismatch = _review_mismatch(db)
+    if mismatch is not None:
+        sequence, reason = mismatch
+        return {
+            "intact": False,
+            "events_checked": checked,
+            "total_events": checked,
+            "broken_at": sequence,
+            "reason": reason,
+            "head_hash": None,
+            "anchored": anchor is not None,
+        }
+
     return {
         "intact": True,
         "events_checked": checked,
@@ -189,6 +245,78 @@ def verify_chain(db: Session) -> dict:
         "head_hash": head,
         "anchored": anchor is not None,
     }
+
+
+def _same_tonnage(left: float | None, right: float | None) -> bool:
+    # The seed records a zero correction in the chain and none in the table.
+    return abs(round(left or 0.0, 3) - round(right or 0.0, 3)) < 1e-9
+
+
+def _review_mismatch(db: Session) -> tuple[int | None, str] | None:
+    """The first review row that no longer says what the chain recorded.
+
+    The queue reads a company's standing from `audit_reviews`, not from the
+    chain, so a chain that verifies says nothing about the standing unless the
+    two are held against each other: an edited status, a review with no
+    decision behind it, or a decision whose review has been deleted all change
+    what the queue shows while every link still matches.
+
+    Run only after the chain has verified, so the events it compares against
+    are known to be the ones that were written. Both passes are joins streamed
+    from the database; like the walk above, neither holds the log in memory.
+
+    A review written before reviews carried a period is checked on everything
+    else; its period is taken as unknown rather than as a mismatch.
+    """
+    decision_event = (AuditEvent.decision_id == AuditReview.decision_id) & AuditEvent.action.in_(
+        DECISION_ACTIONS
+    )
+
+    pairs = db.execute(
+        select(AuditReview, AuditEvent)
+        .outerjoin(AuditEvent, decision_event)
+        .order_by(AuditReview.id.asc())
+        .execution_options(yield_per=500)
+    )
+    for review, event in pairs:
+        if event is None:
+            return None, (
+                f"Decision {review.decision_id} is in the review table but was never "
+                "recorded in the chain."
+            )
+        data = event.event_data or {}
+        if (
+            review.company_id != event.company_id
+            or review.auditor_id != event.user_id
+            or review.status != event.new_status
+            or (review.notes or None) != (event.notes or None)
+            or not _same_tonnage(
+                review.confirmed_additional_tonnage, data.get("confirmed_additional_tonnage")
+            )
+            or (review.period is not None and review.period != data.get("period"))
+        ):
+            return event.sequence, (
+                f"The review table no longer matches decision {review.decision_id} "
+                "as recorded in the chain."
+            )
+
+    removed = db.execute(
+        select(AuditEvent.sequence, AuditEvent.decision_id)
+        .outerjoin(AuditReview, decision_event)
+        .where(
+            AuditEvent.action.in_(DECISION_ACTIONS),
+            AuditEvent.decision_id.isnot(None),
+            AuditReview.id.is_(None),
+        )
+        .order_by(AuditEvent.sequence.asc())
+        .limit(1)
+    ).first()
+    if removed is not None:
+        sequence, decision_id = removed
+        return sequence, (
+            f"Decision {decision_id} is in the chain but has been removed from the review table."
+        )
+    return None
 
 
 def chain_length(db: Session) -> int:
