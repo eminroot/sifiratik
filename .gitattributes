@@ -1,0 +1,16 @@
+# Metin dosyaları depoda LF, çalışma kopyasında platformun kendi satır sonuyla.
+* text=auto
+
+# Model artefaktları ve veri dosyaları: satır sonu dönüşümü yapılmaz.
+# LightGBM metin modelleri ve Parquet blokları biçim olarak sabittir.
+*.txt        -text
+*.parquet    binary
+*.xlsx       binary
+*.pdf        binary
+*.png        binary
+*.ico        binary
+
+# Kabuk betikleri her zaman LF; .bat/.ps1 her zaman CRLF.
+*.sh         text eol=lf
+*.bat        text eol=crlf
+*.ps1        text eol=crlf

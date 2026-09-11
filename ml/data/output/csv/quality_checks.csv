@@ -1,0 +1,42 @@
+﻿kategori;kontrol;deger;beklenen;durum;aciklama
+Butunluk;Firma sayisi;600;>= 300;GECTI;
+Butunluk;Firma-ceyrek kayit sayisi;8244;>= 3600;GECTI;
+Butunluk;Farkli donem sayisi;14;>= 12;GECTI;
+Butunluk;Yinelenen observation_id;0;0;GECTI;
+Butunluk;Yinelenen firm_id;0;0;GECTI;
+Butunluk;Firms tablosunda karsiligi olmayan gozlem;0;0;GECTI;
+Butunluk;Etiketi olmayan gozlem;0;0;GECTI;
+Sizinti;Model_Ready icinde yasak sutun;0;0;GECTI;
+Sizinti;En yuksek |korelasyon| (ozellik vs truth);0.1864;< 0,90;GECTI;sutun: f_s8_external_gap_rel
+Dagilim;Genel anomali prevalansi;0.073;0,03 - 0,15;GECTI;
+Dagilim;Prevalans - train;0.0693;0,03 - 0,15;GECTI;
+Dagilim;Prevalans - valid;0.0767;0,03 - 0,15;GECTI;
+Dagilim;Prevalans - test;0.0808;0,03 - 0,15;GECTI;
+Dagilim;Mesru gorunum (hard negative) sayisi;1429;> 0;GECTI;Yanlis-pozitif olcumu icin gereklidir
+Dagilim;Veri incelemesi kuyrugu kaydi;309;> 0;GECTI;
+Dagilim;Farkli gercek anomali mekanizmasi sayisi;10;>= 6;GECTI;
+Ayirt edilebilirlik;Normal p10 ile anomali p90 ortusuyor mu;normal_p10=0.647 / anomali_p90=1.428;ortusme OLMALI;GECTI;Ortusme yoksa dataset trivial demektir
+Eksik veri;Eksik oran - import_qty;0.1326;0,00 - 0,90;BILGI;
+Eksik veri;Eksik oran - export_qty;0.1326;0,00 - 0,90;BILGI;
+Eksik veri;Eksik oran - production_qty;0.0558;0,00 - 0,90;BILGI;
+Eksik veri;Eksik oran - bom_expected_tonnage_observable;0.0051;0,00 - 0,90;BILGI;
+Eksik veri;Eksik oran - external_evidence_tonnage;0.8125;0,00 - 0,90;BILGI;
+Eksik veri;Dusuk veri guveni orani;0.0672;> 0;BILGI;Eksik veri dusuk risk olarak degerlendirilMEZ
+Mantik;Negatif beyan tonaji;0;0;GECTI;
+Mantik;Malzeme kirilimi toplami ile toplam beyan uyusmazligi;0;0;GECTI;
+Mantik;Tarifesi dogrulanmis donem kayitlari;5948;> 0;GECTI;
+Mantik;Tarifesi dogrulanMAMIS (2023) kayitlarda GEKAP tutari bos mu;0;0;GECTI;2023 tarifeleri birincil kaynaktan dogrulanamadigi icin parasal tutar UYDURULMAZ
+Gercekcilik;Malzeme payi - plastik;0.0113;resmi atik beyan referansi: 0.1825;BILGI;"Referans ATIK BEYAN evrenidir; piyasaya surme evreni ile birebir esitlik BEKLENMEZ"
+Gercekcilik;Malzeme payi - kagit_karton;0.0222;resmi atik beyan referansi: 0.507;BILGI;"Referans ATIK BEYAN evrenidir; piyasaya surme evreni ile birebir esitlik BEKLENMEZ"
+Gercekcilik;Malzeme payi - cam;0.0087;resmi atik beyan referansi: 0.0259;BILGI;"Referans ATIK BEYAN evrenidir; piyasaya surme evreni ile birebir esitlik BEKLENMEZ"
+Gercekcilik;Malzeme payi - metal;0.0077;resmi atik beyan referansi: 0.0177;BILGI;"Referans ATIK BEYAN evrenidir; piyasaya surme evreni ile birebir esitlik BEKLENMEZ"
+Gercekcilik;Malzeme payi - kompozit;0.0054;resmi atik beyan referansi: 0.0092;BILGI;"Referans ATIK BEYAN evrenidir; piyasaya surme evreni ile birebir esitlik BEKLENMEZ"
+Gercekcilik;Malzeme payi - ahsap;0.9446;resmi atik beyan referansi: 0.2578;BILGI;"Referans ATIK BEYAN evrenidir; piyasaya surme evreni ile birebir esitlik BEKLENMEZ"
+Gercekcilik;Medyan ceyreklik beyan tonaji - kucuk;67.662;olcekle artan;BILGI;
+Gercekcilik;Medyan ceyreklik beyan tonaji - mikro;15.997;olcekle artan;BILGI;
+Gercekcilik;Medyan ceyreklik beyan tonaji - buyuk;865.555;olcekle artan;BILGI;
+Gercekcilik;Medyan ceyreklik beyan tonaji - orta;235.491;olcekle artan;BILGI;
+Bolunme;Kayit sayisi - history;2296;> 0;GECTI;
+Bolunme;Kayit sayisi - train;3548;> 0;GECTI;
+Bolunme;Kayit sayisi - valid;1200;> 0;GECTI;
+Bolunme;Kayit sayisi - test;1200;> 0;GECTI;

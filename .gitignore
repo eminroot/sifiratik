@@ -1,23 +1,30 @@
-# Python
+# --- Python -----------------------------------------------------------------
 __pycache__/
 *.py[cod]
 .venv/
 venv/
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
-# Local database and environment
+# --- Yerel veritabani ve ortam ----------------------------------------------
+# SQLite dosyasi ilk acilista kendini olusturur, surumlenmez.
 backend/*.db
 backend/.env
+.env
 
-# Model artefacts, delivered separately
-backend/models/*
-!backend/models/.gitkeep
-
-# Node
+# --- Node -------------------------------------------------------------------
 node_modules/
 frontend/dist/
+npm-debug.log*
 
-# Editors and OS
+# --- Calisma zamani ---------------------------------------------------------
+# start.bat'in surec ve log dosyalari.
+.run/
+
+# --- Editor ve isletim sistemi ----------------------------------------------
 .DS_Store
+Thumbs.db
 .idea/
 .vscode/
+.claude/

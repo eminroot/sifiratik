@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     # Where the GÜS panel is read from at import time. Relative paths are
     # resolved against the repository root. The panel is only needed to
     # build the database; the service does not read it while running.
-    panel_dir: str = "ZeroWaste ML/ZeroWaste ML/data/output/csv"
+    panel_dir: str = "ml/data/output/csv"
     # The model engine when its artefacts are present; `resolve_engine`
     # falls back to the rule engine when they are not, so a checkout
     # without `backend/models/` still runs.

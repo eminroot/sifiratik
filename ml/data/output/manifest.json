@@ -1,0 +1,92 @@
+{
+  "dataset_version": "1.0.0",
+  "schema_version": "1.0.0",
+  "seed": 20260902,
+  "n_firms": 600,
+  "n_observations": 8244,
+  "n_skus": 3439,
+  "periods": [
+    "2023Q1",
+    "2023Q2",
+    "2023Q3",
+    "2023Q4",
+    "2024Q1",
+    "2024Q2",
+    "2024Q3",
+    "2024Q4",
+    "2025Q1",
+    "2025Q2",
+    "2025Q3",
+    "2025Q4",
+    "2026Q1",
+    "2026Q2"
+  ],
+  "split_map": {
+    "2023Q1": "history",
+    "2023Q2": "history",
+    "2023Q3": "history",
+    "2023Q4": "history",
+    "2024Q1": "train",
+    "2024Q2": "train",
+    "2024Q3": "train",
+    "2024Q4": "train",
+    "2025Q1": "train",
+    "2025Q2": "train",
+    "2025Q3": "valid",
+    "2025Q4": "valid",
+    "2026Q1": "test",
+    "2026Q2": "test"
+  },
+  "prevalence_overall": 0.0730228044638525,
+  "config": {
+    "seed": 20260902,
+    "dataset_version": "1.0.0",
+    "schema_version": "1.0.0",
+    "n_firms": 600,
+    "periods": [
+      "2023Q1",
+      "2023Q2",
+      "2023Q3",
+      "2023Q4",
+      "2024Q1",
+      "2024Q2",
+      "2024Q3",
+      "2024Q4",
+      "2025Q1",
+      "2025Q2",
+      "2025Q3",
+      "2025Q4",
+      "2026Q1",
+      "2026Q2"
+    ],
+    "sku_min": 3,
+    "sku_max": 12,
+    "bom_kapsam_beta": [
+      2.2,
+      1.6
+    ],
+    "eskimis_matris_orani": 0.18,
+    "eskimis_matris_sapma": [
+      0.06,
+      0.22
+    ],
+    "anomali_prevalansi": 0.07,
+    "mesru_gorunum_orani": 0.075,
+    "veri_eksikligi_kuyruk_orani": 0.045,
+    "eksik_beyan_siddeti": [
+      0.05,
+      0.55
+    ],
+    "eksik_beyan_beta": [
+      1.6,
+      2.6
+    ],
+    "eksik_ithalat_ihracat_orani": 0.12,
+    "eksik_uretim_orani": 0.05,
+    "dis_dogrulama_kapsami": 0.18,
+    "sektor_kodu_hatasi_orani": 0.035,
+    "etiket_gurultusu": 0.03,
+    "out_dir": "data/output",
+    "excel_name": "GUS-DEDEKTIV_Dataset_v1.0.xlsx"
+  }
+}
