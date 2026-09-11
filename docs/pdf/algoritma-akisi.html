@@ -304,8 +304,9 @@ footer {
       <strong>0–100 puan operasyonel bir inceleme önceliğidir. İhlal, suç veya
       usulsüzlük olasılığı değildir.</strong> Sistem otomatik ceza kararı üretmez;
       nihai karar yetkili insan denetçiye aittir. Bu dokümandaki bütün ölçümler
-      <strong>sentetik</strong> bir panel üzerinde alınmıştır ve gerçek beyanlar
-      üzerindeki performansın kanıtı değildir.
+      <strong>sentetik</strong> bir panel üzerinde alınmıştır ve henüz gerçek
+      beyanlar üzerindeki performansın kanıtı değildir; hedef, üretimde gerçek ve
+      <strong>anonimleştirilmiş</strong> veriyle aynı sonuçlara ulaşmaktır (bkz. §06).
     </p>
   </div>
 </section>
@@ -772,12 +773,19 @@ GET /api/audit/verify       → her bağ yeniden hesaplanır</div>
 <h2><span class="n">06</span> Ölçülen sonuçlar</h2>
 
 <div class="notice">
-  <div class="t">Sentetik veri</div>
+  <div class="t">Sentetik veri · üretim hedefi</div>
   <p>
     Aşağıdaki bütün sayılar <strong>sentetik</strong> bir panel üzerinde, zamansal
     bir holdout ile ölçülmüştür: 2025Q2’ye kadar eğitim, 2025Q3–Q4 kalibrasyon,
-    2026Q1–Q2 üzerinde <strong>bir kez</strong> ölçüm. Gerçek beyanlar üzerindeki
-    performansın kanıtı değildir.
+    2026Q1–Q2 üzerinde <strong>bir kez</strong> ölçüm. Bunlar henüz gerçek beyanlar
+    üzerindeki performansın kanıtı değildir.
+  </p>
+  <p style="margin-top: 9px">
+    <strong>Hedefimiz, üretimde kurumun kendi ortamında tutulan gerçek ve
+    anonimleştirilmiş beyan verisiyle aynı sonuçlara ulaşmaktır.</strong> Pilot
+    dönemde aynı zamansal holdout protokolü — aynı bölümleme, aynı metrikler, aynı
+    bootstrap güven aralıkları — gerçek veri üzerinde tekrarlanacak ve iki ölçüm
+    yan yana yayımlanacaktır.
   </p>
 </div>
 

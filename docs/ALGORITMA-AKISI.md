@@ -261,8 +261,14 @@ değişiklik gerektirmez**.
 > [!WARNING]
 > Aşağıdaki bütün sayılar **sentetik** bir panel üzerinde, zamansal bir holdout
 > ile ölçülmüştür: 2025Q2'ye kadar eğitim, 2025Q3–Q4 kalibrasyon, 2026Q1–Q2
-> üzerinde **bir kez** ölçüm. Gerçek beyanlar üzerindeki performansın kanıtı
-> değildir.
+> üzerinde **bir kez** ölçüm. Bunlar henüz gerçek beyanlar üzerindeki performansın
+> kanıtı değildir.
+>
+> **Hedefimiz, üretimde kurumun kendi ortamında tutulan gerçek ve
+> anonimleştirilmiş beyan verisiyle aynı sonuçlara ulaşmaktır.** Pilot dönemde
+> aynı zamansal holdout protokolü — aynı bölümleme, aynı metrikler, aynı bootstrap
+> güven aralıkları — gerçek veri üzerinde tekrarlanacak ve iki ölçüm yan yana
+> yayımlanacaktır.
 
 **Test bölümü · n = 1.200 · taban oran %8,08**
 
