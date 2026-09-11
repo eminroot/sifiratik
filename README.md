@@ -67,9 +67,11 @@ Takım **KinetiX** · TEKNOFEST 2026 Sıfır Atık ve Döngüsel Ekonomi
 
 ---
 
-Bu proje, GEKAP beyanlarındaki olası uyumsuzlukları **farklı kamu verileriyle
+Biz **KinetiX** takımıyız. Projemizin adı **GÜS-DEDEKTİV**.
+
+GÜS-DEDEKTİV, GEKAP beyanlarındaki olası uyumsuzlukları **farklı kamu verileriyle
 karşılaştırarak** denetlenmesi gereken firmaları önceliklendiren, **açıklanabilir**
-bir karar-destek sistemidir. Nihai karar her zaman **denetçi tarafında kalır**;
+bir karar destek sistemidir. Nihai karar her zaman **denetçi tarafında kalır**;
 skorlar **TreeSHAP** ile açıklanır ve eksik veri doldurulmaz — *çalıştırılamadı*
 olarak işaretlenip nedeniyle birlikte denetçiye bildirilir.
 
@@ -95,10 +97,21 @@ olarak işaretlenip nedeniyle birlikte denetçiye bildirilir.
 
 ## Problem
 
-GEKAP (Geri Kazanım Katılım Payı) beyanlarını inceleyecek denetim kapasitesi
-sınırlıdır. Bugün hangi işletmenin inceleneceği büyük ölçüde ihbara, rastgele
-seçime veya tek bir eşik kuralına bağlıdır. Sonuç: **doğru işletme geç bulunur,
-yanlış kapı çalınır.**
+2021 yılında Türkiye'de iç piyasaya 4,31 milyon ton ambalaj sürülürken, Atık
+Beyan Sistemi'ne bildirilen ambalaj atığı yaklaşık 0,95 milyon ton düzeyinde
+kalmıştır. Bu rakamlar arasındaki büyük fark, ambalaj hareketlerinin bütüncül
+biçimde izlenmesindeki görünürlük problemini ortaya koymaktadır.
+
+Aynı zamanda belediye atıklarının %81'i düzenli depolamaya giderken, geri
+dönüşüm oranı yalnızca %12'dir. Yaklaşık 500 bin atık toplayıcısının kayıt dışı
+çalıştığı tahmin edilmektedir.
+
+Binlerce işletmenin tamamını fiziksel olarak denetlemek mümkün değildir.
+Hesaplamamıza göre fiziki denetim kapasitesi yaklaşık %2,06 ile sınırlıdır.
+Üretim, dış ticaret ve geçmiş beyan verileri farklı sistemlerde bulunduğu için
+riskli beyanlar önceliklendirilemiyor. Sonuç olarak denetim zamanı verimsiz
+kullanılıyor, kamu geliri riske giriyor ve güvenilir bir atık envanteri
+oluşturulamıyor.
 
 GÜS-DEDEKTİV aynı denetim kapasitesiyle **doğru firmayı, daha erken ve
 gerekçesiyle** incelemeyi hedefler. Firma-çeyrek bazında bir beyanı dört ayrı
