@@ -295,6 +295,13 @@ bir uyarı olarak görür.
 
 ### Bir kayıt nasıl puanlanır
 
+<div align="center">
+<img src="assets/puanlama-akisi.png" alt="Bir firma-çeyrek kaydının puanlanma akışı" width="86%">
+</div>
+
+<details>
+<summary>Diyagramın Mermaid kaynağı</summary>
+
 ```mermaid
 flowchart TD
     A["<b>1 · Bağlam</b><br/>ScoringContext — firma · beyan geçmişi<br/>emsal · saha · GTİP · veri kalitesi"]
@@ -317,6 +324,8 @@ flowchart TD
     G --> H
     H --> I
 ```
+
+</details>
 
 **Beklenen aralık.** İki LightGBM quantile başlığı ayrı ayrı tahmin verir —
 biri firmanın kendi beyan geçmişinden, diğeri emsallerinden ve üretim hacminden.
@@ -488,9 +497,9 @@ zerowaste/
 ├── docs/                     ALGORITMA-AKISI (md + pdf) · MIMARI · RAPOR-ANALIZI
 │   └── pdf/                    PDF'in HTML kaynağı (tek kaynak, iki çıktı)
 │
-├── assets/                   logo, ikon, banner, akış diyagramı
+├── assets/                   logo, ikon, banner, iki akış diyagramı
 │   ├── ekran-goruntuleri/      acik/ ve koyu/ — dokuz ekran, iki tema
-│   └── src/                    banner ve ikonun HTML kaynağı
+│   └── src/                    banner, ikon ve diyagramların HTML kaynağı
 │
 ├── .github/                  CI iş akışı, konu ve PR şablonları, dependabot
 └── scripts/                  Windows başlatıcı

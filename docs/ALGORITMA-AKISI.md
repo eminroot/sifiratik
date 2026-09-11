@@ -22,6 +22,13 @@ aşağıdaki bir katman yukarıdakinin iç durumunu görmez. Bu ayrım değerlen
 dürüst tutan şeydir: özellik üretimi, anomali üretimini *ithal edemez* ve bu
 kural veri doğrulayıcıda AST analiziyle otomatik denetlenir.
 
+<div align="center">
+<img src="../assets/algoritma-akisi.png" alt="GÜS-DEDEKTİV uçtan uca algoritma akışı" width="86%">
+</div>
+
+<details>
+<summary>Diyagramın Mermaid kaynağı</summary>
+
 ```mermaid
 flowchart TD
     K0["<b>K0 · Veri kaynakları</b><br/>GİB GEKAP beyannamesi · Ambalaj Bilgi Sistemi · TÜİK<br/>Ticaret Bakanlığı GTİP · Sıfır Atık Bilgi Sistemi<br/>önceki denetim kayıtları · <i>MVP'de: sentetik panel</i>"]
@@ -48,7 +55,7 @@ flowchart TD
     K5 -->|REST / JSON| K6
 ```
 
-Aynı diyagramın yüksek çözünürlüklü hali: [`assets/algoritma-akisi.png`](../assets/algoritma-akisi.png)
+</details>
 
 ---
 
@@ -56,6 +63,13 @@ Aynı diyagramın yüksek çözünürlüklü hali: [`assets/algoritma-akisi.png`
 
 Aşağıdaki yedi adım tek bir `(firma, dönem)` kaydı için çalışır ve sonuçta puanı,
 aralığı, gerekçeyi ve karar kimliğini birlikte üretir.
+
+<div align="center">
+<img src="../assets/puanlama-akisi.png" alt="Bir firma-çeyrek kaydının puanlanma akışı" width="86%">
+</div>
+
+<details>
+<summary>Diyagramın Mermaid kaynağı</summary>
 
 ```mermaid
 flowchart TD
@@ -79,6 +93,8 @@ flowchart TD
     G --> H
     H --> I
 ```
+
+</details>
 
 ### 2.1 · Bağlam toplanır
 
