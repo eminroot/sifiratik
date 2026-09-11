@@ -179,10 +179,10 @@ aralığı, gerekçeyi ve karar kimliğini birlikte üretir.
 │ Çalışabilen kontrollerin ağırlıklı ortalaması, EN GÜÇLÜ TEK            │
 │ BULGUYLA sabit bir oranda harmanlanır.                                 │
 │                                                                        │
-│ ağırlıklı_ortalama = Σ( aᵢ·wᵢ·sᵢ ) / Σ( aᵢ·wᵢ )                        │
+│ agirlikli_ortalama = TOPLA( a_i * w_i * s_i ) / TOPLA( a_i * w_i )     │
 │ puan = (1 − p) · ağırlıklı_ortalama + p · en_güçlü ,  p = 0,35         │
 │                                                                        │
-│ aᵢ = 1 kontrol çalıştıysa, 0 çalıştırılamadıysa                        │
+│ a_i = 1 kontrol çalıştıysa, 0 çalıştırılamadıysa                       │
 └────────────────────────────────────┬───────────────────────────────────┘
                                      │
                                      ▼
@@ -202,8 +202,8 @@ aralığı, gerekçeyi ve karar kimliğini birlikte üretir.
 ├────────────────────────────────────────────────────────────────────────┤
 │ Denetçinin kararı eklenir, hiçbir zaman düzenlenmez.                   │
 │                                                                        │
-│ digestₙ = SHA256( digestₙ₋₁ ‖ firma ‖ denetçi ‖ işlem ‖                │
-│                   önceki_durum ‖ yeni_durum ‖ not ‖ zaman )            │
+│ digest_n = SHA256( digest_(n-1) | firma | denetçi | işlem |            │
+│                    önceki_durum | yeni_durum | not | zaman )           │
 │                                                                        │
 │ /api/audit/verify zincirin uyuşmayı bıraktığı İLK SIRA                 │
 │ NUMARASINI bildirir.                                                   │
