@@ -4,7 +4,7 @@
 
 <br><br>
 
-**GEKAP ambalaj beyanlarında hangi dosyanın önce incelenmesi gerektiğini,
+**GEKAP ambalaj beyanlarında hangi işletmenin önce incelenmesi gerektiğini,
 kanıtı ve belirsizliğiyle birlikte söyleyen karar destek platformu.**
 
 Takım **KinetiX** · TEKNOFEST 2026 Sıfır Atık ve Döngüsel Ekonomi
@@ -87,8 +87,8 @@ Takım **KinetiX** · TEKNOFEST 2026 Sıfır Atık ve Döngüsel Ekonomi
 ## Problem
 
 GEKAP (Geri Kazanım Katılım Payı) beyanlarını inceleyecek denetim kapasitesi
-sınırlıdır. Bugün hangi dosyanın inceleneceği büyük ölçüde ihbara, rastgele
-seçime veya tek bir eşik kuralına bağlıdır. Sonuç: **doğru dosya geç bulunur,
+sınırlıdır. Bugün hangi işletmenin inceleneceği büyük ölçüde ihbara, rastgele
+seçime veya tek bir eşik kuralına bağlıdır. Sonuç: **doğru işletme geç bulunur,
 yanlış kapı çalınır.**
 
 GÜS-DEDEKTİV aynı denetim kapasitesiyle **doğru firmayı, daha erken ve
@@ -356,6 +356,7 @@ zerowaste/
 │
 ├── docs/                     ALGORITMA-AKISI (md + pdf) · MIMARI · RAPOR-ANALIZI
 ├── assets/                   logo, ikon, banner, akış diyagramı, ekran görüntüleri
+│   └── src/                    banner ve ikonun HTML kaynağı (yeniden üretmek için)
 └── scripts/                  Windows başlatıcı
 ```
 

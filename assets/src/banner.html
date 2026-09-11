@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,100..900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300..600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #0a0a0b; --surface: #111113; --surface-2: #16161a;
+    --ink: #f5f5f6; --ink-2: #b6b6bd; --ink-3: #8d8d95; --ink-4: #5f5f67;
+    --rule: #232326; --rule-hard: #2f2f36;
+    --stop: #f08a8a; --warn: #e8b866; --ok: #6ddba1; --cool: #8fbcf0;
+    --sans: 'Inter', system-ui, sans-serif;
+    --mono: 'Geist Mono', ui-monospace, Consolas, monospace;
+  }
+  body {
+    width: 1600px; height: 480px; background: var(--bg);
+    font-family: var(--sans); color: var(--ink);
+    display: grid; grid-template-columns: 1fr 620px; align-items: center;
+    overflow: hidden; position: relative;
+  }
+  /* Arka plan: ince ızgara, konsol dokusu. */
+  body::before {
+    content: ''; position: absolute; inset: 0;
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,.028) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,.028) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: radial-gradient(120% 100% at 20% 40%, #000 20%, transparent 78%);
+  }
+
+  .left { padding: 0 0 0 84px; position: relative; }
+
+  .mark { display: flex; align-items: center; gap: 22px; }
+  .tile {
+    width: 76px; height: 76px; border-radius: 20px; background: #0e0e10;
+    box-shadow: inset 0 0 0 1.5px var(--rule-hard);
+    display: grid; place-items: center; flex: none; color: var(--ink);
+  }
+  h1 {
+    font-size: 48px; font-weight: 600; letter-spacing: .14em;
+    line-height: 1; font-family: var(--mono);
+  }
+  .sub {
+    margin-top: 10px; font-size: 12.5px; letter-spacing: .30em;
+    text-transform: uppercase; color: var(--ink-4); font-family: var(--mono);
+  }
+
+  .tagline {
+    margin-top: 34px; font-size: 25px; line-height: 1.42;
+    color: var(--ink-2); max-width: 660px; font-weight: 400;
+    letter-spacing: -.005em;
+  }
+  .tagline b { color: var(--ink); font-weight: 600; }
+
+  .meta {
+    margin-top: 34px; display: flex; align-items: center; gap: 14px;
+    font-family: var(--mono); font-size: 12px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--ink-3); flex-wrap: wrap;
+  }
+  .chip {
+    border: 1px solid var(--rule-hard); border-radius: 999px;
+    padding: 7px 15px; color: var(--ink-2);
+  }
+  .chip.accent { border-color: #2f4034; color: var(--ok); }
+
+  /* --- sağ panel: kuyruğun kendisi ------------------------------------- */
+  .right { padding-right: 84px; }
+  .panel {
+    background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 18px; padding: 26px 28px 24px;
+  }
+  .panel-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-family: var(--mono); font-size: 11px; letter-spacing: .2em;
+    text-transform: uppercase; color: var(--ink-4);
+  }
+  .spread { margin-top: 18px; display: flex; gap: 5px; }
+  .spread i { height: 8px; border-radius: 999px; display: block; }
+  .legend {
+    margin-top: 12px; display: flex; gap: 20px;
+    font-family: var(--mono); font-size: 11.5px; color: var(--ink-3);
+  }
+  .legend b { color: var(--ink-2); font-weight: 500; }
+  .legend s { text-decoration: none; display: inline-block; width: 7px; height: 7px;
+              border-radius: 999px; margin-right: 7px; vertical-align: middle; }
+
+  .rows { margin-top: 22px; border-top: 1px solid var(--rule); }
+  .row {
+    display: grid; grid-template-columns: 26px 1fr 82px 58px;
+    align-items: center; gap: 14px;
+    padding: 13px 0; border-bottom: 1px solid var(--rule);
+    font-size: 14px;
+  }
+  .row .rank { font-family: var(--mono); font-size: 11px; color: var(--ink-4); }
+  .row .name { font-family: var(--mono); font-size: 13.5px; color: var(--ink); letter-spacing: .02em; }
+  .row .why { font-size: 11.5px; color: var(--ink-4); margin-top: 3px; letter-spacing: .01em;
+              font-family: var(--sans); }
+  .row .score { font-family: var(--mono); font-size: 19px; text-align: right; }
+  .row .tag {
+    font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em;
+    text-transform: uppercase; text-align: center; padding: 4px 0;
+    border-radius: 6px; border: 1px solid;
+  }
+  .t-stop { color: var(--stop); border-color: #4a2323; background: #2a1414; }
+  .t-warn { color: var(--warn); border-color: #47341a; background: #271d0d; }
+  .t-ok   { color: var(--ok);   border-color: #1e4030; background: #10241a; }
+  .foot {
+    margin-top: 16px; font-size: 11px; color: var(--ink-4);
+    font-family: var(--sans); line-height: 1.5;
+  }
+</style></head>
+<body>
+  <div class="left">
+    <div class="mark">
+      <div class="tile">
+        <svg viewBox="0 0 64 64" width="44" height="44">
+          <circle cx="27" cy="27" r="19" fill="none" stroke="currentColor" stroke-width="4.5"/>
+          <rect x="18" y="20" width="18" height="4" rx="2" fill="#f08a8a"/>
+          <rect x="18" y="26" width="13" height="4" rx="2" fill="currentColor" opacity=".75"/>
+          <rect x="18" y="32" width="9"  height="4" rx="2" fill="currentColor" opacity=".45"/>
+          <path d="M41 41 L54 54" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <h1>GÜS-DEDEKTİV</h1>
+        <div class="sub">Denetim Önceliklendirme</div>
+      </div>
+    </div>
+
+    <p class="tagline">
+      GEKAP ambalaj beyanlarında <b>hangi işletmenin önce incelenmesi gerektiğini</b>,
+      kanıtı ve belirsizliğiyle birlikte söyleyen karar destek platformu.
+    </p>
+
+    <div class="meta">
+      <span class="chip accent">TEKNOFEST 2026</span>
+      <span class="chip">Takım KinetiX</span>
+      <span class="chip">Sıfır Atık &amp; Döngüsel Ekonomi</span>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="panel">
+      <div class="panel-head">
+        <span>Öncelik Kuyruğu</span>
+        <span>2026Q2 · 600 firma</span>
+      </div>
+
+      <div class="spread">
+        <i style="background:#f08a8a; flex: 56"></i>
+        <i style="background:#e8b866; flex: 75"></i>
+        <i style="background:#6b6b73; flex: 137"></i>
+        <i style="background:#6ddba1; flex: 332"></i>
+      </div>
+      <div class="legend">
+        <span><s style="background:#f08a8a"></s>Kritik <b>56</b></span>
+        <span><s style="background:#e8b866"></s>Yüksek <b>75</b></span>
+        <span><s style="background:#6b6b73"></s>Orta <b>137</b></span>
+        <span><s style="background:#6ddba1"></s>Düşük <b>332</b></span>
+      </div>
+
+      <div class="rows">
+        <div class="row">
+          <span class="rank">01</span>
+          <span>
+            <div class="name">SYN-FRM-000043</div>
+            <div class="why">E8 · Gümrük tarife kanıtı — beklenenin %38 altında</div>
+          </span>
+          <span class="score">99,9</span>
+          <span class="tag t-stop">Kritik</span>
+        </div>
+        <div class="row">
+          <span class="rank">19</span>
+          <span>
+            <div class="name">SYN-FRM-000355</div>
+            <div class="why">E2 · Yapısal eksik beyan — 3 kontrol çalıştırılamadı</div>
+          </span>
+          <span class="score">86,8</span>
+          <span class="tag t-stop">Kritik</span>
+        </div>
+        <div class="row">
+          <span class="rank">44</span>
+          <span>
+            <div class="name">SYN-FRM-000189</div>
+            <div class="why">E3 · Emsalden sapma — kohortun aralığının altında</div>
+          </span>
+          <span class="score">69,5</span>
+          <span class="tag t-warn">Yüksek</span>
+        </div>
+      </div>
+
+      <p class="foot">
+        0–100 puan <b style="color:var(--ink-2)">operasyonel inceleme önceliğidir</b>;
+        ihlal olasılığı değildir. Nihai karar yetkili denetçiye aittir.
+      </p>
+    </div>
+  </div>
+</body></html>
