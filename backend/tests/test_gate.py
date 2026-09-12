@@ -21,9 +21,9 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-USER = "juri"
-PASSWORD = "a-long-password-that-nobody-guesses-8f3c"
-SECRET = "a-signing-secret-for-the-tests"
+USER = "test-only-user"
+PASSWORD = "test-only-password-not-used-anywhere"
+SECRET = "test-only-signing-key"
 
 
 @pytest.fixture
@@ -271,7 +271,7 @@ def test_without_credentials_nothing_is_gated(monkeypatch):
     get_settings.cache_clear()
 
 
-@pytest.mark.parametrize("user,password", [("juri", ""), ("", "password"), ("", "")])
+@pytest.mark.parametrize("user,password", [(USER, ""), ("", PASSWORD), ("", "")])
 def test_half_a_credential_does_not_close_the_gate(monkeypatch, user, password):
     """Better plainly open than seeming shut with a password nobody set."""
     from app.config import get_settings
