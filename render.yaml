@@ -24,6 +24,31 @@ services:
     autoDeployTrigger: commit
 
     envVars:
+      # ---------------------------------------------------------------- gate
+      # One shared sign-in in front of the whole site, so a public address is
+      # not a public dataset. Both must be set or the site stays open; set
+      # them in the Render dashboard, never in this file, which is public.
+      #
+      # The password is the only thing standing in front of the data, so make
+      # it long and random rather than memorable:
+      #   python -c "import secrets; print(secrets.token_urlsafe(18))"
+      - key: SITE_USER
+        sync: false
+      - key: SITE_PASSWORD
+        sync: false
+
+      # Signs the session cookie. Render generates one and keeps it, so a
+      # restart does not sign everybody out. Never set this by hand.
+      - key: SESSION_SECRET
+        generateValue: true
+
+      # The cookie is sent only over HTTPS. Render serves nothing else, and
+      # without this the session would travel in the open on any plain-http
+      # request that reached the service.
+      - key: SESSION_COOKIE_SECURE
+        value: "true"
+
+      # ------------------------------------------------------------- service
       # The delivered model. It falls back to the rule engine on its own if the
       # artefacts or lightgbm are missing, and every response says which ran.
       - key: SCORING_ENGINE

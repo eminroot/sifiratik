@@ -15,10 +15,12 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app import gate
 from app.config import get_settings, weak_key_owners
 from app.database.database import create_all
 from app.routers import (
     assistant,
+    auth,
     climate_impact,
     companies,
     dashboard,
@@ -41,7 +43,11 @@ log = logging.getLogger("gus")
 
 
 def writes_mode() -> str:
-    return "api-key" if settings.auth_enabled else "open"
+    # Read fresh rather than from the module-level `settings`, which is bound
+    # once at import. Anything answered per request has to come from the
+    # settings in force now, or the health endpoint reports the configuration
+    # the process started with instead of the one it is enforcing.
+    return "api-key" if get_settings().auth_enabled else "open"
 
 
 @asynccontextmanager
@@ -61,6 +67,14 @@ async def lifespan(app: FastAPI):
         log.warning(
             "Writing endpoints are OPEN: no API_KEYS configured. Fine for a local demo; "
             "set API_KEYS before exposing this service to a network."
+        )
+
+    if settings.gate_enabled:
+        log.info("The site asks for a sign-in as %r before it shows anything.", settings.site_user)
+    else:
+        log.warning(
+            "The site is READABLE BY ANYONE: no SITE_USER and SITE_PASSWORD configured. "
+            "Fine for a local demo; set both before exposing this service to a network."
         )
 
     create_all()
@@ -138,7 +152,35 @@ async def security_headers(request: Request, call_next):
     response.headers.setdefault("Referrer-Policy", "no-referrer")
     return response
 
+
+@app.middleware("http")
+async def site_gate(request: Request, call_next):
+    """Refuse data to a caller who has not signed in.
+
+    Here rather than on each route, so a route added later is behind the gate
+    by default instead of by remembering. Does nothing at all when no
+    credentials are configured, which is the state of a checkout.
+
+    A browser preflight is answered before the check: it carries no cookie by
+    definition, and refusing it would show the caller a CORS error in place of
+    the 401 that would tell the interface to ask for a password.
+    """
+    if (
+        request.method == "OPTIONS"
+        or not gate.enabled()
+        or gate.path_is_public(request.url.path)
+        or gate.signed_in_as(request) is not None
+    ):
+        return await call_next(request)
+
+    return JSONResponse(
+        status_code=401,
+        content={"detail": "Sign in to use this service."},
+        headers={"X-Content-Type-Options": "nosniff"},
+    )
+
 for router in (
+    auth.router,
     dashboard.router,
     companies.router,
     inspections.router,
@@ -164,6 +206,10 @@ def health() -> dict:
         # Whether decisions, rescoring and policy changes need X-API-Key. The
         # interface reads this to decide whether to ask for a key.
         "writes": writes_mode(),
+        # Whether the site asks for a sign-in. Said here, and only as on or
+        # off, so a deployment can be checked without signing in first. It
+        # tells a caller nothing the sign-in form does not already.
+        "gate": "on" if gate.enabled() else "off",
     }
 
 

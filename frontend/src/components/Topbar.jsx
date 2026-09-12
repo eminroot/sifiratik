@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { KeyRound } from 'lucide-react';
+import { KeyRound, LogOut } from 'lucide-react';
 
 import { useApp } from '../App.jsx';
-import { getApiKey, setApiKey, useApi } from '../lib/api.js';
+import { getApiKey, post, setApiKey, useApi } from '../lib/api.js';
 import { LANGUAGES, useI18n } from '../lib/i18n.jsx';
 
 /**
@@ -26,6 +26,7 @@ export default function Topbar() {
 
       <div className="topbar-tools">
         {gated && <KeyControl />}
+        <SignOut />
 
         <div className="lang-switch" role="group" aria-label={t('lang.switch')}>
           {LANGUAGES.map((option) => (
@@ -44,6 +45,33 @@ export default function Topbar() {
         </div>
       </div>
     </header>
+  );
+}
+
+/**
+ * Shown only when the site asks for a sign-in. A deployment that is open has
+ * nothing to sign out of, so the control would be a button that did nothing.
+ */
+function SignOut() {
+  const { t } = useI18n();
+  const session = useApi('/auth/status');
+  if (!session.data?.enabled) return null;
+
+  const leave = async () => {
+    try {
+      await post('/auth/logout');
+    } catch {
+      // The cookie may already be gone. Reloading lands on the form either
+      // way, which is what the viewer asked for.
+    }
+    window.location.reload();
+  };
+
+  return (
+    <button type="button" className="key-button" onClick={leave} title={t('signIn.out')}>
+      <LogOut size={13} strokeWidth={2} />
+      {t('signIn.out')}
+    </button>
   );
 }
 

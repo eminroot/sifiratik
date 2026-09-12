@@ -19,6 +19,19 @@ export const STRINGS = {
 
     'brand.sub': 'Inspection prioritisation',
 
+    'signIn.title': 'Sign in',
+    'signIn.lede': 'This demonstration is not open to the public. Sign in with the credentials you were given.',
+    'signIn.user': 'Username',
+    'signIn.password': 'Password',
+    'signIn.submit': 'Sign in',
+    'signIn.working': 'Signing in',
+    'signIn.wrong': 'Wrong username or password.',
+    'signIn.tooMany': 'Too many failed attempts. Wait a moment and try again.',
+    'signIn.failed': 'Could not reach the service. Try again.',
+    'signIn.out': 'Sign out',
+    'signIn.signedOut': 'Signed out.',
+    'signIn.disclaimer': 'Scores rank companies for human review. They are not findings of non-compliance.',
+
     'key.button': 'API key',
     'key.set': 'Key in use',
     'key.title': 'Decisions need an API key',
@@ -449,6 +462,19 @@ export const STRINGS = {
     'lang.tr': 'Türkçe',
 
     'brand.sub': 'Denetim önceliklendirme',
+
+    'signIn.title': 'Giriş',
+    'signIn.lede': 'Bu gösterim herkese açık değildir. Size verilen bilgilerle giriş yapın.',
+    'signIn.user': 'Kullanıcı adı',
+    'signIn.password': 'Parola',
+    'signIn.submit': 'Giriş yap',
+    'signIn.working': 'Giriş yapılıyor',
+    'signIn.wrong': 'Kullanıcı adı veya parola hatalı.',
+    'signIn.tooMany': 'Çok fazla hatalı deneme. Biraz bekleyip tekrar deneyin.',
+    'signIn.failed': 'Servise ulaşılamadı. Tekrar deneyin.',
+    'signIn.out': 'Çıkış',
+    'signIn.signedOut': 'Çıkış yapıldı.',
+    'signIn.disclaimer': 'Puanlar firmaları insan incelemesi için sıralar. İhlal tespiti değildir.',
 
     'key.button': 'API anahtarı',
     'key.set': 'Anahtar kullanılıyor',

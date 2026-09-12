@@ -676,18 +676,45 @@ disk eklenip `DATABASE_URL` oraya gösterilir.
 ### Render
 
 Depo GitHub'a gönderilir, Render'da **New > Blueprint** seçilip depo gösterilir;
-`render.yaml` okunur. Adım adım kılavuz: [docs/RENDER-DAGITIM.md](docs/RENDER-DAGITIM.md).
-
-Ayarlanacak tek şey isteğe bağlı iki ortam değişkenidir:
+`render.yaml` okunur. Ayarlanacak ortam değişkenleri şunlardır:
 
 | Değişken | Etkisi |
 |---|---|
+| `SITE_USER` + `SITE_PASSWORD` | İkisi birden kuruluysa site girişe kapanır. Biri eksikse açık kalır. |
 | `GEMINI_API_KEY` | Boşsa asistan paneli görünmez, servis normal çalışır. |
 | `API_KEYS` | Boşsa yazan uç noktalar **açıktır**. |
 
-Yazan uç noktaların açık olması, jürinin karar kaydedebilmesi içindir. Servis
-herkese açık bir adreste duracağı için bu bilinçli bir seçimdir; kapatmak için
-Render panosunda `API_KEYS` değeri `anahtar:denetçi` çiftleri olarak girilir:
+### Sitenin önündeki giriş
+
+Herkese açık bir adres, üzerinde bir kapı yoksa herkese açık bir veri
+kümesidir. `SITE_USER` ve `SITE_PASSWORD` birlikte kurulduğunda site, veri
+döndüren her uç noktayı imzasız çağrılara kapatır; giriş yapmamış bir çağrıya
+kalan tek şey kabuk, stil ve paket dosyalarıdır — içlerinde veri yoktur.
+
+Kapı **arayüzde değil, API'de** durur. Tarayıcının çizdiği bir kapı, bir betiğin
+etrafından dolaştığı bir kapıdır; bu yüzden kontrol `app/gate.py` içinde ve
+`/api/*` yolları imzasız çağrıyı reddeder. Sağlık ucu dışarıdadır, çünkü Render
+dağıtımın kalkıp kalkmadığına onunla karar verir.
+
+Oturum, kendi imzasını taşıyan bir çerezdir: sunucuda saklanan bir şey yoktur.
+`httponly` ile sayfadaki hiçbir betiğin okuyamayacağı, `samesite=lax` ile başka
+bir sitenin başlattığı isteğe iliştirilmeyen bir çerez. `SESSION_SECRET`
+kuruluysa yeniden başlatma kimseyi dışarı atmaz.
+
+Giriş yapan herkes aynı görüntüleyendir; bu bir kimlik sistemi değil, bir
+kapıdır. Bir kararı kimin imzaladığı hâlâ `API_KEYS` ile belirlenir.
+
+Parola, verinin önündeki tek şeydir — akılda kalan değil, uzun ve rastgele olsun:
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(18))"
+```
+
+### Yazan uç noktalar
+
+Yazan uç noktaların açık olması, jürinin karar kaydedebilmesi içindir. Kapatmak
+için Render panosunda `API_KEYS` değeri `anahtar:denetçi` çiftleri olarak
+girilir:
 
 ```bash
 # Uzun ve rastgele olmalı, bir kelime değil:
@@ -860,7 +887,6 @@ Tam model kartı ve 12 değerlendirme tablosu:
 | [`docs/ALGORITMA-AKISI.pdf`](docs/ALGORITMA-AKISI.pdf) | Aynısının baskıya uygun 8 sayfalık A4 sürümü |
 | [`docs/MIMARI.md`](docs/MIMARI.md) | Sistem mimarisi ve teknoloji seçimlerinin tam gerekçesi |
 | [`docs/RAPOR-ANALIZI.md`](docs/RAPOR-ANALIZI.md) | Ön değerlendirme raporunun analizi ve alınan önlemler |
-| [`docs/RENDER-DAGITIM.md`](docs/RENDER-DAGITIM.md) | Render'a dağıtım: adım adım, ekran ekran |
 | [`ml/README.md`](ml/README.md) | Veri altyapısı: üretim, doğrulama, kaynak kütüğü |
 | [`ml/reports/MODEL_KARTI.md`](ml/reports/MODEL_KARTI.md) | Model kartı: sınırlılıklar, bölümleme, metrikler |
 | [`backend/models/README.md`](backend/models/README.md) | Artefakt listesi ve yeniden üretme |

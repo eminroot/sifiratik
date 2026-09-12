@@ -93,6 +93,26 @@ class Settings(BaseSettings):
     # key:user pairs, comma separated — 8f2c...:aydin.m,4b91...:kaya.s
     api_keys: str = ""
 
+    # One shared sign-in for the whole site, so a deployment on a public
+    # address is not readable by whatever finds it. Both must be set for the
+    # gate to close; with either missing the site is open, as it is on a
+    # laptop. This is a door, not an identity system: everyone who is let in is
+    # the same viewer. Decisions are still attributed through API_KEYS.
+    # See app/gate.py.
+    site_user: str = ""
+    site_password: str = ""
+    # Signs the session cookie. Left empty a random one is made at startup,
+    # which works but logs everyone out whenever the process restarts.
+    session_secret: str = ""
+    session_hours: int = Field(default=12, ge=1, le=720)
+    # Send the cookie only over HTTPS. Off by default so a laptop over plain
+    # http can sign in; on in any real deployment, where it is what stops the
+    # cookie travelling in the open.
+    session_cookie_secure: bool = False
+    # Wrong passwords per minute, for everyone together, before the endpoint
+    # starts refusing. A correct password is never refused — see app/gate.py.
+    login_attempts_per_minute: int = Field(default=20, ge=1)
+
     # The in-app assistant. Without a key the endpoint reports itself as
     # unconfigured and the interface hides the panel rather than failing.
     gemini_api_key: str = ""
@@ -120,6 +140,11 @@ class Settings(BaseSettings):
     @property
     def assistant_enabled(self) -> bool:
         return bool(self.gemini_api_key.strip())
+
+    @property
+    def gate_enabled(self) -> bool:
+        """Whether the site asks for a sign-in before it shows anything."""
+        return bool(self.site_user.strip() and self.site_password)
 
     @property
     def cors_origin_list(self) -> list[str]:

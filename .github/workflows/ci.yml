@@ -102,8 +102,37 @@ jobs:
           echo "--- API yolları arayüze düşmüyor"
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/api/boyle-bir-yol-yok)" = "404"
 
+          echo "--- kimlik doğrulama kapalıyken hiçbir şey değişmiyor"
+          echo "$health" | grep -q '"gate":"off"'
+
+          docker rm -f gus >/dev/null
+
+          echo "--- kapı kapalıyken imza olmadan veri verilmiyor"
+          docker run -d --name gus-gated -p 8001:8001 -e PORT=8001             -e SITE_USER=juri -e SITE_PASSWORD=ci-test-parolasi-uzun-9f3c             -e SESSION_SECRET=ci-test-imza-anahtari gus-dedektiv:ci
+
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8001/api/health >/dev/null 2>&1; then break; fi
+            if [ "$i" = "60" ]; then echo "Kapılı servis açılmadı:"; docker logs gus-gated; exit 1; fi
+            sleep 2
+          done
+
+          curl -fsS http://127.0.0.1:8001/api/health | grep -q '"gate":"on"'
+          # Bir bot için tek gördüğü bu: veri yok.
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8001/api/dashboard)" = "401"
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8001/api/inspection-queue)" = "401"
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8001/openapi.json)" = "401"
+          # Giriş formunun gelebilmesi için kabuk açık kalmalı.
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8001/)" = "200"
+
+          echo "--- doğru parola veriyi açıyor"
+          curl -fsS -c /tmp/jar -X POST http://127.0.0.1:8001/api/auth/login             -H 'Content-Type: application/json'             -d '{"username":"juri","password":"ci-test-parolasi-uzun-9f3c"}' >/dev/null
+          test "$(curl -s -b /tmp/jar -o /dev/null -w '%{http_code}' http://127.0.0.1:8001/api/dashboard)" = "200"
+
+          echo "--- yanlış parola açmıyor"
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:8001/api/auth/login             -H 'Content-Type: application/json' -d '{"username":"juri","password":"yanlis"}')" = "401"
+
+          docker rm -f gus-gated >/dev/null
+
           echo "--- veri tohumlanmış geldi"
           curl -fsS http://127.0.0.1:8000/api/dashboard >/dev/null
           curl -fsS "http://127.0.0.1:8000/api/inspection-queue?limit=1" >/dev/null
-
-          docker rm -f gus >/dev/null

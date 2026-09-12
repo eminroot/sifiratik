@@ -32,7 +32,19 @@ class ApiError extends Error {
   }
 }
 
-async function parse(response) {
+/**
+ * Fired when the service says the session is gone — it expired, or the
+ * service restarted without a fixed signing secret. Every request funnels
+ * through `parse`, so one listener in App puts the sign-in form back up
+ * instead of each page inventing its own way to fail.
+ */
+export const SESSION_LOST = 'gus:session-lost';
+
+// The sign-in endpoints answer 401 as part of their normal work; announcing a
+// lost session there would fight with the form the viewer is already using.
+const AUTH_PATHS = '/auth/';
+
+async function parse(response, path = '') {
   const text = await response.text();
   let body = null;
   try {
@@ -41,6 +53,9 @@ async function parse(response) {
     // A proxy error page is HTML, not JSON; report the status, not a parse failure.
   }
   if (!response.ok) {
+    if (response.status === 401 && !path.includes(AUTH_PATHS)) {
+      window.dispatchEvent(new CustomEvent(SESSION_LOST));
+    }
     const detail = body?.detail;
     throw new ApiError(
       response.status,
@@ -73,16 +88,23 @@ export function query(params = {}) {
   return encoded ? `?${encoded}` : '';
 }
 
+// The session cookie is same-origin, which is what fetch sends by default;
+// saying so keeps it from depending on that default.
+const WITH_SESSION = { credentials: 'same-origin' };
+
 export function get(path, signal) {
-  return fetch(`${BASE}${path}`, { signal }).then(parse);
+  return fetch(`${BASE}${path}`, { ...WITH_SESSION, signal }).then((response) =>
+    parse(response, path),
+  );
 }
 
 export function post(path, body) {
   return fetch(`${BASE}${path}`, {
+    ...WITH_SESSION,
     method: 'POST',
     headers: writeHeaders(),
     body: JSON.stringify(body ?? {}),
-  }).then(parse);
+  }).then((response) => parse(response, path));
 }
 
 /**
