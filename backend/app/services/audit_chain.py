@@ -22,13 +22,15 @@ from __future__ import annotations
 
 import hashlib
 import json
+import random
+import time
 import uuid
 from collections.abc import Callable
 from datetime import datetime, timezone
 from typing import TypeVar
 
 from sqlalchemy import func, select
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import Session
 
 from app.models import AuditEvent, AuditReview, ChainAnchor
@@ -125,7 +127,7 @@ def append_event(
     return event
 
 
-def commit_with_retry(db: Session, write: Callable[[], T], attempts: int = 3) -> T:
+def commit_with_retry(db: Session, write: Callable[[], T], attempts: int = 8) -> T:
     """Run `write` and commit it, starting over if another writer got there first.
 
     `append_event` reads the newest sequence number and takes the next one.
@@ -134,16 +136,28 @@ def commit_with_retry(db: Session, write: Callable[[], T], attempts: int = 3) ->
     that to the caller as a server error the whole write is rolled back and
     run again against the chain as it now stands. `write` must build its rows
     from scratch each time it is called.
+
+    A busy SQLite is retried the same way. It refuses a writer that cannot get
+    the lock in time with `OperationalError`, which is the same situation as a
+    lost race and wants the same answer; letting it through meant a decision
+    could be dropped for no reason but timing.
+
+    Waiting a random moment before trying again matters more than the number of
+    attempts. Writers that collide once have just been serialised by the same
+    lock, so retrying in step collides them again; the jitter is what breaks
+    them apart. Without it, a handful of simultaneous decisions could burn
+    every attempt against each other and fail as a server error.
     """
     for attempt in range(1, attempts + 1):
         try:
             result = write()
             db.commit()
             return result
-        except IntegrityError:
+        except (IntegrityError, OperationalError):
             db.rollback()
             if attempt == attempts:
                 raise
+            time.sleep(random.uniform(0.01, 0.05) * attempt)
     raise RuntimeError("unreachable")  # pragma: no cover
 
 
