@@ -4,7 +4,7 @@ message: "Bu yazılımı kullanırsanız lütfen aşağıdaki gibi atıf yapın.
 type: software
 authors:
   - name: "Takım KinetiX"
-repository-code: "https://github.com/eminroot/zerowaste"
+repository-code: "https://github.com/eminroot/zerowasteapp"
 abstract: >-
   GEKAP beyanlarındaki olası uyumsuzlukları farklı kamu verileriyle
   karşılaştırarak denetlenmesi gereken firmaları önceliklendiren, açıklanabilir
