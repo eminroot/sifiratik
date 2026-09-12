@@ -676,7 +676,9 @@ disk eklenip `DATABASE_URL` oraya gösterilir.
 ### Render
 
 Depo GitHub'a gönderilir, Render'da **New > Blueprint** seçilip depo gösterilir;
-`render.yaml` okunur. Ayarlanacak tek şey isteğe bağlı iki ortam değişkenidir:
+`render.yaml` okunur. Adım adım kılavuz: [docs/RENDER-DAGITIM.md](docs/RENDER-DAGITIM.md).
+
+Ayarlanacak tek şey isteğe bağlı iki ortam değişkenidir:
 
 | Değişken | Etkisi |
 |---|---|
@@ -858,6 +860,7 @@ Tam model kartı ve 12 değerlendirme tablosu:
 | [`docs/ALGORITMA-AKISI.pdf`](docs/ALGORITMA-AKISI.pdf) | Aynısının baskıya uygun 8 sayfalık A4 sürümü |
 | [`docs/MIMARI.md`](docs/MIMARI.md) | Sistem mimarisi ve teknoloji seçimlerinin tam gerekçesi |
 | [`docs/RAPOR-ANALIZI.md`](docs/RAPOR-ANALIZI.md) | Ön değerlendirme raporunun analizi ve alınan önlemler |
+| [`docs/RENDER-DAGITIM.md`](docs/RENDER-DAGITIM.md) | Render'a dağıtım: adım adım, ekran ekran |
 | [`ml/README.md`](ml/README.md) | Veri altyapısı: üretim, doğrulama, kaynak kütüğü |
 | [`ml/reports/MODEL_KARTI.md`](ml/reports/MODEL_KARTI.md) | Model kartı: sınırlılıklar, bölümleme, metrikler |
 | [`backend/models/README.md`](backend/models/README.md) | Artefakt listesi ve yeniden üretme |

@@ -15,6 +15,8 @@ services:
     runtime: docker
     # Closest Render region to Turkey.
     region: frankfurt
+    # Legacy name for the 1c-2g plan: 1 CPU, 2 GB. Both spellings are valid.
+    # Scoring peaks near 300 MB, so this leaves room for a re-run under load.
     plan: standard
     dockerfilePath: ./Dockerfile
     dockerContext: .
@@ -39,12 +41,21 @@ services:
       #   8f2c...:aydin.m,4b91...:kaya.s
       # Use a long random value, not a word:
       #   python -c "import secrets; print(secrets.token_urlsafe(32))"
+      #
+      # LEAVE THIS EMPTY unless you mean to close the gate. Anything that is
+      # not key:user stops the service at startup rather than leaving the gate
+      # open while it looks shut, so a placeholder like "x" or "change-me"
+      # here is a service that will not boot. Blank, or a space, is fine.
       - key: API_KEYS
         sync: false
 
       # The in-app assistant. Without a key the endpoint reports itself
       # unconfigured and the interface hides the panel rather than failing.
       # Get one at https://aistudio.google.com/apikey
+      #
+      # Blank is a working answer; a placeholder is not. Any non-empty value
+      # counts as configured, so the panel appears and then fails on the first
+      # question. Either a real key or nothing.
       - key: GEMINI_API_KEY
         sync: false
 
