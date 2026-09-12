@@ -704,7 +704,22 @@ kuruluysa yeniden başlatma kimseyi dışarı atmaz.
 Giriş yapan herkes aynı görüntüleyendir; bu bir kimlik sistemi değil, bir
 kapıdır. Bir kararı kimin imzaladığı hâlâ `API_KEYS` ile belirlenir.
 
-Parola, verinin önündeki tek şeydir — akılda kalan değil, uzun ve rastgele olsun:
+### Gösterim giriş bilgileri
+
+Yayındaki sürüm aşağıdaki bilgilerle açılır:
+
+| | |
+|---|---|
+| **Kullanıcı adı** | `juri` |
+| **Parola** | `gus-dedektiv-673444` |
+
+Bu bilgiler bilerek burada yazılıdır: jüri, ayrıca bir yerden parola aramadan
+girebilsin diye. Dolayısıyla bu kapı bir kilit değil, bir kapıcıdır — arama
+motorlarını, dizinleyicileri ve form doldurmayan gezginleri dışarıda tutar,
+depoyu okuyan birini tutmaz.
+
+Kurum kurulumunda bu iki değer Render panosundan değiştirilir ve hiçbir yerde
+yazılı olmaz; parola o zaman akılda kalan değil, uzun ve rastgele olmalıdır:
 
 ```bash
 python -c "import secrets; print(secrets.token_urlsafe(18))"
