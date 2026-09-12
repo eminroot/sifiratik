@@ -1,0 +1,58 @@
+# Render blueprint. One web service: the API serves the built interface, so
+# there is a single URL, no CORS to configure, and no API address compiled into
+# the bundle.
+#
+# To deploy: push this repository to GitHub, then in Render choose
+# New > Blueprint and point it at the repo. Render reads this file.
+#
+# The database is SQLite, seeded into the image at build time and therefore
+# reset by every deploy. That is deliberate: each deploy serves a known-good
+# demo. Decisions recorded against a running instance last until the next one.
+
+services:
+  - type: web
+    name: gus-dedektiv
+    runtime: docker
+    # Closest Render region to Turkey.
+    region: frankfurt
+    plan: standard
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    autoDeployTrigger: commit
+
+    envVars:
+      # The delivered model. It falls back to the rule engine on its own if the
+      # artefacts or lightgbm are missing, and every response says which ran.
+      - key: SCORING_ENGINE
+        value: ml
+
+      # The image is built with the database already seeded, so this only
+      # matters if that database is ever lost: the service would rebuild it
+      # rather than come up empty.
+      - key: AUTO_SEED
+        value: "true"
+
+      # Writing endpoints are OPEN unless this is set, which is what lets a
+      # visitor record a decision without being handed a key. To close them,
+      # set this in the Render dashboard as key:auditor pairs, comma separated:
+      #   8f2c...:aydin.m,4b91...:kaya.s
+      # Use a long random value, not a word:
+      #   python -c "import secrets; print(secrets.token_urlsafe(32))"
+      - key: API_KEYS
+        sync: false
+
+      # The in-app assistant. Without a key the endpoint reports itself
+      # unconfigured and the interface hides the panel rather than failing.
+      # Get one at https://aistudio.google.com/apikey
+      - key: GEMINI_API_KEY
+        sync: false
+
+      # Every assistant question is a paid call on the key above, so the
+      # service caps them. Behind a proxy the container cannot tell one
+      # anonymous viewer from another without trusting a header the caller
+      # writes, so it does not try: this is the ceiling for all of them
+      # together, not per person. Sized for a few people using the panel at
+      # once. It is also the worst case on the bill, which is the point.
+      - key: ASSISTANT_REQUESTS_PER_MINUTE
+        value: "30"

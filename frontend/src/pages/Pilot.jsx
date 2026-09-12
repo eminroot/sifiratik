@@ -199,7 +199,7 @@ export default function Pilot() {
                   <Stat
                     icon={Cloud}
                     label={t('pilot.emissions')}
-                    value={num(findings.co2e_avoided_tonnes)}
+                    value={tonnes(findings.co2e_avoided_tonnes, { unit: false })}
                     unit="t CO2e"
                     note={t('pilot.emissionsNote', {
                       percent: percent(findings.average_data_quality),
@@ -226,7 +226,7 @@ export default function Pilot() {
                             <td className="lead">{materialLabel(row.key)}</td>
                             <td className="num">{tonnes(row.tonnes)}</td>
                             <td className="num">{lira(row.gekap_value_try)}</td>
-                            <td className="num">{num(row.co2e_avoided_tonnes)} t</td>
+                            <td className="num">{tonnes(row.co2e_avoided_tonnes)}</td>
                           </tr>
                         ))}
                       </tbody>

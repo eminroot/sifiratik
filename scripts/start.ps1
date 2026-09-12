@@ -230,7 +230,13 @@ try {
 
     if ($Reseed.IsPresent) {
         Write-Step 'Rebuilding the dataset'
-        & $pythonExe @pythonPrefix -m app.database.seed --reset
+        & $pythonExe @pythonPrefix -m app.database.gus_import --reset
+        if ($LASTEXITCODE -ne 0) {
+            # Silence here used to look like a successful reseed, and the run
+            # carried on against the old database.
+            Write-Bad 'The dataset could not be rebuilt.'
+            exit 1
+        }
     }
 } finally {
     Pop-Location

@@ -1,0 +1,54 @@
+# Keep the build context to what the image is built from. Everything here is
+# either rebuilt inside the image, rebuilt from the panel, or has no business
+# in a container.
+
+.git/
+.github/
+.claude/
+.run/
+
+# Rebuilt in the image.
+**/node_modules/
+frontend/dist/
+
+# Seeded in the image from the panel. A database copied in from a laptop would
+# outrank the one the build produces.
+backend/*.db
+backend/*.db-journal
+backend/*.db-wal
+backend/*.db-shm
+
+# Never: the local environment carries real keys.
+.env
+**/.env
+
+# Python working files.
+**/__pycache__/
+**/*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Not read by the service. The seed reads ml/data/output/csv, which the
+# Dockerfile copies explicitly.
+ml/data/output/parquet/
+ml/data/output/*.xlsx
+ml/models/
+ml/reports/
+ml/src/
+docs/
+assets/
+scripts/
+*.md
+!backend/models/README.md
+LICENSE
+CITATION.cff
+start.bat
+
+# Editor and OS.
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

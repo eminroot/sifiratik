@@ -27,8 +27,16 @@ from app.routers import (
     scoring,
     transparency,
 )
+from app.static_site import mount_frontend
 
 settings = get_settings()
+
+# Without a handler the service's own lines fall back to the root logger, which
+# prints warnings and drops everything below them. That is fine on a laptop,
+# where the answer is on screen anyway, and wrong in a deployment, where the log
+# stream is the only way to see which engine loaded and whether the interface
+# was found. Uvicorn's own loggers do not propagate, so nothing is printed twice.
+logging.basicConfig(level=logging.INFO, format="%(levelname)s:     %(message)s")
 log = logging.getLogger("gus")
 
 
@@ -157,3 +165,8 @@ def health() -> dict:
         # interface reads this to decide whether to ask for a key.
         "writes": writes_mode(),
     }
+
+
+# Last, so the interface's catch-all route cannot shadow an API path. In a
+# checkout with no build this does nothing and the API serves by itself.
+mount_frontend(app)

@@ -55,3 +55,55 @@ jobs:
       - name: Derle
         working-directory: frontend
         run: npm run build
+
+  docker:
+    name: Dağıtım imajı
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      # Render'ın derleyeceği imajın aynısı. Veritabanı derleme sırasında
+      # tohumlanır, bu yüzden bu adım aynı zamanda panelin ve model
+      # artefaktlarının depoda eksiksiz olduğunu da doğrular.
+      - name: İmajı derle
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: gus-dedektiv:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Ayağa kalkıyor ve cevap veriyor mu
+        run: |
+          set -euo pipefail
+          docker run -d --name gus -p 8000:8000 -e PORT=8000 gus-dedektiv:ci
+
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8000/api/health >/dev/null 2>&1; then break; fi
+            if [ "$i" = "60" ]; then echo "Servis açılmadı:"; docker logs gus; exit 1; fi
+            sleep 2
+          done
+
+          echo "--- health"
+          health=$(curl -fsS http://127.0.0.1:8000/api/health)
+          echo "$health"
+          # Tohumlanmış imajda model motoru hazır olmalı; kural motoruna
+          # düşmüşse lightgbm ya da artefaktlar imaja girmemiş demektir.
+          echo "$health" | grep -q '"engine":"ml"'
+
+          echo "--- arayüz tek köken üzerinden servis ediliyor"
+          curl -fsS http://127.0.0.1:8000/ | grep -qi '<div id="root">'
+          # Tarayıcı yönlendirmesindeki derin bağlantı da kabuğu almalı.
+          curl -fsS http://127.0.0.1:8000/queue | grep -qi '<div id="root">'
+
+          echo "--- API yolları arayüze düşmüyor"
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/api/boyle-bir-yol-yok)" = "404"
+
+          echo "--- veri tohumlanmış geldi"
+          curl -fsS http://127.0.0.1:8000/api/dashboard >/dev/null
+          curl -fsS "http://127.0.0.1:8000/api/inspection-queue?limit=1" >/dev/null
+
+          docker rm -f gus >/dev/null

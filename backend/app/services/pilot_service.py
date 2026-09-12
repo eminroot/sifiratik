@@ -236,14 +236,10 @@ def run_pilot(
             detail=say(
                 "impact",
                 "detail",
-                tonnes=f"{findings.recovery_potential_tonnes:,.0f}",
-                co2e=f"{findings.co2e_avoided_tonnes:,.0f}",
+                tonnes=i18n.tonnes(findings.recovery_potential_tonnes, lang),
+                co2e=i18n.tonnes(findings.co2e_avoided_tonnes, lang),
             ),
-            value=say(
-                "impact",
-                "value",
-                value=f"{findings.estimated_gekap_try / 1_000_000:,.1f}",
-            ),
+            value=say("impact", "value", value=i18n.lira(findings.estimated_gekap_try, lang)),
         ),
         PilotStep(
             index=9,

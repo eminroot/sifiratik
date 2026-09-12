@@ -86,6 +86,7 @@ olarak işaretlenip nedeniyle birlikte denetçiye bildirilir.
 - [Algoritma akışı](#algoritma-akışı)
 - [Sekiz kanıt sinyali](#sekiz-kanıt-sinyali)
 - [Kurulum ve çalıştırma](#kurulum-ve-çalıştırma)
+- [Dağıtım](#dağıtım)
 - [Depo yapısı](#depo-yapısı)
 - [API](#api)
 - [Testler](#testler)
@@ -639,6 +640,73 @@ export DATABASE_URL=postgresql+psycopg://gus:gus@localhost:5432/gus_dedektiv
 alembic upgrade head
 python -m app.database.gus_import
 ```
+
+---
+
+## Dağıtım
+
+Depoda `Dockerfile` ve `render.yaml` hazırdır. Dağıtılan sürüm yerel sürümle
+aynı şeyi çalıştırır: aynı model artefaktları, aynı panel, aynı arayüz.
+
+### Tek servis, tek köken
+
+Geliştirmede iki süreç vardır: Vite 5173'te arayüzü verir ve `/api` isteklerini
+8000'deki uvicorn'a taşır. Dağıtımda taşıyacak bir proxy yoktur, bu yüzden
+derlenmiş arayüzü API'nin kendisi servis eder ve platformun tamamı tek adresten
+cevap verir. Bu yalnızca kolaylık değil: arayüz `/api` yolunu göreli çağırdığı
+için tek köken, ayarlanacak bir CORS listesi ve pakete gömülecek bir API adresi
+bırakmaz — dağıtımda en sık kırılan iki şey ortadan kalkar.
+
+`frontend/dist` yoksa hiçbir şey bağlanmaz; API tek başına çalışır ve
+`npm run dev` arayüzü vermeye devam eder.
+
+### Veritabanı imaja tohumlanır
+
+Paneli içeri almak ve 600 firmayı 14 dönem boyunca puanlamak yarım dakika CPU
+işidir. Bu iş ilk isteğe bırakılsaydı her dağıtım o süre boyunca bozuk
+görünürdü, bu yüzden veritabanı **derleme sırasında** kurulur ve imaja gömülü
+gelir. Açılış, hazır duran bir veritabanını açmaktan ibarettir: ölçülen açılış
+süresi 0,2 saniyedir.
+
+Bunun sonucu, her dağıtımın bilinen ve temiz bir gösteri durumundan başlamasıdır.
+Çalışan bir örnek üzerinde kaydedilen kararlar bir sonraki dağıtıma kadar durur.
+Kararların dağıtımlar arasında kalması istenirse `render.yaml` içine kalıcı bir
+disk eklenip `DATABASE_URL` oraya gösterilir.
+
+### Render
+
+Depo GitHub'a gönderilir, Render'da **New > Blueprint** seçilip depo gösterilir;
+`render.yaml` okunur. Ayarlanacak tek şey isteğe bağlı iki ortam değişkenidir:
+
+| Değişken | Etkisi |
+|---|---|
+| `GEMINI_API_KEY` | Boşsa asistan paneli görünmez, servis normal çalışır. |
+| `API_KEYS` | Boşsa yazan uç noktalar **açıktır**. |
+
+Yazan uç noktaların açık olması, jürinin karar kaydedebilmesi içindir. Servis
+herkese açık bir adreste duracağı için bu bilinçli bir seçimdir; kapatmak için
+Render panosunda `API_KEYS` değeri `anahtar:denetçi` çiftleri olarak girilir:
+
+```bash
+# Uzun ve rastgele olmalı, bir kelime değil:
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+# API_KEYS=8f2c...:aydin.m,4b91...:kaya.s
+```
+
+Anahtar tanımlandığı anda kararı imzalayan, istek gövdesinin iddia ettiği isim
+değil, anahtarın sahibidir. Okuma her iki durumda da açıktır.
+
+### Aynısını yerelde çalıştırmak
+
+```bash
+docker build -t gus-dedektiv .
+docker run --rm -p 8000:8000 -e PORT=8000 gus-dedektiv
+# http://localhost:8000
+```
+
+CI'daki `Dağıtım imajı` işi bu imajı her itmede derler, ayağa kaldırır ve
+model motorunun hazır geldiğini, arayüzün tek kökenden servis edildiğini ve
+bilinmeyen bir `/api` yolunun arayüze düşmediğini doğrular.
 
 ---
 

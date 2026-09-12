@@ -65,7 +65,7 @@ export default function Impact() {
                 <Stat
                   icon={Cloud}
                   label={t('impact.emissions')}
-                  value={num(data.co2e_avoided_tonnes)}
+                  value={tonnes(data.co2e_avoided_tonnes, { unit: false })}
                   unit="t CO2e"
                   note={t('impact.emissionsNote')}
                 />
@@ -83,11 +83,14 @@ export default function Impact() {
                           <div className="chain-head">
                             <span className="chain-label">{step.label}</span>
                             <span className="chain-value tnum">
+                              {/* Every unit but a headcount is a tonnage, CO2e
+                                  included, so it keeps its decimal below 100
+                                  instead of rounding a real figure to zero. */}
                               {step.unit === 'companies'
                                 ? num(step.value)
                                 : step.unit === 'tonnes'
                                   ? tonnes(step.value)
-                                  : `${num(step.value)} ${step.unit}`}
+                                  : `${tonnes(step.value, { unit: false })} ${step.unit}`}
                             </span>
                           </div>
                           {step.note && <div className="chain-note">{step.note}</div>}
@@ -171,7 +174,7 @@ export default function Impact() {
                               </span>
                             )}
                           </td>
-                          <td className="num">{num(row.co2e_avoided_tonnes)} t</td>
+                          <td className="num">{tonnes(row.co2e_avoided_tonnes)}</td>
                         </tr>
                       ))}
                     </tbody>

@@ -264,6 +264,59 @@ def engine_notes(notes: list[str], lang: str) -> list[str]:
 
 
 # --------------------------------------------------------------------------- #
+# Figures inside composed sentences
+#
+# A sentence the API writes sits on screen beside the same figure rendered by
+# the interface, so the two must abbreviate the same way. These mirror `lira`
+# and `tonnes` in frontend/src/lib/format.js: the scale is chosen from the
+# value, never assumed, because a pilot over one province is a thousand-lira
+# figure and a pilot over the country is a billion-lira one.
+# --------------------------------------------------------------------------- #
+
+# Turkish abbreviates milyar / milyon / bin, so the letters differ even though
+# the thresholds do not.
+_SCALE = {
+    "en": {"billion": "B", "million": "M", "thousand": "K"},
+    "tr": {"billion": " Mr", "million": " Mn", "thousand": " B"},
+}
+
+
+# en 1,234.5 -> tr 1.234,5. Translated in one pass; replacing the two
+# separators in turn would put the first one back over the second.
+_TR_SEPARATORS = str.maketrans({",": ".", ".": ","})
+
+
+def _grouped(value: float, digits: int, lang: str) -> str:
+    """A number with the separators the language uses."""
+    body = f"{value:,.{digits}f}"
+    return body.translate(_TR_SEPARATORS) if lang == "tr" else body
+
+
+def lira(value: float | None, lang: str) -> str:
+    """Turkish lira, abbreviated once the figure stops being readable in full."""
+    if value is None:
+        return "--"
+    scale = _SCALE.get(lang, _SCALE["en"])
+    size = abs(value)
+    if size >= 1_000_000_000:
+        return f"{_grouped(value / 1_000_000_000, 1, lang)}{scale['billion']} TL"
+    if size >= 1_000_000:
+        return f"{_grouped(value / 1_000_000, 1, lang)}{scale['million']} TL"
+    if size >= 10_000:
+        return f"{_grouped(round(value / 1000), 0, lang)}{scale['thousand']} TL"
+    return f"{_grouped(round(value), 0, lang)} TL"
+
+
+def tonnes(value: float | None, lang: str) -> str:
+    """Tonnes, with a decimal only where it carries information."""
+    if value is None:
+        return "--"
+    if abs(value) >= 100:
+        return _grouped(round(value), 0, lang)
+    return _grouped(value, 1, lang)
+
+
+# --------------------------------------------------------------------------- #
 # Composed sentences
 #
 # The pilot run sequence and the impact chain describe live figures, so each
@@ -346,7 +399,7 @@ PILOT_STEPS: dict[str, dict[str, dict[str, str]]] = {
             "en": "{tonnes} t into formal recovery, {co2e} t CO2e avoided.",
             "tr": "{tonnes} t kayıtlı geri kazanıma, {co2e} t CO2e önlendi.",
         },
-        "value": {"en": "{value}M TL at stake", "tr": "{value}M TL risk altında"},
+        "value": {"en": "{value} at stake", "tr": "{value} risk altında"},
     },
     "publish": {
         "label": {"en": "Published to impact dashboard", "tr": "Etki panosuna yayımlandı"},
