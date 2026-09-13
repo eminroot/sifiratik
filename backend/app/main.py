@@ -194,7 +194,9 @@ for router in (
 app.include_router(meta.router, prefix=f"{settings.api_prefix}/meta")
 
 
-@app.get("/api/health", tags=["reference"])
+# HEAD too: this is the address a monitor watches, and answering its headers
+# with 405 is indistinguishable from being down.
+@app.api_route("/api/health", methods=["GET", "HEAD"], tags=["reference"])
 def health() -> dict:
     from app.scoring.registry import resolve_engine
 

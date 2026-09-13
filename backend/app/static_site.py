@@ -51,7 +51,10 @@ def mount_frontend(app: FastAPI, dist: Path | None = None) -> bool:
     if assets.is_dir():
         app.mount("/assets", _CachedAssets(directory=assets), name="assets")
 
-    @app.get("/{path:path}", include_in_schema=False)
+    # HEAD as well as GET. Plain Starlette answers HEAD on any GET route;
+    # FastAPI does not, so every page replied 405 to the uptime monitors and
+    # link unfurlers that ask for headers before they ask for a body.
+    @app.api_route("/{path:path}", methods=["GET", "HEAD"], include_in_schema=False)
     async def interface(request: Request, path: str) -> FileResponse:
         """A built file when the path names one, the shell when it does not.
 
