@@ -113,6 +113,22 @@ class Settings(BaseSettings):
     # starts refusing. A correct password is never refused — see app/gate.py.
     login_attempts_per_minute: int = Field(default=20, ge=1)
 
+    # Ceilings on the endpoints that cost something to run. A deployment whose
+    # sign-in is published in its own README has no trusted callers: everyone
+    # through the door is a stranger, and the ceiling is what keeps one of them
+    # from spending the machine. Measured costs per call, on the pilot server:
+    #
+    #   scoring run   7.3 s   the whole population through LightGBM
+    #   pilot run     0.3 s
+    #   review        0.3 s   but every one appends to the audit chain
+    #
+    # Sized so ordinary use never reaches them — nobody rescoring by hand does
+    # it four times a minute — and a script is stopped well short of the
+    # machine. See app/security.py.
+    scoring_runs_per_minute: int = Field(default=4, ge=1)
+    pilot_runs_per_minute: int = Field(default=20, ge=1)
+    reviews_per_minute: int = Field(default=40, ge=1)
+
     # The in-app assistant. Without a key the endpoint reports itself as
     # unconfigured and the interface hides the panel rather than failing.
     gemini_api_key: str = ""

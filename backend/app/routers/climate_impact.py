@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app import i18n
 from app.database.database import get_db
 from app.reference import SECTORS
-from app.security import Principal, require_writer
+from app.security import Principal, limit_pilot_run, require_writer
 from app.routers.deps import known_period, resolve_period
 from app.schemas.climate import MAX_SHORTLIST, ClimateImpact, PilotResult, PilotRunRequest
 from app.services import climate_service, pilot_service
@@ -59,7 +59,7 @@ def run_pilot(
     period: str = Depends(resolve_period),
     lang: str = Depends(i18n.resolve_lang),
     db: Session = Depends(get_db),
-    principal: Principal = Depends(require_writer),
+    principal: Principal = Depends(limit_pilot_run),
 ) -> PilotResult:
     """Execute the pilot and record the run."""
     target = known_period(db, request.period) if request.period else period

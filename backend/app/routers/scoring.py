@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app import i18n
 from app.config import ScoringPolicy, get_policy
 from app.database.database import get_db
-from app.security import Principal, require_writer
+from app.security import Principal, limit_scoring_run, require_writer
 from app.services import policy_service
 from app.routers.deps import known_period, resolve_period
 from app.routers.transparency import engines_out, policy_out
@@ -26,7 +26,7 @@ def scoring_run(
     request: ScoringRunRequest,
     period: str = Depends(resolve_period),
     db: Session = Depends(get_db),
-    principal: Principal = Depends(require_writer),
+    principal: Principal = Depends(limit_scoring_run),
 ) -> ScoringRunOut:
     """Re-evaluate the population.
 

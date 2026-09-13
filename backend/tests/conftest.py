@@ -35,6 +35,22 @@ def database():
         TEMP_DB.unlink(missing_ok=True)
 
 
+@pytest.fixture(autouse=True)
+def fresh_budgets():
+    """Every test starts with the rate-limit allowances untouched.
+
+    The client is session-scoped, so without this a test inherits whatever the
+    tests before it spent — one that rescores twice would start failing
+    because of a test that ran earlier and rescored three times. Rate-limit
+    state is exactly the kind of thing that must not leak between tests.
+    """
+    from app.security import assistant_limiter, cost_limiter
+
+    cost_limiter._calls.clear()
+    assistant_limiter._calls.clear()
+    yield
+
+
 @pytest.fixture(scope="session")
 def client(database):
     from fastapi.testclient import TestClient

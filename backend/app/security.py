@@ -29,11 +29,12 @@ import hmac
 import threading
 import time
 from collections import deque
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from fastapi import Depends, Header, HTTPException, Request, status
 
-from app.config import get_settings
+from app.config import Settings, get_settings
 
 
 @dataclass(frozen=True)
@@ -165,17 +166,56 @@ class SlidingWindowLimiter:
 
 assistant_limiter = SlidingWindowLimiter()
 
+# One limiter for everything that costs something to run. Budgets are kept
+# apart by prefixing the operation onto the key, so somebody rescoring the
+# population cannot use up the allowance for recording a decision.
+cost_limiter = SlidingWindowLimiter()
+
+
+def _caller(request: Request, principal: Principal) -> str:
+    """Who to count this call against.
+
+    A key owner when one is configured. Otherwise the address — which behind a
+    reverse proxy is the proxy's, so every anonymous viewer shares one
+    allowance. That is the honest answer rather than a defect: telling them
+    apart would mean trusting a header the caller writes, and a ceiling a
+    caller can rewrite is not a ceiling.
+    """
+    if principal.authenticated:
+        return principal.user_id
+    return request.client.host if request.client else "unknown"
+
+
+def _costly(operation: str, limit: Callable[[Settings], int], refusal: str):
+    """A writer guard that also caps how often this operation may run.
+
+    The sign-in for a demonstration is published in its own README, so being
+    signed in proves nothing about intent. These ceilings are what stands
+    between a stranger who read it and the machine.
+    """
+
+    def guard(request: Request, principal: Principal = Depends(require_writer)) -> Principal:
+        settings = get_settings()
+        wait = cost_limiter.check(f"{operation}:{_caller(request, principal)}", limit(settings))
+        if wait is not None:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=refusal,
+                headers={"Retry-After": str(max(1, int(wait) + 1))},
+            )
+        return principal
+
+    guard.__name__ = f"limit_{operation.replace('-', '_')}"
+    return guard
+
 
 def limit_assistant(
     request: Request, principal: Principal = Depends(require_writer)
 ) -> Principal:
-    """The writer guard, plus a per-caller ceiling on paid assistant calls."""
-    caller = (
-        principal.user_id
-        if principal.authenticated
-        else (request.client.host if request.client else "unknown")
+    """The writer guard, plus a ceiling on paid assistant calls."""
+    wait = assistant_limiter.check(
+        _caller(request, principal), get_settings().assistant_requests_per_minute
     )
-    wait = assistant_limiter.check(caller, get_settings().assistant_requests_per_minute)
     if wait is not None:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -183,3 +223,24 @@ def limit_assistant(
             headers={"Retry-After": str(max(1, int(wait) + 1))},
         )
     return principal
+
+
+# Rescoring is the expensive one: the whole population through the model, over
+# seven seconds a call on the pilot server. The others are cheap per call and
+# capped because a decision that costs nothing to make still appends a link to
+# the audit chain, and a flooded trail is a trail nobody can read.
+limit_scoring_run = _costly(
+    "scoring-run",
+    lambda s: s.scoring_runs_per_minute,
+    "Scoring was re-run too many times in the last minute. Try again shortly.",
+)
+limit_pilot_run = _costly(
+    "pilot-run",
+    lambda s: s.pilot_runs_per_minute,
+    "The pilot was run too many times in the last minute. Try again shortly.",
+)
+limit_review = _costly(
+    "review",
+    lambda s: s.reviews_per_minute,
+    "Too many decisions recorded in the last minute. Try again shortly.",
+)

@@ -805,6 +805,25 @@ olmalıdır:
 python -c "import secrets; print(secrets.token_urlsafe(18))"
 ```
 
+### Pahalı uç noktaların tavanı
+
+Giriş bilgileri README'de yazılı olduğu için giriş yapmış olmak bir şey
+kanıtlamaz: kapıdan geçen herkes yabancıdır. Makineyi harcamayı engelleyen şey
+kapı değil, bu tavanlardır.
+
+| Uç nokta | Ölçülen maliyet | Dakikada |
+|---|---|---|
+| `POST /scoring/run` | 7,3 sn — tüm popülasyon modelden geçer | 4 |
+| `POST /cop31/pilot/run` | 0,3 sn | 20 |
+| `POST /companies/{id}/review` | 0,3 sn, ama her biri zincire bir halka ekler | 40 |
+
+Bütçeler ayrıdır: popülasyonu yeniden puanlayan biri, karar kaydetme
+hakkını tüketemez. **Okuma hiçbir zaman sınırlanmaz** — kendi verisini
+göstermeyi reddeden bir gösterim, fazla puanlanmış bir gösterimden kötüdür.
+
+Tavan kişi başına değil, hepsi için toplamdır; sebebi
+[asistan bölümündekiyle](#uygulama-içi-asistan) aynıdır.
+
 ### Yazan uç noktalar
 
 Yazan uç noktaların açık olması, jürinin karar kaydedebilmesi içindir. Kapatmak
