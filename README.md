@@ -652,6 +652,12 @@ cp backend/.env.example backend/.env
 # GEMINI_API_KEY=...
 ```
 
+Anahtar <https://aistudio.google.com/apikey> adresinden alınır. Google 2026'da
+biçimi değiştirdi: yeni anahtarlar `AQ.` ile başlıyor, eski `AIzaSy...`
+biçimindeki anahtarlar ise Eylül 2026'dan itibaren reddediliyor. `AQ.` anahtarı
+sorgu parametresi olarak değil, `x-goog-api-key` başlığında gönderilmek
+zorundadır; servis zaten böyle gönderiyor.
+
 Her istek, ekrandaki dönemden derlenen bir brifing taşır — bant dağılımı, risk
 tutarı, alan kapsamı, sekiz kontrol, kuyruğun başı ve varsa görüntülenen firma —
 böylece cevap, sayfanın gösterdiği rakamların aynısını alıntılar. Brifing
