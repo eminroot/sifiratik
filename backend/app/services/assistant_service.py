@@ -208,14 +208,31 @@ def build_briefing(db: Session, period: str, company_id: int | None = None) -> s
         )
     add("")
 
+    # Not every material is priced by weight. Wood is charged per item under
+    # GEKAP and carries no lira-per-kilo figure at all, so formatting the rate
+    # raised a TypeError and took the whole answer down with it — the assistant
+    # could not answer anything, whatever it was asked.
+    #
+    # The ones without a rate are named rather than dropped. Leaving wood out
+    # of a list headed "GEKAP tariffs" invites the model to reach for a number
+    # that is not there; saying it has none is the fact it should have.
+    priced = [key for key in MATERIAL_ORDER if MATERIALS[key]["tariff_try_per_kg"] is not None]
+    unpriced = [key for key in MATERIAL_ORDER if MATERIALS[key]["tariff_try_per_kg"] is None]
+
     add("2026 GEKAP tariffs, TL per kg:")
     add(
         "  "
         + ", ".join(
             f"{MATERIALS[key]['name']} {MATERIALS[key]['tariff_try_per_kg']:.2f}"
-            for key in MATERIAL_ORDER
+            for key in priced
         )
     )
+    if unpriced:
+        add(
+            "  Not priced by weight under GEKAP, so no rate per kilo exists for: "
+            + ", ".join(MATERIALS[key]["name"] for key in unpriced)
+            + "."
+        )
 
     if company_id is not None:
         detail = _company_briefing(db, company_id, period)
