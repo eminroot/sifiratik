@@ -116,6 +116,7 @@ olarak işaretlenip nedeniyle birlikte denetçiye bildirilir.
 - [Ne yapar, ne yapmaz](#ne-yapar-ne-yapmaz)
 - [Prototip akışı](#prototip-akışı)
 - [Açıklanabilirlik](#açıklanabilirlik-her-puan-neden-o-puan)
+- [Teknik çizim](#teknik-çizim)
 - [Algoritma akışı](#algoritma-akışı)
 - [Sekiz kanıt sinyali](#sekiz-kanıt-sinyali)
 - [Kurulum ve çalıştırma](#kurulum-ve-çalıştırma)
@@ -328,6 +329,24 @@ Panel, çalıştırılamayan kontrolü kelimelerle anlatır — örneğin:
 katkı taşıyabilir: model, kontrol edilemeyen dosyaların daha sık eksik beyan
 taşıdığını veriden öğrenir. Denetçi bunu sessiz bir boşluk olarak değil, yazılı
 bir uyarı olarak görür.
+
+---
+
+## Teknik çizim
+
+Sistemin iki görünümü: verinin kaynaktan denetçinin kararına kadar izlediği yol,
+ve bunun hangi makinede nasıl çalıştığı. Baskıya uygun vektör sürüm:
+[`docs/TEKNIK-CIZIM.pdf`](docs/TEKNIK-CIZIM.pdf).
+
+<div align="center">
+
+<img src="assets/teknik-cizim-1.png" alt="Teknik çizim, sayfa 1: veri ve karar akışı" width="82%">
+
+<br><br>
+
+<img src="assets/teknik-cizim-2.png" alt="Teknik çizim, sayfa 2: dağıtım mimarisi" width="82%">
+
+</div>
 
 ---
 

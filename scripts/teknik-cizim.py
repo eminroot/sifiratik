@@ -70,7 +70,8 @@ ax.text(X + 0.16, 1.28, "Veri kurum içinde kalır. Sistem veri toplamaz.", font
 ax.text(X + 0.16, 1.06, "Nihai karar denetçiye aittir; puan bir önceliktir, ihlal tespiti değildir.",
         fontsize=8.2, color=MUTE)
 ax.text(X, 0.55, "Takım KinetiX · TEKNOFEST 2026 Sıfır Atık ve Döngüsel Ekonomi", fontsize=7.5, color=MUTE)
-pdf.savefig(fig); plt.close(fig)
+pdf.savefig(fig); fig.savefig("assets/teknik-cizim-1.png", dpi=170)
+plt.close(fig)
 
 # ----------------------------------------------------------------- page 2 --
 fig, ax = page()
@@ -113,6 +114,7 @@ ax.text(X + 0.16, 1.28, "Tek köken: arayüz ve API aynı adresten. CORS yok.", 
 ax.text(X + 0.16, 1.06, "Kapsayıcı yalnızca geri döngüye bağlıdır; dışarıdan tek yol Caddy'dir.",
         fontsize=8.2, color=MUTE)
 ax.text(X, 0.55, "eminbaxishli.online", fontsize=7.5, color=MUTE)
-pdf.savefig(fig); plt.close(fig)
+pdf.savefig(fig); fig.savefig("assets/teknik-cizim-2.png", dpi=170)
+plt.close(fig)
 pdf.close()
 print("written")
