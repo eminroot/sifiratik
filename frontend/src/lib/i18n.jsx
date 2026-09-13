@@ -35,18 +35,11 @@ function readStored() {
     // A browser that refuses storage still gets a working interface.
   }
 
-  // Nothing chosen yet: follow the browser, so a visitor who reads English
-  // is not handed Turkish and a Turkish one is not handed English. `en-GB`
-  // and `tr-TR` both carry the language in front of the dash.
-  try {
-    for (const tag of navigator.languages ?? [navigator.language]) {
-      const code = String(tag).toLowerCase().split('-')[0];
-      if (supported(code)) return code;
-    }
-  } catch {
-    // No navigator, or a browser that hides it. The default stands.
-  }
-
+  // Nothing chosen yet: Turkish, without asking the browser. Following the
+  // browser sounds more correct and reads worse here — a Turkish auditor on a
+  // laptop set to English would be handed English, which is the exact thing
+  // this default exists to prevent. The switch is in the corner of every page
+  // for anyone who wants the other one.
   return DEFAULT_LANG;
 }
 
