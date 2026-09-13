@@ -163,7 +163,7 @@ kadar katkı verdiği** ve **hangi kontrolün neden çalıştırılamadığı** 
 | Belirsizliği (tahmin aralığı, veri güveni) birlikte verir | Firmayı suçlu ilan etmez |
 | Nihai kararı insan denetçiye bırakır | Otomatik ceza kararı vermez |
 | Karar kaydı ve itiraz izi tutar | Kamu denetçisinin yerini almaz |
-| Kurumun kendi verisini kendi ortamında değerlendirir | Veri **toplamaz**, dışarıya kayıt göndermez |
+| Kurumun kendi verisini kendi ortamında değerlendirir | Veri **toplamaz**; asistan kapalıyken dışarıya kayıt göndermez ([ayrıntı](#uygulama-içi-asistan)) |
 
 ---
 
@@ -345,7 +345,8 @@ bir uyarı olarak görür.
 │ önceki denetim kayıtları · MVP'de: sentetik panel                      │
 │                                                                        │
 │ Sistem veri TOPLAMAZ. Kurumun kendi verisini kendi                     │
-│ ortamında değerlendirir; dışarıya kayıt göndermez.                     │
+│ ortamında değerlendirir. Tek istisna, isteğe bağlı asistan:            │
+│ açıldığında VKN içermeyen bir brifing Google'a gider.                  │
 └────────────────────────────────────┬───────────────────────────────────┘
                                      │  toplu yükleme · kurum içi API
                                      ▼
@@ -656,10 +657,24 @@ tutarı, alan kapsamı, sekiz kontrol, kuyruğun başı ve varsa görüntülenen
 böylece cevap, sayfanın gösterdiği rakamların aynısını alıntılar. Brifing
 **referans veri** olarak geçirilir, talimat olarak değil.
 
-Asistan açıkken bu brifing **Google'a gönderilir**; vergi numaraları brifinge
-girmez. Her çağrı kurumun Gemini kotasından harcandığı için istemci başına
-dakikada 12 soru sınırı vardır (`ASSISTANT_REQUESTS_PER_MINUTE`). Kurum
-kurulumunda asistan kurum içi bir modelle değiştirilmelidir.
+Asistan açıkken bu brifing **Google'a gönderilir**. Firma adı, sektör, il,
+puan, tonaj ve risk tutarı brifinge girer; **vergi kimlik numarası girmez** —
+denetçi numarayı zaten ekranda görüyor, model ise cevap vermek için isme
+ihtiyaç duyuyor, numaraya değil. Yayındaki gösterimde brifinge giren her firma
+kaydı sentetiktir; `SYN-FRM-000043` gerçek bir firma değildir.
+
+Bu, platformun kurum ortamından dışarı veri çıkaran tek yeridir ve bu yüzden
+varsayılan olarak kapalıdır: anahtar yoksa uç nokta kendini yapılandırılmamış
+ilan eder, arayüz de paneli hiç çizmez. Kurum kurulumunda ya kapalı bırakılmalı
+ya da kurum içi bir modelle değiştirilmelidir — gerçek beyan verisiyle
+çalışırken brifingin kurumdan çıkması kabul edilebilir değildir.
+
+Her çağrı kurumun Gemini kotasından harcanır. Tavan `ASSISTANT_REQUESTS_PER_MINUTE`
+ile verilir ve **kişi başına değil, hepsi için toplamdır**: servis ters vekil
+arkasında durduğu için bir ziyaretçiyi diğerinden ancak çağıranın kendi yazdığı
+bir başlığa güvenerek ayırabilirdi, o da sahtelenebilir bir tavan demek olurdu.
+Paylaşılan tavan daha düşüktür ve kimsenin konuşarak aşamayacağı bir tavandır;
+faturadaki en kötü durum bu sayede bilinir.
 
 ### PostgreSQL
 
