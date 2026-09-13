@@ -1,8 +1,8 @@
 blank_issues_enabled: true
 contact_links:
   - name: Güvenlik açığı
-    url: https://github.com/eminroot/zerowasteapp/security/advisories/new
+    url: https://github.com/eminroot/sifiratik/security/advisories/new
     about: Güvenlik açıklarını herkese açık konu olarak açmayın; özel bildirim gönderin.
   - name: Algoritma ve mimari dokümanları
-    url: https://github.com/eminroot/zerowasteapp/blob/main/docs/ALGORITMA-AKISI.md
+    url: https://github.com/eminroot/sifiratik/blob/main/docs/ALGORITMA-AKISI.md
     about: Puanın nasıl hesaplandığını sormadan önce buraya bakın.

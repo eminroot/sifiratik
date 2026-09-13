@@ -45,7 +45,7 @@ Takım **KinetiX** · TEKNOFEST 2026 Sıfır Atık ve Döngüsel Ekonomi
 
 <br>
 
-[![CI](https://github.com/eminroot/zerowasteapp/actions/workflows/ci.yml/badge.svg)](https://github.com/eminroot/zerowasteapp/actions/workflows/ci.yml)
+[![CI](https://github.com/eminroot/sifiratik/actions/workflows/ci.yml/badge.svg)](https://github.com/eminroot/sifiratik/actions/workflows/ci.yml)
 ![Platform](https://img.shields.io/badge/PLATFORM-WEB-2b2b31?style=flat-square&labelColor=1a1a1d)
 ![Lisans](https://img.shields.io/badge/LİSANS-MIT-14603d?style=flat-square&labelColor=1a1a1d)
 ![Dil](https://img.shields.io/badge/ARAYÜZ-TÜRKÇE%20%7C%20İNGİLİZCE-1d4674?style=flat-square&labelColor=1a1a1d)
