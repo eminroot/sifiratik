@@ -160,14 +160,14 @@ export default function Assistant() {
             {turns.map((turn, index) => (
               <div
                 key={index}
-                className={`assistant-turn ${turn.role}${turn.failed ? ' failed' : ''}`}
+                className={`assistant-turn is-${turn.role}${turn.failed ? ' failed' : ''}`}
               >
                 {turn.role === 'assistant' ? <Prose text={turn.content} /> : turn.content}
               </div>
             ))}
 
             {thinking && (
-              <div className="assistant-turn assistant thinking" aria-live="polite">
+              <div className="assistant-turn is-assistant thinking" aria-live="polite">
                 <span />
                 <span />
                 <span />

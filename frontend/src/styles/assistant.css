@@ -124,6 +124,10 @@
   color: var(--ink);
 }
 
+/* The role is namespaced with `is-`. Written as the bare role it produced
+   `class="assistant-turn assistant"`, and `.assistant` is the floating panel:
+   every reply was handed the panel's position, width, height, background and
+   shadow, and rendered as a second panel on top of the first. */
 .assistant-turn {
   max-width: 92%;
   font-size: 13.5px;
@@ -134,7 +138,7 @@
 
 /* The operator's own words are the filled shape; the answer is set on the
    page itself, the way a document reads. */
-.assistant-turn.user {
+.assistant-turn.is-user {
   align-self: flex-end;
   max-width: 88%;
   padding: 9px 13px;
@@ -144,16 +148,16 @@
   font-weight: 500;
 }
 
-.assistant-turn.assistant {
+.assistant-turn.is-assistant {
   align-self: flex-start;
   max-width: 100%;
   color: var(--ink-2);
   white-space: normal;
 }
 
-.assistant-turn.assistant p + p { margin-top: 9px; }
-.assistant-turn.assistant ul { margin: 9px 0 0; padding-left: 17px; }
-.assistant-turn.assistant li { margin-bottom: 4px; }
+.assistant-turn.is-assistant p + p { margin-top: 9px; }
+.assistant-turn.is-assistant ul { margin: 9px 0 0; padding-left: 17px; }
+.assistant-turn.is-assistant li { margin-bottom: 4px; }
 
 .assistant-turn.failed {
   padding: 10px 13px;
