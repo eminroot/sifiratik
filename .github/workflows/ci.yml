@@ -68,7 +68,7 @@ jobs:
       # tohumlanır, bu yüzden bu adım aynı zamanda panelin ve model
       # artefaktlarının depoda eksiksiz olduğunu da doğrular.
       - name: İmajı derle
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           load: true
