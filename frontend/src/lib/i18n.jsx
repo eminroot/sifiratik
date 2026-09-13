@@ -9,18 +9,45 @@ export const LANGUAGES = [
 ];
 
 const STORAGE_KEY = 'gus.lang';
+
+// The language a first-time visitor gets. Turkish: this is a Turkish platform,
+// about Turkish regulation, read by Turkish auditors, and arriving in English
+// made every one of them start by hunting for the switch.
+const DEFAULT_LANG = 'tr';
+
+// Where a missing string is looked up instead. English, because that catalogue
+// is the complete one; a key added in Turkish alone would otherwise render as
+// its own key. This is not the default language and must not be confused with
+// one — that mix-up is what used to open the interface in English.
 const FALLBACK = 'en';
 
 const I18nContext = createContext(null);
 
+function supported(code) {
+  return LANGUAGES.some((item) => item.code === code);
+}
+
 function readStored() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (LANGUAGES.some((item) => item.code === saved)) return saved;
+    if (supported(saved)) return saved;
   } catch {
     // A browser that refuses storage still gets a working interface.
   }
-  return FALLBACK;
+
+  // Nothing chosen yet: follow the browser, so a visitor who reads English
+  // is not handed Turkish and a Turkish one is not handed English. `en-GB`
+  // and `tr-TR` both carry the language in front of the dash.
+  try {
+    for (const tag of navigator.languages ?? [navigator.language]) {
+      const code = String(tag).toLowerCase().split('-')[0];
+      if (supported(code)) return code;
+    }
+  } catch {
+    // No navigator, or a browser that hides it. The default stands.
+  }
+
+  return DEFAULT_LANG;
 }
 
 /**
