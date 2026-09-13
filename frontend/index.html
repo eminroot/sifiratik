@@ -43,7 +43,7 @@
       content="600 firma, sekiz kanıt sinyali, her puanın yanında gerekçesi. TEKNOFEST 2026 — Takım KinetiX."
     />
     <meta name="twitter:image" content="https://eminbaxishli.online/og.png" />
-    <meta name="theme-color" content="#0a0a0b" />
+    <meta name="theme-color" content="#fbfbfa" />
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
     <link rel="apple-touch-icon" href="/icon.png" />
@@ -58,15 +58,17 @@
       rel="stylesheet"
     />
     <script>
-      // Paint the stored theme before anything else, or a reload flashes white.
+      // Paint the theme before anything else, or a reload flashes the wrong one.
+      //
+      // Light unless this visitor has chosen dark here before. The phone's own
+      // setting is deliberately not consulted: most phones are set to dark, and
+      // the platform was designed light — a printed report, a screen behind a
+      // desk, a projector in a room with the lights on. Whoever prefers dark
+      // finds the switch in the dock and the choice sticks.
       (function () {
         try {
-          var saved = localStorage.getItem('gus.theme');
-          var dark =
-            saved === 'dark' ||
-            (saved !== 'light' &&
-              window.matchMedia('(prefers-color-scheme: dark)').matches);
-          document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+          document.documentElement.dataset.theme =
+            localStorage.getItem('gus.theme') === 'dark' ? 'dark' : 'light';
         } catch (e) {
           document.documentElement.dataset.theme = 'light';
         }

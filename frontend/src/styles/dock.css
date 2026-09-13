@@ -172,3 +172,32 @@
 @media (prefers-reduced-motion: reduce) {
   .dock-item, .dock-label { transition-duration: 0.01ms !important; }
 }
+
+/* iOS Safari floats its address bar over the bottom of the viewport, and the
+   dock sat underneath it — the first two tiles were unreachable on an iPhone.
+   safe-area-inset-bottom is the height the browser reserves there; on anything
+   without a reserved area it resolves to zero and nothing moves. */
+.dock-rail {
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+}
+
+@media (max-width: 760px) {
+  .dock-rail {
+    /* Clear of the address bar on a phone, where it is tallest. */
+    bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  /* Eight tiles at 38px plus gaps came to 375 inside a 372 box, so the bar
+     was born three pixels scrollable and the last tile always sat half cut.
+     Slightly tighter tiles and gaps put all eight on screen at 393px. */
+  .dock { gap: 5px; padding: 0 7px 7px; }
+  .dock-item:not([style*='width']) { width: 36px; height: 36px; }
+}
+
+@media (max-width: 400px) {
+  .dock { gap: 4px; padding: 0 6px 6px; }
+  .dock-item:not([style*='width']) { width: 34px; height: 34px; }
+  .dock-item svg { width: 17px; height: 17px; }
+}

@@ -857,3 +857,40 @@
   line-height: 1.5;
   color: var(--ink-3);
 }
+
+/* ------------------------------------------------------ narrow phones ------
+
+   On a 393px iPhone the English chrome fit with twelve pixels to spare:
+   brand 171 + tools 182 + padding 28 = 381. Twelve pixels is not a margin,
+   it is a coincidence — a phone whose webfont has not loaded yet renders the
+   fallback slightly wider and the bar starts clipping its own wordmark.
+
+   So below 430px the chrome gives up what it can afford to lose. The
+   subtitle is decorative and the wordmark above it says the same thing. The
+   sign-out button keeps its icon and drops its word, which is the widest
+   single thing in the bar and the least necessary: a door-shaped icon in the
+   corner is understood. */
+@media (max-width: 430px) {
+  .topbar {
+    gap: 10px;
+    padding: 0 12px;
+  }
+
+  .brand-sub { display: none; }
+  .brand-mark { font-size: 14px; letter-spacing: 0.13em; }
+
+  .topbar-tools { gap: 7px; }
+
+  /* Icon only. The label stays in the accessibility tree through the button's
+     title, so a screen reader still announces it. */
+  .key-button { padding: 6px 8px; font-size: 0; gap: 0; }
+  .key-button svg { width: 15px; height: 15px; }
+
+  .lang-option { padding: 4px 8px; }
+}
+
+/* Smaller still — the 375px iPhone SE and mini. */
+@media (max-width: 380px) {
+  .brand-mark { font-size: 13px; letter-spacing: 0.1em; }
+  .topbar { padding: 0 10px; }
+}
