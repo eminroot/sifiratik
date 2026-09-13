@@ -63,7 +63,7 @@ Takım **KinetiX** · TEKNOFEST 2026 Sıfır Atık ve Döngüsel Ekonomi
 <a id="canli-surum"></a>
 
 > [!TIP]
-> ### Canlı sürüm
+> ### Canlı sürüm(Linux serverimizde deploy olundu)
 >
 > # <https://eminbaxishli.online>
 >
