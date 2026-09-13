@@ -45,6 +45,10 @@ Takım **KinetiX** · TEKNOFEST 2026 Sıfır Atık ve Döngüsel Ekonomi
 
 <br>
 
+[![Canlı](https://img.shields.io/badge/CANLI-eminbaxishli.online-14603d?style=for-the-badge&labelColor=1a1a1d)](https://eminbaxishli.online)
+
+<br>
+
 [![CI](https://github.com/eminroot/sifiratik/actions/workflows/ci.yml/badge.svg)](https://github.com/eminroot/sifiratik/actions/workflows/ci.yml)
 ![Platform](https://img.shields.io/badge/PLATFORM-WEB-2b2b31?style=flat-square&labelColor=1a1a1d)
 ![Lisans](https://img.shields.io/badge/LİSANS-MIT-14603d?style=flat-square&labelColor=1a1a1d)
@@ -53,6 +57,35 @@ Takım **KinetiX** · TEKNOFEST 2026 Sıfır Atık ve Döngüsel Ekonomi
 ![Durum](https://img.shields.io/badge/DURUM-MVP%20%2F%20PROTOTİP-8e2323?style=flat-square&labelColor=1a1a1d)
 
 </div>
+
+---
+
+<a id="canli-surum"></a>
+
+> [!TIP]
+> ### Canlı sürüm
+>
+> # <https://eminbaxishli.online>
+>
+> | | |
+> |---|---|
+> | **Kullanıcı adı** | `juri` |
+> | **Parola** | `gus-dedektiv-673444` |
+>
+> Platform, **kendi sahibi olduğumuz sıkılaştırılmış bir Linux sunucusunda**
+> yayındadır — kiralık bir panelde değil, yönetimi bize ait bir makinede.
+> Ubuntu 24.04 LTS, Docker içinde tek servis, önünde TLS sonlandıran Caddy;
+> SSH parolayla girişe kapalı, güvenlik duvarı gelen trafiği varsayılan olarak
+> reddediyor ve yalnızca 22, 80, 443 açık.
+>
+> **Giriş bilgilerinin burada yazılı olması bilinçlidir.** Amaç jüriyi
+> zorlamak değil, siteye rastgele gelen botları, arama motoru dizinleyicilerini
+> ve form doldurmayan gezginleri dışarıda tutmaktır. Jüri bu satırı okuyup
+> doğrudan girer; bir bot formu doldurmaz ve veri döndüren hiçbir uç noktaya
+> ulaşamaz. Yani bu bir kilit değil, bir kapıcıdır — ve öyle olması
+> amaçlanmıştır.
+>
+> Sunucuda neyin nasıl kapatıldığı [Dağıtım](#dağıtım) bölümünde yazılıdır.
 
 ---
 
@@ -645,8 +678,11 @@ python -m app.database.gus_import
 
 ## Dağıtım
 
-Depoda `Dockerfile` ve `render.yaml` hazırdır. Dağıtılan sürüm yerel sürümle
-aynı şeyi çalıştırır: aynı model artefaktları, aynı panel, aynı arayüz.
+Yayındaki sürüm, **kendi sahibi olduğumuz bir Linux sunucusunda** çalışır:
+Ubuntu 24.04 LTS, Docker içinde tek servis, önünde TLS sonlandıran Caddy.
+Depodaki `render.yaml` ikinci bir yol olarak durur; aynı `Dockerfile` ile
+Render'da da aynı şey ayağa kalkar. Dağıtılan sürüm yerel sürümle aynı şeyi
+çalıştırır: aynı model artefaktları, aynı panel, aynı arayüz.
 
 ### Tek servis, tek köken
 
@@ -670,10 +706,35 @@ süresi 0,2 saniyedir.
 
 Bunun sonucu, her dağıtımın bilinen ve temiz bir gösteri durumundan başlamasıdır.
 Çalışan bir örnek üzerinde kaydedilen kararlar bir sonraki dağıtıma kadar durur.
-Kararların dağıtımlar arasında kalması istenirse `render.yaml` içine kalıcı bir
-disk eklenip `DATABASE_URL` oraya gösterilir.
+Kararların dağıtımlar arasında kalması istenirse veritabanı kalıcı bir Docker
+biriminde tutulup `DATABASE_URL` oraya gösterilir.
 
-### Render
+### Sunucunun kendisi
+
+Makine, ilk açılışından sonra elle sıkılaştırıldı. Kısaca ne kapatıldığı:
+
+| Alan | Durum |
+|---|---|
+| SSH parolası | **Kapalı.** Yalnızca anahtar; `PasswordAuthentication no` |
+| Hesaplar | Kök dışı `deploy` hesabı, parolası kilitli — tahmin edilecek bir parola yok |
+| Güvenlik duvarı | Gelen varsayılanı **reddet**; yalnızca 22 (hız sınırlı), 80, 443 — IPv4 *ve* IPv6 |
+| fail2ban | Artan süreli yasak, bir haftaya kadar |
+| Güncelleme | Güvenlik yamaları otomatik; yeniden başlatma insana bırakıldı |
+| Çekirdek | Kaynak yönlendirme kapalı, SYN çerezleri açık, `kptr_restrict` |
+| TLS | Let's Encrypt, kendi kendine yenilenir; HSTS bir yıl |
+
+İki ayrıntı görünmüyor ama önemli:
+
+**Kapsayıcı `127.0.0.1:8000` adresine bağlıdır, `0.0.0.0` değil.** Docker kendi
+iptables kurallarını yazar; `0.0.0.0` üzerinde yayımlanan bir port, güvenlik
+duvarı ne derse desin internetten erişilebilir olurdu. Geri döngüde aşılacak bir
+şey yoktur ve içeri giden tek yol Caddy'dir.
+
+**Kök hesap anahtarla hâlâ erişilebilir**, tamamen kapatılmış değil. Parolalar
+kapalı olduğu için denenerek bulunamaz; buna karşılık `deploy` hesabı bozulursa
+geri dönülecek bir yol kalır.
+
+### Render (ikinci yol)
 
 Depo GitHub'a gönderilir, Render'da **New > Blueprint** seçilip depo gösterilir;
 `render.yaml` okunur. Ayarlanacak ortam değişkenleri şunlardır:
@@ -693,8 +754,8 @@ kalan tek şey kabuk, stil ve paket dosyalarıdır — içlerinde veri yoktur.
 
 Kapı **arayüzde değil, API'de** durur. Tarayıcının çizdiği bir kapı, bir betiğin
 etrafından dolaştığı bir kapıdır; bu yüzden kontrol `app/gate.py` içinde ve
-`/api/*` yolları imzasız çağrıyı reddeder. Sağlık ucu dışarıdadır, çünkü Render
-dağıtımın kalkıp kalkmadığına onunla karar verir.
+`/api/*` yolları imzasız çağrıyı reddeder. Sağlık ucu dışarıdadır, çünkü
+dağıtımın kalkıp kalkmadığına onunla karar veriliyor.
 
 Oturum, kendi imzasını taşıyan bir çerezdir: sunucuda saklanan bir şey yoktur.
 `httponly` ile sayfadaki hiçbir betiğin okuyamayacağı, `samesite=lax` ile başka
@@ -706,20 +767,18 @@ kapıdır. Bir kararı kimin imzaladığı hâlâ `API_KEYS` ile belirlenir.
 
 ### Gösterim giriş bilgileri
 
-Yayındaki sürüm aşağıdaki bilgilerle açılır:
+Yayındaki sürümün kullanıcı adı ve parolası [sayfanın başında](#canli-surum)
+yazılıdır; burada tekrar edilmiyor, çünkü iki yerde yazan bir değer er geç
+birbirinden ayrı düşer.
 
-| | |
-|---|---|
-| **Kullanıcı adı** | `juri` |
-| **Parola** | `gus-dedektiv-673444` |
-
-Bu bilgiler bilerek burada yazılıdır: jüri, ayrıca bir yerden parola aramadan
-girebilsin diye. Dolayısıyla bu kapı bir kilit değil, bir kapıcıdır — arama
+Bu bilgilerin açıkça yazılı olması bilinçlidir: jüri, parolayı başka bir yerde
+aramadan girer. Dolayısıyla bu kapı bir kilit değil, bir kapıcıdır — arama
 motorlarını, dizinleyicileri ve form doldurmayan gezginleri dışarıda tutar,
 depoyu okuyan birini tutmaz.
 
-Kurum kurulumunda bu iki değer Render panosundan değiştirilir ve hiçbir yerde
-yazılı olmaz; parola o zaman akılda kalan değil, uzun ve rastgele olmalıdır:
+Kurum kurulumunda bu iki değer sunucudaki ortam dosyasından değiştirilir ve
+hiçbir yerde yazılı olmaz; parola o zaman akılda kalan değil, uzun ve rastgele
+olmalıdır:
 
 ```bash
 python -c "import secrets; print(secrets.token_urlsafe(18))"
@@ -728,8 +787,8 @@ python -c "import secrets; print(secrets.token_urlsafe(18))"
 ### Yazan uç noktalar
 
 Yazan uç noktaların açık olması, jürinin karar kaydedebilmesi içindir. Kapatmak
-için Render panosunda `API_KEYS` değeri `anahtar:denetçi` çiftleri olarak
-girilir:
+için sunucudaki ortam dosyasına `API_KEYS` değeri `anahtar:denetçi` çiftleri
+olarak girilir:
 
 ```bash
 # Uzun ve rastgele olmalı, bir kelime değil:
