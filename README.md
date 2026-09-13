@@ -922,4 +922,3 @@ Bu depo [MIT Lisansı](LICENSE) ile dağıtılmaktadır. `ml/data/reference/` al
 açık veriler kendi kaynaklarının koşullarına tabidir; her satırın kaynağı ve
 erişim tarihi [`source_registry.csv`](ml/data/reference/source_registry.csv)
 içinde kayıtlıdır.
-"# sifiratik" 
