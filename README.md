@@ -982,6 +982,7 @@ Tam model kartı ve 12 değerlendirme tablosu:
 | [`docs/ALGORITMA-AKISI.pdf`](docs/ALGORITMA-AKISI.pdf) | Aynısının baskıya uygun 8 sayfalık A4 sürümü |
 | [`docs/MIMARI.md`](docs/MIMARI.md) | Sistem mimarisi ve teknoloji seçimlerinin tam gerekçesi |
 | [`docs/RAPOR-ANALIZI.md`](docs/RAPOR-ANALIZI.md) | Ön değerlendirme raporunun analizi ve alınan önlemler |
+| [`docs/TEKNIK-CIZIM.pdf`](docs/TEKNIK-CIZIM.pdf) | Teknik çizim: veri ve karar akışı, dağıtım mimarisi |
 | [`ml/README.md`](ml/README.md) | Veri altyapısı: üretim, doğrulama, kaynak kütüğü |
 | [`ml/reports/MODEL_KARTI.md`](ml/reports/MODEL_KARTI.md) | Model kartı: sınırlılıklar, bölümleme, metrikler |
 | [`backend/models/README.md`](backend/models/README.md) | Artefakt listesi ve yeniden üretme |
